@@ -30,4 +30,4 @@ if __name__ == '__main__':
             '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36\\Lib\\site-packages\\PyQt5\\Qt\\plugins',
             ]
     run(opts)
-    input()
+    input('\r\n 请按回车键结束。\r\n')
