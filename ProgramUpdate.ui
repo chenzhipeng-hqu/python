@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>Form</class>
  <widget class="QWidget" name="Form">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,9 +14,9 @@
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-    <horstretch>2</horstretch>
-    <verstretch>2</verstretch>
+   <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+    <horstretch>5</horstretch>
+    <verstretch>5</verstretch>
    </sizepolicy>
   </property>
   <property name="cursor">
@@ -95,6 +98,43 @@
           </item>
           <item row="1" column="1">
            <widget class="QPushButton" name="ser_open_button">
+            <property name="palette">
+             <palette>
+              <active>
+               <colorrole role="Light">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>85</red>
+                  <green>85</green>
+                  <blue>255</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </active>
+              <inactive>
+               <colorrole role="Light">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>255</red>
+                  <green>255</green>
+                  <blue>255</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </inactive>
+              <disabled>
+               <colorrole role="Light">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>255</red>
+                  <green>255</green>
+                  <blue>255</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </disabled>
+             </palette>
+            </property>
             <property name="font">
              <font>
               <stylestrategy>PreferDefault</stylestrategy>
@@ -187,6 +227,9 @@
            <pointsize>11</pointsize>
           </font>
          </property>
+         <property name="acceptDrops">
+          <bool>true</bool>
+         </property>
          <property name="readOnly">
           <bool>true</bool>
          </property>
@@ -229,7 +272,20 @@
          <number>10</number>
         </property>
         <item row="0" column="1">
-         <widget class="QComboBox" name="DownloadSlect_comboBox"/>
+         <widget class="QComboBox" name="DownloadSlect_comboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>5</horstretch>
+            <verstretch>5</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="inputMethodHints">
+           <set>Qt::ImhPreferLatin</set>
+          </property>
+          <property name="frame">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item row="0" column="8">
          <widget class="QPushButton" name="download_button">
@@ -507,12 +563,12 @@
         <item row="0" column="2" colspan="6">
          <widget class="QProgressBar" name="Progress_bar">
           <property name="value">
-           <number>24</number>
+           <number>99</number>
           </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QCheckBox" name="Box0_checkBox_2">
+         <widget class="QCheckBox" name="allNodeID_checkBox">
           <property name="enabled">
            <bool>true</bool>
           </property>
