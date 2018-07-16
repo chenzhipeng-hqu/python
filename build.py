@@ -26,8 +26,8 @@ if __name__ == '__main__':
     opts = ['ProgramUpdate.py',
             '-F',
             '--clean',
-            '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36\\Lib\\site-packages\\PyQt5\\Qt\\bin',
-            '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36\\Lib\\site-packages\\PyQt5\\Qt\\plugins',
+            '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\bin',
+            '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\plugins',
             ]
     run(opts)
     input('\r\n 请按回车键结束。\r\n')
