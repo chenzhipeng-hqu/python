@@ -16,7 +16,6 @@ import serial.tools.list_ports
 import threading
 from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox)
 from PyQt5.QtCore import (pyqtSignal, QTimer, QThread)
-from PyQt5.QtGui import QFont
 from PyQt5 import QtCore, QtGui
 
 import UI_ProgramUpdate
@@ -103,13 +102,11 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 self.NodeID_button[i*8+j].setFlat(True)
                 self.NodeID_button[i*8+j].setPalette(palette)
                 self.NodeID_button[i*8+j].clicked[bool].connect(self.selectNodeID)
-                # self.NodeID_button[i*8+j].pressed.connect(self.selectNodeID)
                 self.gridLayout_3.addWidget(self.NodeID_button[i*8+j], j+2, i+1, 1, 1)
 
-            # self.BoxID_checkBox.append(QPushButton('Box '+str(i), self))
             self.BoxID_checkBox.append(QCheckBox('机箱 '+str(i), self.gridLayoutWidget_2))
             self.BoxID_checkBox[i].setEnabled(False)
-            font = QFont()
+            font = QtGui.QFont()
             font.setPointSize(11)
             font.setBold(True)
             font.setWeight(75)
@@ -159,8 +156,8 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
     def download_select(self, state):
         source = self.sender()
         # print(source.currentIndex(), end=' ')
-        print(source.text())
-        print(str(state))
+        # print(source.text())
+        # print(str(state))
         # print(source.currentIndexChanged())
         if state == 0:
        # if state == QtCore.Qt.UnChecked:
@@ -304,9 +301,10 @@ class ProgramUpdateThread(QThread):
         #----end---- 
 
         #----initialize----threading 任务
-        self.thread_1 = threading.Thread(target=self.receive_data_thread)
-        self.thread_1.setDaemon(True)
-        # self.thread_1.start()
+        self.thread_1 = threading.Thread(target=self.receive_data_thread) #建立一个线程，调用receive_data_thread方法，不带参数
+        self.thread_1.setDaemon(True) #声明为守护线程，设置的话，子线程将和主线程一起运行，并且直接结束，不会再执行循环里面的子线程
+        self.thread_1.start()
+        # self.thread_1.join() #作用是执行完所有子线程才去执行主线程
         #----end---- 
 
         self.download_process_flag = 0
@@ -324,6 +322,8 @@ class ProgramUpdateThread(QThread):
 
             if self.download_process_flag == 1:
                 self.download_process()
+
+            self.wait(1)
 
             pass
 
@@ -880,7 +880,7 @@ class ProgramUpdateThread(QThread):
 
     def receive_data_thread(self):
         while True:
-            # time.sleep(1)
+            time.sleep(0.001)
             # print('tick3=%d ' % (self.tick))
             pass
 
