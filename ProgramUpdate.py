@@ -471,6 +471,7 @@ class ProgramUpdateThread(QThread):
             # print('please select uart and open it!')
             self.message_singel.emit('请检查串口是否打开！\r\n')
             self.refreshBoardFlag = 0
+            return
 
         # print('refreshBoardFlag=%d ' % (self.refreshBoardFlag))
         for i in range(8):
@@ -776,6 +777,7 @@ class ProgramUpdateThread(QThread):
                     print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
                     print('正在升级...  ',  end='')
                     print(" ".join(hex(i) for i in node_id_need_program))
+                    self.message_singel.emit('正在升级 ' + file_name + '   ...' ' \r\n')
                 else:
                     print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
 
@@ -791,6 +793,7 @@ class ProgramUpdateThread(QThread):
             if send_tell >= self.size:
                 print('size=%d' % (self.size))
                 return send_tell,0
+
             size_high = self.size//PACK_SIZE  # 1K的倍数
             size_low = self.size%PACK_SIZE   # 1K的余数
             size_low_8_high = size_low//READ_SIZE                  # 1K的余数 ， 8字节的倍数
@@ -798,14 +801,14 @@ class ProgramUpdateThread(QThread):
         #----start--- 打开文件串口发送操作
             with open(file_name, 'rb') as f_bin:
 
-                print('send_file_data ...1')
+                # print('send_file_data ...1')
                 f_bin.seek(send_tell)
                 send_cnt = send_tell//PACK_SIZE
                 if send_cnt < (size_high+1):
                 # while self.send_cnt < (size_high+1):
                 # for (send_cnt) in  range(size_high+1):
                 #----start--- 发送装载数据命令
-                    print('send_file_data ...2')
+                    # print('send_file_data ...2')
                     self.send_data_command(self.ser, node_id_need_program)
                 #----end-----
 
@@ -853,14 +856,17 @@ class ProgramUpdateThread(QThread):
                     #----end---
 
                     self.processBar_singel.emit((f_bin.tell()/self.size)*100)
-                    self.message_singel.emit(file_name + ' -> ' + str(round(f_bin.tell()/self.size*100, 1)) + '% \r\n')
+
+                    if f_bin.tell() >= self.size:
+                        self.message_singel.emit(file_name + ' -> ' + str(round(f_bin.tell()/self.size*100, 1)) + '% \r\n')
+
                     self.old_tell = f_bin.tell()
                     send_tell = f_bin.tell()
 
                 #----start--- 发送烧录命令
                     self.send_program_command(self.ser, check_sum_1K, node_id_need_program)
                 #----end-----
-                    QThread.msleep(50)
+                    QThread.msleep(80)
                     # time.sleep(0.001)
 
 
