@@ -323,7 +323,7 @@ class ProgramUpdateThread(QThread):
             if self.download_process_flag == 1:
                 self.download_process()
 
-            self.wait(1)
+            QThread.msleep(1)
 
             pass
 
@@ -879,6 +879,7 @@ class ProgramUpdateThread(QThread):
 
 
     def receive_data_thread(self):
+        print('start receive_data_thread.')
         while True:
             time.sleep(0.001)
             # print('tick3=%d ' % (self.tick))
