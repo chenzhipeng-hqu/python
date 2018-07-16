@@ -161,21 +161,19 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         # print(source.currentIndexChanged())
         if state == 0:
        # if state == QtCore.Qt.UnChecked:
-            print(str(state))
             self.ProgramUpdate_thread.downloadSelect(0)
 
         elif state == 2:
-            print(str(state))
             self.ProgramUpdate_thread.downloadSelect(2)
 
     #selectNodeID 
     def selectNodeID(self, pressed):
         source = self.sender()
-        self.ProgramUpdate_thread.selectNodeID(pressed, source.text())
+        self.ProgramUpdate_thread.selectNodeID(pressed, str(source.id_))
 
     def download_process(self):
         source = self.sender()
-        print(source.text())
+        # print(dir(source))
         # print(self.Download_combo.currentText())
         self.ProgramUpdate_thread.download_process_flag = 1
 
@@ -228,7 +226,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.Progress_bar.setValue(val)
 
     #refresh_singel
-    def refresh_singel(self, cmd, i, j, is_down):
+    def refresh_singel(self, cmd, i, j, version ,is_down):
         if is_down == 2:
             is_down = True
 
@@ -249,10 +247,11 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         if cmd == 3:  # set node_id
             # print('cmd=%d, i=0x%02X, j=%d' % (cmd, i, j))
             self.NodeID_button[(i>>4)*8+j].setFlat(False)
-            self.NodeID_button[(i>>4)*8+j].setText(hex(i))
+            self.NodeID_button[(i>>4)*8+j].setText(str(version))
             self.NodeID_button[(i>>4)*8+j].setCheckable(True)
             self.NodeID_button[(i>>4)*8+j].setChecked(is_down)
             self.NodeID_button[(i>>4)*8+j].setEnabled(True)
+            self.NodeID_button[(i>>4)*8+j].id_ = i
             # self.NodeID_button[(i>>4)*8+j].clicked[bool].connect(self.selectNodeID)
             # self.BoardTypeUI.BoxID_button[(i>>4)].setText('Box '+str(i>>4))
             self.BoxID_checkBox[(i>>4)].setCheckable(True)
@@ -262,7 +261,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 '''
 class ProgramUpdateThread(QThread):
     #定义一个信号
-    refresh_singel = pyqtSignal(int, int, int, int)
+    refresh_singel = pyqtSignal(int, int, int, str, int)
     processBar_singel = pyqtSignal(int)
     message_singel = pyqtSignal(str)
 
@@ -476,8 +475,8 @@ class ProgramUpdateThread(QThread):
         # print('refreshBoardFlag=%d ' % (self.refreshBoardFlag))
         for i in range(8):
             for j in range(8):
-                self.refresh_singel.emit(1, i, j, 0)
-            self.refresh_singel.emit(2, i, j, 0)
+                self.refresh_singel.emit(1, i, j, ' ', 0)
+            self.refresh_singel.emit(2, i, j,' ', 0)
 
         self.node_id_all_exist.clear()
         self.node_id_audio.clear()
@@ -524,13 +523,14 @@ class ProgramUpdateThread(QThread):
                 data = self.find_start_head(data)
                 # print(" ".join(hex(i) for i in data))
 
-                # print('123')
+                version = self.find_version(data)
+
                 if data[7] == AUDIO_BOARD:
                     self.node_id_audio.append(data[6])
                     self.node_id_all_exist.append(data[6])
                     if (data[6]>>4) not in self.box_id_exist:
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 0, self.download_select)
+                    self.refresh_singel.emit(3, data[6], 0, version, self.download_select)
                     if self.download_select == 2:
                         self.node_id_need_program.append(data[6])
                         self.node_id_audio_need_program.append(data[6])
@@ -541,7 +541,7 @@ class ProgramUpdateThread(QThread):
                     self.node_id_all_exist.append(data[6])
                     if (data[6]>>4) not in self.box_id_exist:
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 3, self.download_select)
+                    self.refresh_singel.emit(3, data[6], 3, version, self.download_select)
                     if self.download_select == 2:
                         self.node_id_need_program.append(data[6])
                         self.node_id_power_need_program.append(data[6])
@@ -551,7 +551,7 @@ class ProgramUpdateThread(QThread):
                     self.node_id_all_exist.append(data[6])
                     if (data[6]>>4) not in self.box_id_exist:
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 1, self.download_select)
+                    self.refresh_singel.emit(3, data[6], 1, version, self.download_select)
                     if self.download_select == 2:
                         self.node_id_need_program.append(data[6])
                         self.node_id_analog_need_program.append(data[6])
@@ -561,7 +561,7 @@ class ProgramUpdateThread(QThread):
                     self.node_id_all_exist.append(data[6])
                     if (data[6]>>4) not in self.box_id_exist:
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 2, self.download_select)
+                    self.refresh_singel.emit(3, data[6], 2, version, self.download_select)
                     if self.download_select == 2:
                         self.node_id_need_program.append(data[6])
                         self.node_id_digital_need_program.append(data[6])
@@ -571,7 +571,7 @@ class ProgramUpdateThread(QThread):
                     self.node_id_all_exist.append(data[6])
                     if (data[6]>>4) not in self.box_id_exist:
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 4, self.download_select)
+                    self.refresh_singel.emit(3, data[6], 4, version, self.download_select)
                     if self.download_select == 2:
                         self.node_id_need_program.append(data[6])
                         self.node_id_analog_video_need_program.append(data[6])
@@ -581,7 +581,7 @@ class ProgramUpdateThread(QThread):
                     self.node_id_all_exist.append(data[6])
                     if (data[6]>>4) not in self.box_id_exist:
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 5, self.download_select)
+                    self.refresh_singel.emit(3, data[6], 5, version, self.download_select)
                     if self.download_select == 2:
                         self.node_id_need_program.append(data[6])
                         self.node_id_digital_video_need_program.append(data[6])
@@ -591,7 +591,7 @@ class ProgramUpdateThread(QThread):
                     self.node_id_all_exist.append(data[6])
                     if (data[6]>>4) not in self.box_id_exist:
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 6, self.download_select)
+                    self.refresh_singel.emit(3, data[6], 6, version, self.download_select)
                     if self.download_select == 2:
                         self.node_id_need_program.append(data[6])
                         self.node_id_lvds_in_need_program.append(data[6])
@@ -601,7 +601,7 @@ class ProgramUpdateThread(QThread):
                     self.node_id_all_exist.append(data[6])
                     if (data[6]>>4) not in self.box_id_exist:
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 7, self.download_select)
+                    self.refresh_singel.emit(3, data[6], 7, version, self.download_select)
                     if self.download_select == 2:
                         self.node_id_need_program.append(data[6])
                         self.node_id_pcie_base_need_program.append(data[6])
@@ -907,7 +907,17 @@ class ProgramUpdateThread(QThread):
     def find_start_head(self, data):
         for i,data_ in enumerate(data):
             if data[i] == CAN_HEAD and data[i+1] == CAN_HEAD and data[i+2] == 0x81:
-                return data[i:i+21]
+                return data[i:i+42]
+
+    def find_version(self, data):
+        year = ((data[29] >> 2)&0x3f)
+        month = (((data[29]<<2)&0x0c) | ((data[30]>>6)&0x03))&0x0f
+        day = (data[30]>>1)&0x1f
+        hour = ((data[30]<<4)&0x10) | data[31]>>4
+        minute = ((data[31]&0x0f)<<2) | ((data[32]>>6)&0x0f)
+        version = str(year)+'_'+str(month)+'_'+str(day)
+        # print('year=%d, month=%d, day=%d, hour=%d, minute=%d' % (year, month, day, hour, minute))
+        return version
 
     def send_command_ctrl_deal(self, send_data):
         send_data2 = list(send_data)        # another list, 创建了的内存

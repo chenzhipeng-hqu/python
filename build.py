@@ -24,13 +24,13 @@ __data__    : 04-July-2018
 
 if __name__ == '__main__':
     try:
-    opts = ['ProgramUpdate.py',
-            '-F',
-            '--clean',
-            '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\bin',
-            '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\plugins',
-            ]
-    run(opts)
+        opts = ['ProgramUpdate.py',
+                '-F',
+                '--clean',
+                '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\bin',
+                '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\plugins',
+                ]
+        run(opts)
 
     except :
         print('\r\n     build error!!!\r\n')
@@ -38,4 +38,4 @@ if __name__ == '__main__':
             pass
 
     finally:
-    input('\r\n 请按回车键结束。\r\n')
+        input('\r\n 请按回车键结束。\r\n')
