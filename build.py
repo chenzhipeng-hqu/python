@@ -25,7 +25,7 @@ __data__    : 04-July-2018
 if __name__ == '__main__':
     try:
         opts = ['ProgramUpdate.py',
-                '-F',
+                '-D',
                 '--clean',
                 '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\bin',
                 '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\plugins',

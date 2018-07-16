@@ -28,14 +28,14 @@ CAN_CTRL = int(0xA5)
 CAN_TAIL = int(0x55)
 PACK_SIZE = int(1024)
 READ_SIZE = int(8)
-FILE_NAME_PCIE_BASE     = str('PcieBaseBoard.bin')
-FILE_NAME_DIGITAL_VIDEO = str('DigitalVideo.bin')
-FILE_NAME_ANALOG_VIDEO  = str('AnalogVideo.bin')
-FILE_NAME_LVDS_IN       = str('LVDSIn.bin')
-FILE_NAME_DIGITAL_IO    = str('IoBoardDigital.bin')
-FILE_NAME_ANALOG_IO     = str('IoBoardAnalog.bin')
-FILE_NAME_POWER         = str('PowerBoard.bin')
-FILE_NAME_AUDIO         = str('AudioBoard.bin')
+FILE_NAME_PCIE_BASE     = str('..//bin//PcieBaseBoard.bin')
+FILE_NAME_DIGITAL_VIDEO = str('..//bin//DigitalVideo.bin')
+FILE_NAME_ANALOG_VIDEO  = str('..//bin//AnalogVideo.bin')
+FILE_NAME_LVDS_IN       = str('..//bin//LVDSIn.bin')
+FILE_NAME_DIGITAL_IO    = str('..//bin//IoBoardDigital.bin')
+FILE_NAME_ANALOG_IO     = str('..//bin//IoBoardAnalog.bin')
+FILE_NAME_POWER         = str('..//bin//PowerBoard.bin')
+FILE_NAME_AUDIO         = str('..//bin//AudioBoard.bin')
 
 E_UPG_CMD_ERASE     = int(0x01)
 E_UPG_CMD_DATA      = int(0x02)
@@ -314,7 +314,6 @@ class ProgramUpdateThread(QThread):
 
     def run(self):
         while True:
-            # QThread.msleep(1000)
             # print('tick2=%d ' % (self.tick))
             if self.refreshBoardFlag == 1:
                 self.refreshBoard()
@@ -516,10 +515,10 @@ class ProgramUpdateThread(QThread):
         data = ''
         for node_id in node_id_all:
             self.send_start_command(self.ser, node_id)
-            time.sleep(0.005)
+            QThread.msleep(5)
             while self.ser.inWaiting() > 0:
                 data = self.ser.read_all()
-            if data != '' :
+            if data != '' and len(data)>40:
                 data = self.find_start_head(data)
                 # print(" ".join(hex(i) for i in data))
 
@@ -687,7 +686,6 @@ class ProgramUpdateThread(QThread):
 
         elif self.Download_state == 2: #send file
             if len(self.node_id_pcie_base_need_program) > 0:
-                # if self.send_file_audio_ret !=0 :kkkkkkkkkkkkkkkkkkkkk
                 self.send_file_pcie_base_tell, self.send_file_pcie_base_ret = self.send_file_data(FILE_NAME_PCIE_BASE, self.send_file_pcie_base_ret, self.send_file_pcie_base_tell, self.node_id_pcie_base_need_program)
 
             if len(self.node_id_digital_video_need_program) > 0:
@@ -867,7 +865,6 @@ class ProgramUpdateThread(QThread):
                     self.send_program_command(self.ser, check_sum_1K, node_id_need_program)
                 #----end-----
                     QThread.msleep(80)
-                    # time.sleep(0.001)
 
 
         elif send_file_state == 3:
@@ -1015,14 +1012,12 @@ class ProgramUpdateThread(QThread):
                 send_data = self.send_command_ctrl_deal(send_data)
                 # print(i)
                 # if(i >= 21):
-                    # sleep(3)
                     # print(send_data)
                 # print(" ".join(hex(i) for i in send_data))
                 ser.write(send_data) #数据写回
                 # input("按回车键继续")
 
             check_sum_1K += sum(f_bin_data)
-            # sleep(0.02)
         # print(f_bin.tell())
         return check_sum_1K
 
