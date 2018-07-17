@@ -292,6 +292,19 @@ class ProgramUpdateThread(QThread):
         self.node_id_audio = list()
         self.node_id_all_exist = list()
 
+            #seq, board_type, file_name, node_idx_exist, node_idx_need_program i
+        self.AllNodeList = [\
+            (3, POWER_BOARD         , FILE_NAME_POWER           , self.node_id_power        , self.node_id_power_need_program),\
+            (1, IO_ANALOG_BOARD     , FILE_NAME_ANALOG_IO       , self.node_id_analog       , self.node_id_analog_need_program),\
+            (0, AUDIO_BOARD         , FILE_NAME_AUDIO           , self.node_id_audio        , self.node_id_audio_need_program),\
+            (2, IO_DIGITAL_BOARD    , FILE_NAME_DIGITAL_IO      , self.node_id_digital      , self.node_id_digital_need_program),\
+            (4, ANALOG_VIDEO_BOARD  , FILE_NAME_ANALOG_VIDEO    , self.node_id_analog_video , self.node_id_analog_video_need_program),\
+            (5, DIGITAL_VIDEO_BOARD , FILE_NAME_DIGITAL_VIDEO   , self.node_id_digital_video, self.node_id_digital_video_need_program),\
+            (6, LVDS_IN_BOARD       , FILE_NAME_LVDS_IN         , self.node_id_lvds_in      , self.node_id_lvds_in_need_program),\
+            (7, PCIE_BASE_BOARD     , FILE_NAME_PCIE_BASE       , self.node_id_pcie_base    , self.node_id_pcie_base_need_program)\
+            ]
+
+
         #----initialize----QTimer 任务
         self.tick = int(0)
         self.timer = QTimer(self)
@@ -343,74 +356,24 @@ class ProgramUpdateThread(QThread):
     #selectNodeID 
     def selectNodeID(self, pressed, input_node_str):
         input_node_id = eval('[%s]'% input_node_str)
-        print(input_node_id)
-        if pressed:
-            print(input_node_str + ' select')
-            if (input_node_id[0] in self.node_id_all_exist):
-                self.node_id_need_program.append(input_node_id[0])
+        # print(input_node_id)
 
-            if (input_node_id[0] in self.node_id_analog):
-                self.node_id_analog_need_program.append(input_node_id[0])
+        for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+            if pressed:
+                if input_node_id[0] in node_idx_exist:
+                    node_idx_need_program.append(input_node_id[0])
+                    if (input_node_id[0] in self.node_id_all_exist):
+                        self.node_id_need_program.append(input_node_id[0])
 
-            elif (input_node_id[0] in self.node_id_digital):
-                self.node_id_digital_need_program.append(input_node_id[0])
+            else:
+                if input_node_id[0] in node_idx_need_program:
+                    node_idx_need_program.remove(input_node_id[0])
+                    if (input_node_id[0] in self.node_id_need_program):
+                        self.node_id_need_program.remove(input_node_id[0])
 
-            elif (input_node_id[0] in self.node_id_audio):
-                self.node_id_audio_need_program.append(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_power):
-                self.node_id_power_need_program.append(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_digital_video):
-                self.node_id_digital_video_need_program.append(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_analog_video):
-                self.node_id_analog_video_need_program.append(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_lvds_in):
-                self.node_id_lvds_in_need_program.append(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_pcie_base):
-                self.node_id_pcie_base_need_program.append(input_node_id[0])
-
-        else:
-            print(input_node_str + ' unselect')
-            if (input_node_id[0] in self.node_id_need_program):
-                self.node_id_need_program.remove(input_node_id[0])
-
-            if (input_node_id[0] in self.node_id_analog_need_program):
-                self.node_id_analog_need_program.remove(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_digital_need_program):
-                self.node_id_digital_need_program.remove(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_audio_need_program):
-                self.node_id_audio_need_program.remove(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_power_need_program):
-                self.node_id_power_need_program.remove(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_digital_video_need_program):
-                self.node_id_digital_video_need_program.remove(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_analog_video_need_program):
-                self.node_id_analog_video_need_program.remove(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_lvds_in_need_program):
-                self.node_id_lvds_in_need_program.remove(input_node_id[0])
-
-            elif (input_node_id[0] in self.node_id_pcie_base_need_program):
-                self.node_id_pcie_base_need_program.remove(input_node_id[0])
-
-        self.node_id_need_program = list(set(self.node_id_need_program))  # 设为集合再设回列表，清除重复数值
-        self.node_id_analog_need_program = list(set(self.node_id_analog_need_program))  # 设为集合再设回列表，清除重复数值
-        self.node_id_digital_need_program = list(set(self.node_id_digital_need_program))  # 设为集合再设回列表，清除重复数值
-        self.node_id_audio_need_program = list(set(self.node_id_audio_need_program))  # 设为集合再设回列表，清除重复数值
-        self.node_id_power_need_program = list(set(self.node_id_power_need_program))  # 设为集合再设回列表，清除重复数值
-        self.node_id_digital_video_need_program = list(set(self.node_id_digital_video_need_program))  # 设为集合再设回列表，清除重复数值
-        self.node_id_analog_video_need_program = list(set(self.node_id_analog_video_need_program))  # 设为集合再设回列表，清除重复数值
-        self.node_id_lvds_in_need_program = list(set(self.node_id_lvds_in_need_program))  # 设为集合再设回列表，清除重复数值
-        self.node_id_pcie_base_need_program = list(set(self.node_id_pcie_base_need_program))  # 设为集合再设回列表，清除重复数值
+        # print(id(self.node_id_need_program))
+        # self.node_id_need_program = list(set(self.node_id_need_program))  # 设为集合再设回列表，清除重复数值, 会改变储存地址
+        # print(id(self.node_id_need_program))
 
         print('\r\nnode_id_need_program:', end=' ')
         print(", ".join(hex(i) for i in self.node_id_need_program))
@@ -478,23 +441,11 @@ class ProgramUpdateThread(QThread):
             self.refresh_singel.emit(2, i, j,' ', 0)
 
         self.node_id_all_exist.clear()
-        self.node_id_audio.clear()
-        self.node_id_analog.clear()
-        self.node_id_digital.clear()
-        self.node_id_power.clear()
-        self.node_id_analog_video.clear()
-        self.node_id_digital_video.clear()
-        self.node_id_lvds_in.clear()
-        self.node_id_pcie_base.clear()
         self.node_id_need_program.clear()
-        self.node_id_analog_need_program.clear()
-        self.node_id_digital_need_program.clear()
-        self.node_id_audio_need_program.clear()
-        self.node_id_power_need_program.clear()
-        self.node_id_digital_video_need_program.clear()
-        self.node_id_analog_video_need_program.clear()
-        self.node_id_lvds_in_need_program.clear()
-        self.node_id_pcie_base_need_program.clear()
+
+        for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+            node_idx_exist.clear()
+            node_idx_need_program.clear()
 
         node_id_all = list(range(0x02, 0x10))
         for node_id_temp in range(0x12, 0x20):
@@ -522,91 +473,17 @@ class ProgramUpdateThread(QThread):
                 data = self.find_start_head(data)
                 # print(" ".join(hex(i) for i in data))
 
-                if len(data) >40:
                 version = self.find_version(data)
-                else:
-                    version = 'boot'
 
-                if data[7] == AUDIO_BOARD:
-                    self.node_id_audio.append(data[6])
-                    self.node_id_all_exist.append(data[6])
-                    if (data[6]>>4) not in self.box_id_exist:
+                for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+                    if data[7] == board_type:
+                        node_idx_exist.append((data[6]))
+                        self.node_id_all_exist.append(data[6])
                         self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 0, version, self.download_select)
-                    if self.download_select == 2:
-                        self.node_id_need_program.append(data[6])
-                        self.node_id_audio_need_program.append(data[6])
-
-
-                elif data[7] == POWER_BOARD:
-                    self.node_id_power.append(data[6])
-                    self.node_id_all_exist.append(data[6])
-                    if (data[6]>>4) not in self.box_id_exist:
-                        self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 3, version, self.download_select)
-                    if self.download_select == 2:
-                        self.node_id_need_program.append(data[6])
-                        self.node_id_power_need_program.append(data[6])
-
-                elif data[7] == IO_ANALOG_BOARD:
-                    self.node_id_analog.append(data[6])
-                    self.node_id_all_exist.append(data[6])
-                    if (data[6]>>4) not in self.box_id_exist:
-                        self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 1, version, self.download_select)
-                    if self.download_select == 2:
-                        self.node_id_need_program.append(data[6])
-                        self.node_id_analog_need_program.append(data[6])
-
-                elif data[7] == IO_DIGITAL_BOARD:
-                    self.node_id_digital.append(data[6])
-                    self.node_id_all_exist.append(data[6])
-                    if (data[6]>>4) not in self.box_id_exist:
-                        self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 2, version, self.download_select)
-                    if self.download_select == 2:
-                        self.node_id_need_program.append(data[6])
-                        self.node_id_digital_need_program.append(data[6])
-
-                elif data[7] == ANALOG_VIDEO_BOARD:
-                    self.node_id_analog_video.append(data[6])
-                    self.node_id_all_exist.append(data[6])
-                    if (data[6]>>4) not in self.box_id_exist:
-                        self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 4, version, self.download_select)
-                    if self.download_select == 2:
-                        self.node_id_need_program.append(data[6])
-                        self.node_id_analog_video_need_program.append(data[6])
-
-                elif data[7] == DIGITAL_VIDEO_BOARD:
-                    self.node_id_digital_video.append(data[6])
-                    self.node_id_all_exist.append(data[6])
-                    if (data[6]>>4) not in self.box_id_exist:
-                        self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 5, version, self.download_select)
-                    if self.download_select == 2:
-                        self.node_id_need_program.append(data[6])
-                        self.node_id_digital_video_need_program.append(data[6])
-
-                elif data[7] == LVDS_IN_BOARD:
-                    self.node_id_lvds_in.append(data[6])
-                    self.node_id_all_exist.append(data[6])
-                    if (data[6]>>4) not in self.box_id_exist:
-                        self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 6, version, self.download_select)
-                    if self.download_select == 2:
-                        self.node_id_need_program.append(data[6])
-                        self.node_id_lvds_in_need_program.append(data[6])
-
-                elif data[7] == PCIE_BASE_BOARD:
-                    self.node_id_pcie_base.append(data[6])
-                    self.node_id_all_exist.append(data[6])
-                    if (data[6]>>4) not in self.box_id_exist:
-                        self.box_id_exist.append(data[6]>>4)
-                    self.refresh_singel.emit(3, data[6], 7, version, self.download_select)
-                    if self.download_select == 2:
-                        self.node_id_need_program.append(data[6])
-                        self.node_id_pcie_base_need_program.append(data[6])
+                        self.refresh_singel.emit(3, data[6], seq, version, self.download_select)
+                        if self.download_select == 2:
+                            self.node_id_need_program.append(data[6])
+                            node_idx_need_program.append((data[6]))
 
                 data = ''
 
@@ -778,7 +655,7 @@ class ProgramUpdateThread(QThread):
                     print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
                     print('正在升级...  ',  end='')
                     print(" ".join(hex(i) for i in node_id_need_program))
-                    self.message_singel.emit('正在升级 ' + file_name + '   ...' ' \r\n')
+                    self.message_singel.emit('正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:
                     print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
 
@@ -910,6 +787,12 @@ class ProgramUpdateThread(QThread):
                 return data[i:i+42]
 
     def find_version(self, data):
+        if len(data) >40:
+            pass
+        else:
+            print('there is no version, maybe in boot')
+            return 'Boot'
+
         year = ((data[29] >> 2)&0x3f)
         month = (((data[29]<<2)&0x0c) | ((data[30]>>6)&0x03))&0x0f
         day = (data[30]>>1)&0x1f
