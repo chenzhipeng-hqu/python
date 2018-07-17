@@ -518,11 +518,14 @@ class ProgramUpdateThread(QThread):
             QThread.msleep(5)
             while self.ser.inWaiting() > 0:
                 data = self.ser.read_all()
-            if data != '' and len(data)>40:
+            if data != '' and len(data)>20:
                 data = self.find_start_head(data)
                 # print(" ".join(hex(i) for i in data))
 
+                if len(data) >40:
                 version = self.find_version(data)
+                else:
+                    version = 'boot'
 
                 if data[7] == AUDIO_BOARD:
                     self.node_id_audio.append(data[6])
