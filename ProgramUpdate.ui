@@ -271,22 +271,6 @@
         <property name="spacing">
          <number>10</number>
         </property>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="DownloadSlect_comboBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>5</horstretch>
-            <verstretch>5</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="inputMethodHints">
-           <set>Qt::ImhPreferLatin</set>
-          </property>
-          <property name="frame">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="8">
          <widget class="QPushButton" name="download_button">
           <property name="enabled">
@@ -557,6 +541,9 @@
          <widget class="QPushButton" name="BoardRefresh_button">
           <property name="text">
            <string>刷新节点</string>
+          </property>
+          <property name="shortcut">
+           <string>F5</string>
           </property>
          </widget>
         </item>
@@ -877,6 +864,56 @@
           </property>
           <property name="tristate">
            <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="ctrl_220V_button">
+          <property name="palette">
+           <palette>
+            <active>
+             <colorrole role="Light">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </active>
+            <inactive>
+             <colorrole role="Light">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </inactive>
+            <disabled>
+             <colorrole role="Light">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </disabled>
+           </palette>
+          </property>
+          <property name="text">
+           <string>220V</string>
+          </property>
+          <property name="shortcut">
+           <string>F4</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

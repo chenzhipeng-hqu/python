@@ -152,6 +152,15 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         #allNodeID_checkBox
         self.allNodeID_checkBox.stateChanged.connect(self.download_select)
 
+        #ctrl_220V_button
+        self.ctrl_220V_button.clicked.connect(self.ctrl_220V)
+
+    #ctrl_220V
+    def ctrl_220V(self, pressed):
+        source = self.sender()
+        # print(source.text())
+        self.ProgramUpdate_thread.send_ctrl_220V_command(pressed)
+
     #allNodeID_checkBox
     def download_select(self, state):
         source = self.sender()
@@ -337,6 +346,38 @@ class ProgramUpdateThread(QThread):
             QThread.msleep(1)
 
             pass
+
+    #send_ctrl_220V_command
+    def send_ctrl_220V_command(self, pressed):
+        if  self.ser.isOpen():
+            self.message_singel.emit('220V状态：%s...\r\n' % pressed)
+            print('220V状态：%s...' % pressed)
+            pass
+        else:
+            self.message_singel.emit('请检查串口并选择节点！\r\n')
+
+        send_data = [0x00, pressed, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+        for node_idx_exist in self.AllNodeList[0][3]:
+            self.send_can_command(node_idx_exist, send_data)
+
+    def send_can_command(self, node_id, data):
+        send = [0xAA, 0xAA,
+                node_id, 0x02, 0x00, 0x00,
+                # data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+                0x08, 0x00, 0x00, 0x00,
+                0x00,
+                0x55 , 0x55
+                ]
+        send = send[0:6]+data+send[6:]
+        send[18] = (send[2]+send[3]+send[14]+sum(data))&0xff
+        send = self.send_command_ctrl_deal(send)
+        print(" ".join(hex(i) for i in send))
+        try:
+            self.ser.write(send)
+        except :
+            print("***打开失败,请检查串口是否被占用或其他异常!!!")
+            self.message_singel.emit("***打开失败,请检查串口是否被占用或其他异常!!!\r\n")
+            return
 
     # download_select
     def downloadSelect(self, download_select):
