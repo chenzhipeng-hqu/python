@@ -279,38 +279,22 @@ class ProgramUpdateThread(QThread):
         self.ser = serial.Serial()  #/dev/ttyUSB0
 
         #node_id_list
-        self.node_id_pcie_base_need_program = list()
-        self.node_id_digital_video_need_program = list()
-        self.node_id_analog_video_need_program = list()
-        self.node_id_lvds_in_need_program = list()
-        self.node_id_digital_need_program = list()
-        self.node_id_analog_need_program = list()
-        self.node_id_power_need_program = list()
-        self.node_id_audio_need_program = list()
         self.node_id_need_program = list()
         self.box_id_need_program = list()
 
         self.box_id_exist = list()
-        self.node_id_pcie_base = list()
-        self.node_id_digital_video = list()
-        self.node_id_analog_video = list()
-        self.node_id_lvds_in = list()
-        self.node_id_digital = list()
-        self.node_id_analog = list()
-        self.node_id_power = list()
-        self.node_id_audio = list()
         self.node_id_all_exist = list()
 
             #seq, board_type, file_name, node_idx_exist, node_idx_need_program i
         self.AllNodeList = [\
-            (3, POWER_BOARD         , FILE_NAME_POWER           , self.node_id_power        , self.node_id_power_need_program),\
-            (1, IO_ANALOG_BOARD     , FILE_NAME_ANALOG_IO       , self.node_id_analog       , self.node_id_analog_need_program),\
-            (0, AUDIO_BOARD         , FILE_NAME_AUDIO           , self.node_id_audio        , self.node_id_audio_need_program),\
-            (2, IO_DIGITAL_BOARD    , FILE_NAME_DIGITAL_IO      , self.node_id_digital      , self.node_id_digital_need_program),\
-            (4, ANALOG_VIDEO_BOARD  , FILE_NAME_ANALOG_VIDEO    , self.node_id_analog_video , self.node_id_analog_video_need_program),\
-            (5, DIGITAL_VIDEO_BOARD , FILE_NAME_DIGITAL_VIDEO   , self.node_id_digital_video, self.node_id_digital_video_need_program),\
-            (6, LVDS_IN_BOARD       , FILE_NAME_LVDS_IN         , self.node_id_lvds_in      , self.node_id_lvds_in_need_program),\
-            (7, PCIE_BASE_BOARD     , FILE_NAME_PCIE_BASE       , self.node_id_pcie_base    , self.node_id_pcie_base_need_program)\
+            ( 0 , AUDIO_BOARD         , FILE_NAME_AUDIO           , list()    , list() ),\
+            ( 1 , IO_ANALOG_BOARD     , FILE_NAME_ANALOG_IO       , list()    , list() ),\
+            ( 2 , IO_DIGITAL_BOARD    , FILE_NAME_DIGITAL_IO      , list()    , list() ),\
+            ( 3 , POWER_BOARD         , FILE_NAME_POWER           , list()    , list() ),\
+            ( 4 , ANALOG_VIDEO_BOARD  , FILE_NAME_ANALOG_VIDEO    , list()    , list() ),\
+            ( 5 , DIGITAL_VIDEO_BOARD , FILE_NAME_DIGITAL_VIDEO   , list()    , list() ),\
+            ( 6 , LVDS_IN_BOARD       , FILE_NAME_LVDS_IN         , list()    , list() ),\
+            ( 7 , PCIE_BASE_BOARD     , FILE_NAME_PCIE_BASE       , list()    , list() )\
             ]
 
 
@@ -357,7 +341,7 @@ class ProgramUpdateThread(QThread):
             self.message_singel.emit('请检查串口并选择节点！\r\n')
 
         send_data = [0x00, pressed, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
-        for node_idx_exist in self.AllNodeList[0][3]:
+        for node_idx_exist in self.AllNodeList[3][3]:
             self.send_can_command(node_idx_exist, send_data)
 
     def send_can_command(self, node_id, data):
@@ -418,14 +402,14 @@ class ProgramUpdateThread(QThread):
 
         print('\r\nnode_id_need_program:', end=' ')
         print(", ".join(hex(i) for i in self.node_id_need_program))
-        print('  1、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.node_id_analog_need_program))
-        print('  2、数字IO板卡  : %s' % " ".join(hex(i) for i in self.node_id_digital_need_program))
-        print('  3、音频板卡    : %s' % " ".join(hex(i) for i in self.node_id_audio_need_program))
-        print('  4、电源控制板卡: %s' % " ".join(hex(i) for i in self.node_id_power_need_program))
-        print('  5、数字信号板卡: %s' % " ".join(hex(i) for i in self.node_id_digital_video_need_program))
-        print('  6、模拟信号板卡: %s' % " ".join(hex(i) for i in self.node_id_analog_video_need_program))
-        print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.node_id_lvds_in_need_program))
-        print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.node_id_pcie_base_need_program))
+        print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[0][4]))
+        print('  2、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][4]))
+        print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[2][4]))
+        print('  4、电源控制板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[3][4]))
+        print('  5、模拟信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[4][4]))
+        print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][4]))
+        print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][4]))
+        print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][4]))
 
     # openSerial
     def openSerial(self, COMn):
@@ -530,14 +514,14 @@ class ProgramUpdateThread(QThread):
 
         print('\r\nnode_id_all_exist:', end=' ')
         print(", ".join(hex(i) for i in self.node_id_all_exist))
-        print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.node_id_audio))
-        print('  2、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.node_id_analog))
-        print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.node_id_digital))
-        print('  4、电源控制板卡: %s' % " ".join(hex(i) for i in self.node_id_power))
-        print('  5、模拟信号板卡: %s' % " ".join(hex(i) for i in self.node_id_analog_video))
-        print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.node_id_digital_video))
-        print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.node_id_lvds_in))
-        print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.node_id_pcie_base))
+        print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[0][3]))
+        print('  2、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][3]))
+        print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[2][3]))
+        print('  4、电源控制板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[3][3]))
+        print('  5、模拟信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[4][3]))
+        print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][3]))
+        print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][3]))
+        print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][3]))
         self.message_singel.emit(' --> 完成.\r\n')
 
         self.refreshBoardFlag = 0
@@ -606,29 +590,29 @@ class ProgramUpdateThread(QThread):
             pass
 
         elif self.Download_state == 2: #send file
-            if len(self.node_id_pcie_base_need_program) > 0:
-                self.send_file_pcie_base_tell, self.send_file_pcie_base_ret = self.send_file_data(FILE_NAME_PCIE_BASE, self.send_file_pcie_base_ret, self.send_file_pcie_base_tell, self.node_id_pcie_base_need_program)
+            if len(self.AllNodeList[7][4]) > 0:
+                self.send_file_pcie_base_tell, self.send_file_pcie_base_ret = self.send_file_data(self.AllNodeList[7][2], self.send_file_pcie_base_ret, self.send_file_pcie_base_tell, self.AllNodeList[7][4])
 
-            if len(self.node_id_digital_video_need_program) > 0:
-                self.send_file_digital_video_tell, self.send_file_digital_video_ret = self.send_file_data(FILE_NAME_DIGITAL_VIDEO, self.send_file_digital_video_ret, self.send_file_digital_video_tell, self.node_id_digital_video_need_program)
+            if len(self.AllNodeList[5][4]) > 0:
+                self.send_file_digital_video_tell, self.send_file_digital_video_ret = self.send_file_data(self.AllNodeList[5][2], self.send_file_digital_video_ret, self.send_file_digital_video_tell, self.AllNodeList[5][4])
 
-            if len(self.node_id_analog_video_need_program) > 0:
-                self.send_file_analog_video_tell, self.send_file_analog_video_ret = self.send_file_data(FILE_NAME_ANALOG_VIDEO, self.send_file_analog_video_ret, self.send_file_analog_video_tell, self.node_id_analog_video_need_program)
+            if len(self.AllNodeList[4][4]) > 0:
+                self.send_file_analog_video_tell, self.send_file_analog_video_ret = self.send_file_data(self.AllNodeList[4][2], self.send_file_analog_video_ret, self.send_file_analog_video_tell, self.AllNodeList[4][4])
 
-            if len(self.node_id_lvds_in_need_program) > 0:
-                self.send_file_lvds_in_tell, self.send_file_lvds_in_ret = self.send_file_data(FILE_NAME_LVDS_IN, self.send_file_lvds_in_ret, self.send_file_lvds_in_tell, self.node_id_lvds_in_need_program)
+            if len(self.AllNodeList[6][4]) > 0:
+                self.send_file_lvds_in_tell, self.send_file_lvds_in_ret = self.send_file_data(self.AllNodeList[6][4], self.send_file_lvds_in_ret, self.send_file_lvds_in_tell, self.AllNodeList[6][4])
 
-            if len(self.node_id_digital_need_program) > 0:
-                self.send_file_io_digital_tell, self.send_file_io_digital_ret = self.send_file_data(FILE_NAME_DIGITAL_IO, self.send_file_io_digital_ret, self.send_file_io_digital_tell, self.node_id_digital_need_program)
+            if len(self.AllNodeList[2][4]) > 0:
+                self.send_file_io_digital_tell, self.send_file_io_digital_ret = self.send_file_data(self.AllNodeList[2][2], self.send_file_io_digital_ret, self.send_file_io_digital_tell, self.AllNodeList[2][4])
 
-            if len(self.node_id_analog_need_program) > 0:
-                self.send_file_io_analog_tell, self.send_file_io_analog_ret = self.send_file_data(FILE_NAME_ANALOG_IO, self.send_file_io_analog_ret, self.send_file_io_analog_tell, self.node_id_analog_need_program)
+            if len(self.AllNodeList[1][4]) > 0:
+                self.send_file_io_analog_tell, self.send_file_io_analog_ret = self.send_file_data(self.AllNodeList[1][2], self.send_file_io_analog_ret, self.send_file_io_analog_tell, self.AllNodeList[1][4])
 
-            if len(self.node_id_power_need_program) > 0:
-                self.send_file_power_tell, self.send_file_power_ret = self.send_file_data(FILE_NAME_POWER, self.send_file_power_ret, self.send_file_power_tell, self.node_id_power_need_program)
+            if len(self.AllNodeList[3][4]) > 0:
+                self.send_file_power_tell, self.send_file_power_ret = self.send_file_data(self.AllNodeList[3][2], self.send_file_power_ret, self.send_file_power_tell, self.AllNodeList[3][4])
 
-            if len(self.node_id_audio_need_program) > 0:
-                self.send_file_audio_tell, self.send_file_audio_ret = self.send_file_data(FILE_NAME_AUDIO, self.send_file_audio_ret, self.send_file_audio_tell, self.node_id_audio_need_program)
+            if len(self.AllNodeList[0][4]) > 0:
+                self.send_file_audio_tell, self.send_file_audio_ret = self.send_file_data(self.AllNodeList[0][2], self.send_file_audio_ret, self.send_file_audio_tell, self.AllNodeList[0][4])
 
             if self.send_file_pcie_base_ret == 0 and self.send_file_digital_video_ret == 0 and self.send_file_analog_video_ret == 0 and self.send_file_lvds_in_ret == 0 and self.send_file_io_digital_ret == 0 and self.send_file_io_analog_ret == 0 and self.send_file_power_ret == 0 and self.send_file_audio_ret == 0:
                 self.Download_state = 3
