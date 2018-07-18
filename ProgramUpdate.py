@@ -808,6 +808,10 @@ class ProgramUpdateThread(QThread):
                     self.message_singel.emit('正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:
                     print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
+                    self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
+                    print('当前工作路径为：%s ' % (os.getcwd())
+                    os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
+                    print('切换后工作路径为：%s ' % (os.getcwd())
 
         # # print("size_high %d, size_low %d, size_low_8_high %d  , size_low_8_low %d " % (size_high, size_low, size_low_8_high, size_low_8_low))
 
@@ -1118,6 +1122,9 @@ if __name__ == "__main__":
         default_encoding = sys.stdout.encoding
     else:
         default_encoding = locale.getpreferredencoding()
+
+    print('当前工作路径为：%s ' % (os.getcwd())
+    print('当前运行程序为：%s ' % (sys.argv[0]))
 
     #每一pyqt5应用程序必须创建一个应用程序对象。sys.argv参数是一个列表，从命令行输入参数。
     app = QApplication(sys.argv)

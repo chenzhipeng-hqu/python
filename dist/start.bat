@@ -1,1 +1,1 @@
-start ProgramUpdate/ProgramUpdate.exe
+start ./ProgramUpdate/ProgramUpdate.exe
