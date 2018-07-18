@@ -354,8 +354,15 @@ class ProgramUpdateThread(QThread):
                         self.send_reset_iwdg_command(self.ser, node_id)
                         self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                         data = ''
+                        reboot_time = time.time()
                         while True:
+                            while (time.time() - reboot_time) > 15:
+                                self.send_reset_iwdg_command(self.ser, node_id)
+                                self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
+                                reboot_time = time.time()
+
                             while self.ser.inWaiting() > 0:
+                                reboot_time = time.time()
                                 data = self.ser.read_all()
                                 # print(data)
                             if data != '' and len(data) > 41 and data [2]< 0x90 and data[23] == node_id:
@@ -669,8 +676,15 @@ class ProgramUpdateThread(QThread):
             for node_id in self.node_id_need_program:
                 self.send_reset_iwdg_command(self.ser, node_id)
                 self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
+                reboot_time = time.time()
                 while True:
+                    while (time.time() - reboot_time) > 15:
+                        self.send_reset_iwdg_command(self.ser, node_id)
+                        self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
+                        reboot_time = time.time()
+
                     while self.ser.inWaiting() > 0:
+                        reboot_time = time.time()
                         data = self.ser.read_all()
                         # print(data)
                     if data != '' and len(data) > 41 and data [2]< 0x90 and data[23] == node_id:
@@ -805,13 +819,13 @@ class ProgramUpdateThread(QThread):
                     print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
                     print('正在升级...  ',  end='')
                     print(" ".join(hex(i) for i in node_id_need_program))
-                    self.message_singel.emit('正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
+                    self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:
                     print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
                     self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
-                    print('当前工作路径为：%s ' % (os.getcwd())
+                    print('当前工作路径为：%s ' % (os.getcwd()))
                     os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
-                    print('切换后工作路径为：%s ' % (os.getcwd())
+                    print('切换后工作路径为：%s ' % (os.getcwd()))
 
         # # print("size_high %d, size_low %d, size_low_8_high %d  , size_low_8_low %d " % (size_high, size_low, size_low_8_high, size_low_8_low))
 
@@ -1123,7 +1137,7 @@ if __name__ == "__main__":
     else:
         default_encoding = locale.getpreferredencoding()
 
-    print('当前工作路径为：%s ' % (os.getcwd())
+    print('当前工作路径为：%s ' % (os.getcwd()))
     print('当前运行程序为：%s ' % (sys.argv[0]))
 
     #每一pyqt5应用程序必须创建一个应用程序对象。sys.argv参数是一个列表，从命令行输入参数。
