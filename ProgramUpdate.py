@@ -420,7 +420,7 @@ class ProgramUpdateThread(QThread):
                             print(time.time() - reboot_time)
                             reboot_time = time.time()
                         if len(node_idx_need_program) <= 0:
-                            QThread.sleep(2)
+                            QThread.sleep(5)
                             print('烧录 OK， 请关闭软件!....')
                             if seq < 7 :
                                 self.Download_state = 1
