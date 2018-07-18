@@ -347,6 +347,9 @@ class ProgramUpdateThread(QThread):
 
         if self.Download_state == 1: #---- 复位看门狗---
             for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+                print('reset iwdg: seq=%d' % (seq))
+                print(id(node_idx_need_program))
+                print(" ".join(hex(i) for i in node_idx_need_program))
                 if len(node_idx_need_program)>0:
                     print(" ".join(hex(i) for i in node_idx_need_program))
 
@@ -405,7 +408,8 @@ class ProgramUpdateThread(QThread):
 
         elif self.Download_state == 3: #----start--- 发送重启命令
             for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
-                print('seq=%d' % (seq))
+                print('reboot: seq=%d' % (seq))
+                print(id(node_idx_need_program))
                 print(" ".join(hex(i) for i in node_idx_need_program))
                 if len(node_idx_need_program)>0:
                     self.send_command_reboot(self.ser, node_idx_need_program)
@@ -432,6 +436,7 @@ class ProgramUpdateThread(QThread):
                             if seq < 7 :
                                 self.Download_state = 1
                                 return
+
                     self.Download_state = 1
                     break
 
