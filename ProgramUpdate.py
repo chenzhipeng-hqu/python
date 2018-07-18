@@ -316,7 +316,7 @@ class ProgramUpdateThread(QThread):
         self.download_select = 0
         self.refreshBoardFlag = 0
         self.send_file_state = int(1)
-        self.Download_state = int(1)
+        self.Download_state = int(0)
 
     def run(self):
         while True:
@@ -325,11 +325,128 @@ class ProgramUpdateThread(QThread):
                 self.refreshBoard()
 
             if self.download_process_flag == 1:
-                self.download_process()
+                # self.download_process()
+                self.download_process2()
 
             QThread.msleep(1)
 
             pass
+
+    def download_process2(self):
+        if self.Download_state == 0: #---- 初始化数据---
+            if  self.ser.isOpen():
+                self.message_singel.emit('下载程序...\r\n')
+                self.run_time = nowTime()
+                self.Download_state = 1
+            else:
+                print('please select uart and open it!')
+                self.message_singel.emit('请检查串口并选择节点！\r\n')
+                self.download_process_flag = 0
+                self.Download_state = 1
+                return
+
+        if self.Download_state == 1: #---- 复位看门狗---
+            for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+                if len(node_idx_need_program)>0:
+                    print(" ".join(hex(i) for i in node_idx_need_program))
+
+                    for node_id in node_idx_need_program:
+                        self.send_reset_iwdg_command(self.ser, node_id)
+                        self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
+                        data = ''
+                        while True:
+                            while self.ser.inWaiting() > 0:
+                                data = self.ser.read_all()
+                                # print(data)
+                            if data != '' and len(data) > 41 and data [2]< 0x90 and data[23] == node_id:
+                                # print(" ".join(hex(i) for i in data))
+                                print("重启成功 节点 --> 0x%02X" % (data[23]))
+                                self.message_singel.emit('重启成功 --> ' + str(hex(data[23])) + ' \r\n')
+
+                                self.send_start_command(self.ser, node_id) #------- 发送启动命令
+                                QThread.msleep(1)
+                                self.send_erase_commane(self.ser, node_id) #------- 发送擦除扇区命令
+                                QThread.msleep(1)
+                                break;
+
+                    self.send_file_ret = 1
+                    QThread.sleep(2)
+                    self.Download_state = 2
+                    self.send_file_tell = -1
+                    break
+                if seq == 7 and len(node_idx_need_program) <=0:
+                    print('seq=%d' % (seq))
+                    print('升级结束，请重启机箱，并确认各板卡绿灯全亮！')
+                    self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
+                    self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！ ')
+                    self.Download_state = 0
+                    self.download_process_flag = 0
+
+
+
+        elif self.Download_state == 2: #send file
+            for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+                # print("1")
+                if len(node_idx_need_program)>0:
+                    # print("2")
+                    # print(" ".join(hex(i) for i in node_idx_need_program))
+                    self.send_file_tell, self.send_file_ret = self.send_file_data(file_name, self.send_file_ret, self.send_file_tell, node_idx_need_program)
+                    if self.send_file_ret == 0 :
+                        self.Download_state = 3
+                    break;
+                # print('send_file_ret=%d' % (self.send_file_ret))
+
+        elif self.Download_state == 3: #----start--- 发送重启命令
+            for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+                print('seq=%d' % (seq))
+                print(" ".join(hex(i) for i in node_idx_need_program))
+                if len(node_idx_need_program)>0:
+                    self.send_command_reboot(self.ser, node_idx_need_program)
+                    reboot_time = time.time()
+                    print('reboot_time=%d' % reboot_time)
+                    self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
+                    while (time.time() - reboot_time) < 20:
+                        while self.ser.inWaiting() > 0:
+                            data = self.ser.read_all()
+                            QThread.msleep(1)
+                            # print(data)
+                        if data != '' and len(data) > 40 and data[2]< 0x90 and data[23] in node_idx_need_program:
+                            print("升级成功 --> 0x%02X" % (data[23]))
+                            self.message_singel.emit('升级成功 --> ' + str(hex(data[23])) + ' \r\n')
+                            print(node_idx_need_program)
+                            node_idx_need_program.remove(data[23])
+                            print(node_idx_need_program)
+                            data = ''
+                            print(time.time() - reboot_time)
+                            reboot_time = time.time()
+                        if len(node_idx_need_program) <= 0:
+                            QThread.sleep(2)
+                            print('烧录 OK， 请关闭软件!....')
+                            if seq < 7 :
+                                self.Download_state = 1
+                                return
+                    self.Download_state = 1
+                    break
+
+                    # if len(node_idx_need_program) <= 0:
+                        # print('烧录 OK， 请关闭软件!....')
+                        # QThread.sleep(1)
+                        # break
+                        # if seq < 7 and len(node_idx_need_program) <=0 and len(self.AllNodeList[seq+1][4])>0:
+                            # self.Download_state = 1
+                            # break
+                if seq >= 7 and len(node_idx_need_program) <=0:
+                    # print('download_process_flag=%d' % (self.download_process_flag))
+                    print('升级结束，请重启机箱，并确认各板卡绿灯全亮！')
+                    self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
+                    self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！ ')
+                    self.Download_state = 0
+                    self.download_process_flag = 0
+
+                    # node_idx_need_program.clear()
+
+
+
 
     #send_ctrl_220V_command
     def send_ctrl_220V_command(self, pressed):
@@ -421,10 +538,12 @@ class ProgramUpdateThread(QThread):
                 self.message_singel.emit('打开成功 -> '+ COMn + '\r\n')
                 ret = 0
             else:
+                self.download_process_flag = 0
                 print("打开失败,请检查串口后重启程序!")
                 self.message_singel.emit("打开失败,请检查串口后重启程序!\r\n")
                 ret = 1
         except:
+            self.download_process_flag = 0
             print("***打开失败,请检查串口是否被占用或其他异常!!!")
             self.message_singel.emit("***打开失败,请检查串口是否被占用或其他异常!!!\r\n")
             ret = 1
@@ -446,6 +565,9 @@ class ProgramUpdateThread(QThread):
             print("***打开失败,请检查串口是否被占用或其他异常!!!")
             self.message_singel.emit("***打开失败,请检查串口是否被占用或其他异常!!!\r\n")
             ret = 1
+        finally:
+            self.download_process_flag = 0
+
         return ret
 
     #BoardRefresh_button
@@ -527,6 +649,9 @@ class ProgramUpdateThread(QThread):
         self.refreshBoardFlag = 0
 
     def download_process(self):
+
+        if self.Download_state == 0: #---- 初始化数据---
+            self.Download_state = 1
 
         if self.Download_state == 1: #---- 复位看门狗---
             if  self.ser.isOpen() and len(self.node_id_need_program) > 0:
