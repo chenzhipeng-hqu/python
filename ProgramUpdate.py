@@ -600,7 +600,7 @@ class ProgramUpdateThread(QThread):
                 self.send_file_analog_video_tell, self.send_file_analog_video_ret = self.send_file_data(self.AllNodeList[4][2], self.send_file_analog_video_ret, self.send_file_analog_video_tell, self.AllNodeList[4][4])
 
             if len(self.AllNodeList[6][4]) > 0:
-                self.send_file_lvds_in_tell, self.send_file_lvds_in_ret = self.send_file_data(self.AllNodeList[6][4], self.send_file_lvds_in_ret, self.send_file_lvds_in_tell, self.AllNodeList[6][4])
+                self.send_file_lvds_in_tell, self.send_file_lvds_in_ret = self.send_file_data(self.AllNodeList[6][2], self.send_file_lvds_in_ret, self.send_file_lvds_in_tell, self.AllNodeList[6][4])
 
             if len(self.AllNodeList[2][4]) > 0:
                 self.send_file_io_digital_tell, self.send_file_io_digital_ret = self.send_file_data(self.AllNodeList[2][2], self.send_file_io_digital_ret, self.send_file_io_digital_tell, self.AllNodeList[2][4])
