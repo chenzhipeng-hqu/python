@@ -943,11 +943,17 @@ class ProgramUpdateThread(QThread):
             print('there is no version, maybe in boot')
             return 'Boot'
 
-        year = ((data[29] >> 2)&0x3f)
-        month = (((data[29]<<2)&0x0c) | ((data[30]>>6)&0x03))&0x0f
-        day = (data[30]>>1)&0x1f
-        hour = ((data[30]<<4)&0x10) | data[31]>>4
-        minute = ((data[31]&0x0f)<<2) | ((data[32]>>6)&0x0f)
+        if data[28] == DIGITAL_VIDEO_BOARD or data[28] == LVDS_IN_BOARD or data[28] == ANALOG_VIDEO_BOARD:
+            year = ((data[31] >> 2)&0x3f)
+            month = (((data[31]<<2)&0x0c) | ((data[32]>>6)&0x03))&0x0f
+            day = (data[32]>>1)&0x1f
+        else:
+            year = ((data[29] >> 2)&0x3f)
+            month = (((data[29]<<2)&0x0c) | ((data[30]>>6)&0x03))&0x0f
+            day = (data[30]>>1)&0x1f
+            hour = ((data[30]<<4)&0x10) | data[31]>>4
+            minute = ((data[31]&0x0f)<<2) | ((data[32]>>6)&0x0f)
+
         version = str(year)+'_'+str(month)+'_'+str(day)
         # print('year=%d, month=%d, day=%d, hour=%d, minute=%d' % (year, month, day, hour, minute))
         return version
