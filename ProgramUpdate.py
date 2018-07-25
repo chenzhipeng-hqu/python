@@ -36,6 +36,9 @@ FILE_NAME_DIGITAL_IO    = str('..//bin//IoBoardDigital.bin')
 FILE_NAME_ANALOG_IO     = str('..//bin//IoBoardAnalog.bin')
 FILE_NAME_POWER         = str('..//bin//PowerBoard.bin')
 FILE_NAME_AUDIO         = str('..//bin//AudioBoard.bin')
+FILE_NAME_ANALOG_FPGA   = str('..//bin//AudioBoard.bin')
+FILE_NAME_DIGITAL_FPGA  = str('..//bin//AudioBoard.bin')
+FILE_NAME_LVDS_FPGA     = str('..//bin//AudioBoard.bin')
 
 E_UPG_CMD_ERASE     = int(0x01)
 E_UPG_CMD_DATA      = int(0x02)
@@ -53,6 +56,9 @@ ANALOG_VIDEO_BOARD  = int(0x07)
 DIGITAL_VIDEO_BOARD = int(0x08)
 LVDS_IN_BOARD       = int(0x09)
 PCIE_BASE_BOARD     = int(0x0a)
+ANALOG_FPGA_BOARD   = int(0x07)
+DIGITAL_FPGA_BOARD  = int(0x08)
+LVDS_FPGA_BOARD     = int(0x09)
 
 nowTime = lambda:int(round(time.time()*1000))
 
@@ -93,16 +99,16 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Light, brush)
         for i in range(8):
-            for j in range(8):
+            for j in range(11):
                 # self.NodeID_button.append(QPushButton(hex(i*16+j), self))
                 self.NodeID_button.append(QPushButton(self.gridLayoutWidget_2))
-                self.NodeID_button[i*8+j].setEnabled(False)
-                self.NodeID_button[i*8+j].setText("")
-                self.NodeID_button[i*8+j].setCheckable(True)
-                self.NodeID_button[i*8+j].setFlat(True)
-                self.NodeID_button[i*8+j].setPalette(palette)
-                self.NodeID_button[i*8+j].clicked[bool].connect(self.selectNodeID)
-                self.gridLayout_3.addWidget(self.NodeID_button[i*8+j], j+2, i+1, 1, 1)
+                self.NodeID_button[i*11+j].setEnabled(False)
+                self.NodeID_button[i*11+j].setText("")
+                self.NodeID_button[i*11+j].setCheckable(True)
+                self.NodeID_button[i*11+j].setFlat(True)
+                self.NodeID_button[i*11+j].setPalette(palette)
+                self.NodeID_button[i*11+j].clicked[bool].connect(self.selectNodeID)
+                self.gridLayout_3.addWidget(self.NodeID_button[i*11+j], j+2, i+1, 1, 1)
 
             self.BoxID_checkBox.append(QCheckBox('机箱 '+str(i), self.gridLayoutWidget_2))
             self.BoxID_checkBox[i].setEnabled(False)
@@ -240,10 +246,10 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             is_down = True
 
         if cmd == 1:  # clear node_id
-            self.NodeID_button[i*8+j].setText('    ')
-            self.NodeID_button[i*8+j].setCheckable(False)
-            self.NodeID_button[i*8+j].setEnabled(False)
-            self.NodeID_button[i*8+j].setFlat(True)
+            self.NodeID_button[i*11+j].setText('    ')
+            self.NodeID_button[i*11+j].setCheckable(False)
+            self.NodeID_button[i*11+j].setEnabled(False)
+            self.NodeID_button[i*11+j].setFlat(True)
             # self.NodeID_button[i*8+j].clicked[bool].connect(self.selectNodeID)
             # self.NodeID_button[i*8+j].clicked[bool].disconnect(self.selectNodeID)
 
@@ -255,12 +261,15 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         if cmd == 3:  # set node_id
             # print('cmd=%d, i=0x%02X, j=%d' % (cmd, i, j))
-            self.NodeID_button[(i>>4)*8+j].setFlat(False)
-            self.NodeID_button[(i>>4)*8+j].setText(str(version))
-            self.NodeID_button[(i>>4)*8+j].setCheckable(True)
-            self.NodeID_button[(i>>4)*8+j].setChecked(is_down)
-            self.NodeID_button[(i>>4)*8+j].setEnabled(True)
-            self.NodeID_button[(i>>4)*8+j].id_ = i
+            self.NodeID_button[(i>>4)*11+j].setFlat(False)
+            self.NodeID_button[(i>>4)*11+j].setText(str(version))
+            self.NodeID_button[(i>>4)*11+j].setCheckable(True)
+            self.NodeID_button[(i>>4)*11+j].setChecked(is_down)
+            self.NodeID_button[(i>>4)*11+j].setEnabled(True)
+            if j >= 8 :
+                self.NodeID_button[(i>>4)*11+j].id_ = i | 0x80   # 最高位置1 表示FPGA板
+            else:
+                self.NodeID_button[(i>>4)*11+j].id_ = i
             # self.NodeID_button[(i>>4)*8+j].clicked[bool].connect(self.selectNodeID)
             # self.BoardTypeUI.BoxID_button[(i>>4)].setText('Box '+str(i>>4))
             self.BoxID_checkBox[(i>>4)].setCheckable(True)
@@ -277,6 +286,9 @@ class ProgramUpdateThread(QThread):
     def __init__(self):
         super(ProgramUpdateThread, self).__init__()
         self.ser = serial.Serial()  #/dev/ttyUSB0
+        self.data_receive = ''
+        self.wait_receive = int(1)
+        self.can_cmd = list()
 
         #node_id_list
         self.node_id_need_program = list()
@@ -287,14 +299,17 @@ class ProgramUpdateThread(QThread):
 
             #seq, board_type, file_name, node_idx_exist, node_idx_need_program i
         self.AllNodeList = [\
-            ( 0 , AUDIO_BOARD         , FILE_NAME_AUDIO           , list()    , list() ),\
-            ( 1 , IO_ANALOG_BOARD     , FILE_NAME_ANALOG_IO       , list()    , list() ),\
-            ( 2 , IO_DIGITAL_BOARD    , FILE_NAME_DIGITAL_IO      , list()    , list() ),\
-            ( 3 , POWER_BOARD         , FILE_NAME_POWER           , list()    , list() ),\
-            ( 4 , ANALOG_VIDEO_BOARD  , FILE_NAME_ANALOG_VIDEO    , list()    , list() ),\
-            ( 5 , DIGITAL_VIDEO_BOARD , FILE_NAME_DIGITAL_VIDEO   , list()    , list() ),\
-            ( 6 , LVDS_IN_BOARD       , FILE_NAME_LVDS_IN         , list()    , list() ),\
-            ( 7 , PCIE_BASE_BOARD     , FILE_NAME_PCIE_BASE       , list()    , list() )\
+            ( 0     , AUDIO_BOARD         , FILE_NAME_AUDIO           , list()    , list() ),\
+            ( 1     , IO_ANALOG_BOARD     , FILE_NAME_ANALOG_IO       , list()    , list() ),\
+            ( 2     , IO_DIGITAL_BOARD    , FILE_NAME_DIGITAL_IO      , list()    , list() ),\
+            ( 3     , POWER_BOARD         , FILE_NAME_POWER           , list()    , list() ),\
+            ( 4     , ANALOG_VIDEO_BOARD  , FILE_NAME_ANALOG_VIDEO    , list()    , list() ),\
+            ( 5     , DIGITAL_VIDEO_BOARD , FILE_NAME_DIGITAL_VIDEO   , list()    , list() ),\
+            ( 6     , LVDS_IN_BOARD       , FILE_NAME_LVDS_IN         , list()    , list() ),\
+            ( 7     , PCIE_BASE_BOARD     , FILE_NAME_PCIE_BASE       , list()    , list() ),\
+            ( 8     , ANALOG_FPGA_BOARD   , FILE_NAME_ANALOG_FPGA     , list()    , list() ),\
+            ( 9     , DIGITAL_FPGA_BOARD  , FILE_NAME_DIGITAL_FPGA    , list()    , list() ),\
+            ( 10    , LVDS_FPGA_BOARD     , FILE_NAME_LVDS_FPGA       , list()    , list() )\
             ]
 
 
@@ -328,6 +343,30 @@ class ProgramUpdateThread(QThread):
                 # self.download_process()
                 self.download_process2()
 
+            if self.data_receive != '':
+                self.data_receive = self.find_can_command_format(self.data_receive)
+                self.data_receive = ''
+
+                # if len(self.can_cmd) > 0:
+                i = int(0)
+                self.lvds_rx_data = list()
+                while i < len(self.can_cmd):
+                    dat = self.can_cmd[i]
+                    print(" ".join(hex(k) for k in dat))
+                    if dat[3] == 0x02:  #PDO1（接收）
+                        pass
+                    elif dat[3] == 0x01: #PDO1（发送）
+                        if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
+                            if dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
+                                self.lvds_rx_data.append(dat[10])
+                                self.lvds_rx_data.append(dat[11])
+                                self.lvds_rx_data.append(dat[12])
+                                self.lvds_rx_data.append(dat[13])
+                        pass
+                    self.can_cmd.remove(dat)
+                print(bytes(self.lvds_rx_data))
+
+
             QThread.msleep(1)
 
             pass
@@ -358,6 +397,7 @@ class ProgramUpdateThread(QThread):
                         self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                         data = ''
                         reboot_time = time.time()
+                        self.wait_receive = 0
                         while True:
                             while (time.time() - reboot_time) > 15:
                                 self.send_reset_iwdg_command(self.ser, node_id)
@@ -378,6 +418,7 @@ class ProgramUpdateThread(QThread):
                                 self.send_erase_commane(self.ser, node_id) #------- 发送擦除扇区命令
                                 QThread.msleep(1)
                                 break;
+                        self.wait_receive = 1
 
                     self.send_file_ret = 1
                     QThread.sleep(2)
@@ -416,6 +457,7 @@ class ProgramUpdateThread(QThread):
                     reboot_time = time.time()
                     print('reboot_time=%d' % reboot_time)
                     self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
+                    self.wait_receive = 0
                     while (time.time() - reboot_time) < 20:
                         while self.ser.inWaiting() > 0:
                             data = self.ser.read_all()
@@ -437,6 +479,7 @@ class ProgramUpdateThread(QThread):
                                 self.Download_state = 1
                                 return
 
+                    self.wait_receive = 1
                     self.Download_state = 1
                     break
 
@@ -510,19 +553,35 @@ class ProgramUpdateThread(QThread):
     #selectNodeID 
     def selectNodeID(self, pressed, input_node_str):
         input_node_id = eval('[%s]'% input_node_str)
-        # print(input_node_id)
+        print(", ".join(hex(i) for i in input_node_id))
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+            # print(seq)
+            # print(node_idx_exist)
             if pressed:
-                if input_node_id[0] in node_idx_exist:
+                if seq < 8 and input_node_id[0] in node_idx_exist:
                     node_idx_need_program.append(input_node_id[0])
                     if (input_node_id[0] in self.node_id_all_exist):
                         self.node_id_need_program.append(input_node_id[0])
+                elif seq >= 8 and input_node_id[0] >= 0x80:
+                    # print(input_node_id[0])
+                    if input_node_id[0]&0x7f in node_idx_exist:
+                        input_node_id[0] = input_node_id[0]&0x7f
+                        node_idx_need_program.append(input_node_id[0])
+                        if (input_node_id[0] in self.node_id_all_exist):
+                            self.node_id_need_program.append(input_node_id[0])
+
 
             else:
-                if input_node_id[0] in node_idx_need_program:
-                    node_idx_need_program.remove(input_node_id[0])
+                if seq < 8 and input_node_id[0] in node_idx_need_program:
                     if (input_node_id[0] in self.node_id_need_program):
+                        node_idx_need_program.remove(input_node_id[0])
+                        self.node_id_need_program.remove(input_node_id[0])
+                elif input_node_id[0] >= 0x80 and seq >= 8 :
+                    # input_node_id[0] = input_node_id[0]&0x7f
+                    if input_node_id[0]&0x7f in node_idx_need_program:
+                        input_node_id[0] = input_node_id[0]&0x7f
+                        node_idx_need_program.remove(input_node_id[0])
                         self.node_id_need_program.remove(input_node_id[0])
 
         # print(id(self.node_id_need_program))
@@ -539,6 +598,9 @@ class ProgramUpdateThread(QThread):
         print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][4]))
         print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][4]))
         print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][4]))
+        print('  9、模拟FPGA板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[8][4]))
+        print('  10、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[9][4]))
+        print('  11、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[10][4]))
 
     # openSerial
     def openSerial(self, COMn):
@@ -595,7 +657,7 @@ class ProgramUpdateThread(QThread):
 
         # print('refreshBoardFlag=%d ' % (self.refreshBoardFlag))
         for i in range(8):
-            for j in range(8):
+            for j in range(11):
                 self.refresh_singel.emit(1, i, j, ' ', 0)
             self.refresh_singel.emit(2, i, j,' ', 0)
 
@@ -623,6 +685,7 @@ class ProgramUpdateThread(QThread):
             node_id_all.append(node_id_temp)
 
         data = ''
+        self.wait_receive = 0
         for node_id in node_id_all:
             self.send_start_command(self.ser, node_id)
             QThread.msleep(5)
@@ -632,19 +695,28 @@ class ProgramUpdateThread(QThread):
                 data = self.find_start_head(data)
                 # print(" ".join(hex(i) for i in data))
 
-                version = self.find_version(data)
+                version_mcu, version_fpga = self.find_version(data)
 
                 for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
-                    if data[7] == board_type:
+                    if seq < 8 and data[7] == board_type:
                         node_idx_exist.append((data[6]))
                         self.node_id_all_exist.append(data[6])
                         self.box_id_exist.append(data[6]>>4)
-                        self.refresh_singel.emit(3, data[6], seq, version, self.download_select)
+                        self.refresh_singel.emit(3, data[6], seq, version_mcu, self.download_select)
+                        if self.download_select == 2:
+                            self.node_id_need_program.append(data[6])
+                            node_idx_need_program.append((data[6]))
+                    elif seq >=8 and data[7] == board_type:
+                        node_idx_exist.append((data[6]))
+                        self.node_id_all_exist.append(data[6])
+                        self.box_id_exist.append(data[6]>>4)
+                        self.refresh_singel.emit(3, data[6], seq, version_fpga, self.download_select)
                         if self.download_select == 2:
                             self.node_id_need_program.append(data[6])
                             node_idx_need_program.append((data[6]))
 
                 data = ''
+        self.wait_receive = 1
 
         print('\r\nnode_id_all_exist:', end=' ')
         print(", ".join(hex(i) for i in self.node_id_all_exist))
@@ -656,6 +728,9 @@ class ProgramUpdateThread(QThread):
         print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][3]))
         print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][3]))
         print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][3]))
+        print('  9、模拟FPGA板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[8][3]))
+        print('  10、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[9][3]))
+        print('  11、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[10][3]))
         self.message_singel.emit(' --> 完成.\r\n')
 
         self.refreshBoardFlag = 0
@@ -682,6 +757,7 @@ class ProgramUpdateThread(QThread):
                 self.send_reset_iwdg_command(self.ser, node_id)
                 self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                 reboot_time = time.time()
+                self.wait_receive = 0
                 while True:
                     while (time.time() - reboot_time) > 15:
                         self.send_reset_iwdg_command(self.ser, node_id)
@@ -711,6 +787,7 @@ class ProgramUpdateThread(QThread):
                             # data = ''
                         break;
                         data = ''
+                self.wait_receive = 1
             QThread.sleep(2)
             self.Download_state = 2
 
@@ -768,6 +845,7 @@ class ProgramUpdateThread(QThread):
             reboot_time = time.time()
             self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
             # print(reboot_time)
+            self.wait_receive = 0
             while (time.time() - reboot_time) < 20:
                 while self.ser.inWaiting() > 0:
                     data = self.ser.read_all()
@@ -784,6 +862,7 @@ class ProgramUpdateThread(QThread):
                 if len(self.node_id_need_program) <= 0:
                     print('烧录 OK， 请关闭软件!....')
                     break
+            self.wait_receive = 1
 
             # self.Download_state = 4
 
@@ -932,8 +1011,42 @@ class ProgramUpdateThread(QThread):
         print('start receive_data_thread.')
         while True:
             time.sleep(0.001)
+            if self.ser.isOpen() and self.wait_receive == 1:
+                while self.ser.inWaiting() > 0:
+                    self.data_receive = self.ser.read_all()
+                    # self.wait_receive = 0
             # print('tick3=%d ' % (self.tick))
             pass
+
+    def find_can_command_format(self, data):
+        print('find_can_command_format...')
+        # print(type(data))
+        data = list(data)
+        # print(type(data))
+        for i,dat in enumerate(data[2:-2]):
+            if (data[i-1] == CAN_CTRL) and (data[i]== CAN_HEAD or data[i]== CAN_CTRL or data[i]== CAN_TAIL): #去除重复的A5
+                data.remove(data[i-1])
+
+        # print(" ".join(hex(i) for i in data))
+
+        # for i,dat1 in enumerate(data):
+        i = 1
+        # print(len(data))
+        while i<len(data):
+            if data[i] == CAN_HEAD and data[i-1] == CAN_HEAD:
+                for j,dat2 in enumerate(data[i+9:]):
+                    if data[i+9+j] == CAN_TAIL and data[i+9+j-1] == CAN_TAIL:
+                        self.can_cmd.append(data[i-1:i+9+j+1])
+                        # print('i=%d, j=%d ' % (i, j))
+                        # print(" ".join(hex(k) for k in data[i-1:i+9+j+1]))
+                        i = i + 9
+                        break
+            else:
+                i = i + 1
+        # print(", ".join(hex(k) for k in self.can_cmd[0]))
+        # for i, dat in enumerate(self.can_cmd):
+            # print(" ".join(hex(i) for i in dat))
+        return data
 
 
     def timeout_slot(self):
@@ -961,15 +1074,23 @@ class ProgramUpdateThread(QThread):
 
     def find_version(self, data):
         if len(data) >40:
+            version2 = ' '
             pass
         else:
             print('there is no version, maybe in boot')
             return 'Boot'
 
         if data[28] == DIGITAL_VIDEO_BOARD or data[28] == LVDS_IN_BOARD or data[28] == ANALOG_VIDEO_BOARD:
+            year2 = ((data[29] >> 2)&0x3f)
+            month2 = (((data[29]<<2)&0x0c) | ((data[30]>>6)&0x03))&0x0f
+            day2 = (data[30]>>1)&0x1f
+
             year = ((data[31] >> 2)&0x3f)
             month = (((data[31]<<2)&0x0c) | ((data[32]>>6)&0x03))&0x0f
             day = (data[32]>>1)&0x1f
+
+            version2 = str(year2)+'_'+str(month2)+'_'+str(day2)
+
         else:
             year = ((data[29] >> 2)&0x3f)
             month = (((data[29]<<2)&0x0c) | ((data[30]>>6)&0x03))&0x0f
@@ -979,7 +1100,7 @@ class ProgramUpdateThread(QThread):
 
         version = str(year)+'_'+str(month)+'_'+str(day)
         # print('year=%d, month=%d, day=%d, hour=%d, minute=%d' % (year, month, day, hour, minute))
-        return version
+        return version, version2
 
     def send_command_ctrl_deal(self, send_data):
         send_data2 = list(send_data)        # another list, 创建了的内存
