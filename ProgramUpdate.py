@@ -36,9 +36,9 @@ FILE_NAME_DIGITAL_IO    = str('..//bin//IoBoardDigital.bin')
 FILE_NAME_ANALOG_IO     = str('..//bin//IoBoardAnalog.bin')
 FILE_NAME_POWER         = str('..//bin//PowerBoard.bin')
 FILE_NAME_AUDIO         = str('..//bin//AudioBoard.bin')
-FILE_NAME_ANALOG_FPGA   = str('..//bin//AudioBoard.bin')
-FILE_NAME_DIGITAL_FPGA  = str('..//bin//AudioBoard.bin')
-FILE_NAME_LVDS_FPGA     = str('..//bin//AudioBoard.bin')
+FILE_NAME_ANALOG_FPGA   = str('..//bin//AnalogFPGA.bin')
+FILE_NAME_DIGITAL_FPGA  = str('..//bin//DigitalFPGA.bin')
+FILE_NAME_LVDS_FPGA     = str('..//bin//LvdsFPGA.bin')
 
 E_UPG_CMD_ERASE     = int(0x01)
 E_UPG_CMD_DATA      = int(0x02)
@@ -375,8 +375,10 @@ class ProgramUpdateThread(QThread):
         if self.Download_state == 0: #---- 初始化数据---
             if  self.ser.isOpen():
                 self.message_singel.emit('下载程序...\r\n')
+                print('下载程序...')
                 self.run_time = nowTime()
                 self.Download_state = 1
+                self.wait_receive = 0
             else:
                 print('please select uart and open it!')
                 self.message_singel.emit('请检查串口并选择节点！\r\n')
@@ -387,9 +389,9 @@ class ProgramUpdateThread(QThread):
         if self.Download_state == 1: #---- 复位看门狗---
             for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
                 print('reset iwdg: seq=%d' % (seq))
-                print(id(node_idx_need_program))
+                # print(id(node_idx_need_program))
                 print(" ".join(hex(i) for i in node_idx_need_program))
-                if len(node_idx_need_program)>0:
+                if seq <=7 and len(node_idx_need_program)>0:
                     print(" ".join(hex(i) for i in node_idx_need_program))
 
                     for node_id in node_idx_need_program:
@@ -397,7 +399,6 @@ class ProgramUpdateThread(QThread):
                         self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                         data = ''
                         reboot_time = time.time()
-                        self.wait_receive = 0
                         while True:
                             while (time.time() - reboot_time) > 15:
                                 self.send_reset_iwdg_command(self.ser, node_id)
@@ -418,46 +419,54 @@ class ProgramUpdateThread(QThread):
                                 self.send_erase_commane(self.ser, node_id) #------- 发送擦除扇区命令
                                 QThread.msleep(1)
                                 break;
-                        self.wait_receive = 1
 
                     self.send_file_ret = 1
                     QThread.sleep(2)
                     self.Download_state = 2
                     self.send_file_tell = -1
                     break
-                if seq == 7 and len(node_idx_need_program) <=0:
+                elif seq >=8 and len(node_idx_need_program)>0:
+                    print('into FPGA bootloader...')
+                    self.Download_state = 2
+                    break
+
+                if seq == 10 and len(node_idx_need_program) <=0:
                     print('seq=%d' % (seq))
-                    print('升级结束，请重启机箱，并确认各板卡绿灯全亮！')
+                    print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
                     self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
                     self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！ ')
                     self.Download_state = 0
                     self.download_process_flag = 0
+                    self.wait_receive = 1
 
 
 
         elif self.Download_state == 2: #send file
             for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
                 # print("1")
-                if len(node_idx_need_program)>0:
+                if seq <=7 and len(node_idx_need_program)>0:
                     # print("2")
                     # print(" ".join(hex(i) for i in node_idx_need_program))
                     self.send_file_tell, self.send_file_ret = self.send_file_data(file_name, self.send_file_ret, self.send_file_tell, node_idx_need_program)
                     if self.send_file_ret == 0 :
                         self.Download_state = 3
                     break;
+                elif seq >=8 and len(node_idx_need_program)>0:
+                    print('send_FPGA_file_data')
+                    self.Download_state = 3
+                    break
                 # print('send_file_ret=%d' % (self.send_file_ret))
 
         elif self.Download_state == 3: #----start--- 发送重启命令
             for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
                 print('reboot: seq=%d' % (seq))
-                print(id(node_idx_need_program))
+                # print(id(node_idx_need_program))
                 print(" ".join(hex(i) for i in node_idx_need_program))
-                if len(node_idx_need_program)>0:
+                if seq <=7 and len(node_idx_need_program)>0:
                     self.send_command_reboot(self.ser, node_idx_need_program)
                     reboot_time = time.time()
                     print('reboot_time=%d' % reboot_time)
                     self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
-                    self.wait_receive = 0
                     while (time.time() - reboot_time) < 20:
                         while self.ser.inWaiting() > 0:
                             data = self.ser.read_all()
@@ -474,14 +483,21 @@ class ProgramUpdateThread(QThread):
                             reboot_time = time.time()
                         if len(node_idx_need_program) <= 0:
                             QThread.sleep(5)
-                            print('烧录 OK， 请关闭软件!....')
+                            print('烧录 OK....')
                             if seq < 7 :
                                 self.Download_state = 1
                                 return
 
-                    self.wait_receive = 1
-                    self.Download_state = 1
-                    break
+                    # self.Download_state = 1
+                    # break
+                elif seq >= 8 and len(node_idx_need_program)>0:
+                    print('reboot FPGA')
+                    print('检查是否升级成功，请稍后...')
+                    print("升级成功 --> ")
+                    node_idx_need_program.pop(0)
+                    if seq < 10 :
+                        self.Download_state = 1
+                        return
 
                     # if len(node_idx_need_program) <= 0:
                         # print('烧录 OK， 请关闭软件!....')
@@ -490,13 +506,14 @@ class ProgramUpdateThread(QThread):
                         # if seq < 7 and len(node_idx_need_program) <=0 and len(self.AllNodeList[seq+1][4])>0:
                             # self.Download_state = 1
                             # break
-                if seq >= 7 and len(node_idx_need_program) <=0:
+                if seq >= 10 and len(node_idx_need_program) <=0:
                     # print('download_process_flag=%d' % (self.download_process_flag))
-                    print('升级结束，请重启机箱，并确认各板卡绿灯全亮！')
+                    print('升级结束，请重启机箱，并确认各板卡绿灯全亮！reboot')
                     self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
                     self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！ ')
                     self.Download_state = 0
                     self.download_process_flag = 0
+                    self.wait_receive = 1
 
                     # node_idx_need_program.clear()
 
