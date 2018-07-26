@@ -12,8 +12,9 @@ import os
 import sys
 import time
 import serial
-import serial.tools.list_ports
+import binascii
 import threading
+import serial.tools.list_ports
 from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox)
 from PyQt5.QtCore import (pyqtSignal, QTimer, QThread)
 from PyQt5 import QtCore, QtGui
@@ -38,7 +39,7 @@ FILE_NAME_POWER         = str('..//bin//PowerBoard.bin')
 FILE_NAME_AUDIO         = str('..//bin//AudioBoard.bin')
 FILE_NAME_ANALOG_FPGA   = str('..//bin//AnalogFPGA.bin')
 FILE_NAME_DIGITAL_FPGA  = str('..//bin//DigitalFPGA.bin')
-FILE_NAME_LVDS_FPGA     = str('..//bin//LvdsFPGA.bin')
+FILE_NAME_LVDS_FPGA     = str('..//bin//lvds_ddr.bin')
 
 E_UPG_CMD_ERASE     = int(0x01)
 E_UPG_CMD_DATA      = int(0x02)
@@ -387,6 +388,7 @@ class ProgramUpdateThread(QThread):
                 return
 
         if self.Download_state == 1: #---- 复位看门狗---
+            data = ''
             for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
                 print('reset iwdg: seq=%d' % (seq))
                 # print(id(node_idx_need_program))
@@ -427,6 +429,59 @@ class ProgramUpdateThread(QThread):
                     break
                 elif seq >=8 and len(node_idx_need_program)>0:
                     print('into FPGA bootloader...')
+                    # send_data = [0xF0] #查询版本
+                    send_data = [0x28] # into bootloader
+                    self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
+
+                    send_data = [0x05, 0x08] # into isp model
+                    reboot_time = time.time()
+                    revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
+                    while True:
+                        while (time.time() - reboot_time) > 3:
+                            revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
+                            reboot_time = time.time()
+                        if len(revData) > 3 and revData[1] == 0x05 and revData[2] == 0x09 and revData[3] == 0x01:
+                            print('into ISP model...')
+                            break
+
+
+
+                    # send_data = [0xFF, 0x33, 0x0f, 0x05, 0x05, 0x00, (firmCrc>>24)&0xff, 0x02] # into bootloader
+                    # send_data = [(firmCrc>>16)&0xff, (firmCrc>>8)&0xff, (firmCrc)&0xff, (fileLen>>24)&0xff, (fileLen>>16)&0xff, (fileLen>>8)&0xff, (fileLen)&0xff, 0x02] # into bootloader
+                    # send_data = [0xFF, 0x33, 0x06, 0x05, 0x08, 0xED, 0x00, 0x02] # into bootloader
+                    # self.send_can_command(node_idx_need_program[0], send_data)
+                    # reboot_time = time.time()
+                    # while True:
+                        # while (time.time() - reboot_time) > 3:
+                            # self.send_can_command(node_idx_need_program[0], send_data)
+                            # reboot_time = time.time()
+
+                        # while self.ser.inWaiting() > 0:
+                            # reboot_time = time.time()
+                            # data = self.ser.read_all()
+                        # if data != '':
+                            # data = self.find_can_command_format(data)
+                            # i = int(0)
+                            # self.lvds_rx_data = list()
+                            # while i < len(self.can_cmd):
+                                # dat = self.can_cmd[i]
+                                # print(" ".join(hex(k) for k in dat))
+                                # if dat[3] == 0x02:  #PDO1（接收）
+                                    # pass
+                                # elif dat[3] == 0x01: #PDO1（发送）
+                                    # if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
+                                        # if dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
+                                            # self.lvds_rx_data.append(dat[10])
+                                            # self.lvds_rx_data.append(dat[11])
+                                            # self.lvds_rx_data.append(dat[12])
+                                            # self.lvds_rx_data.append(dat[13])
+                                    # pass
+                                # self.can_cmd.remove(dat)
+                            # print(bytes(self.lvds_rx_data))
+                            # print((self.lvds_rx_data))
+                            # if self.lvds_rx_data[1] == 0x05 and self.lvds_rx_data[2] == 0x09 and self.lvds_rx_data[3] == 0x01:
+                                # break
+
                     self.Download_state = 2
                     break
 
@@ -518,6 +573,82 @@ class ProgramUpdateThread(QThread):
                     # node_idx_need_program.clear()
 
 
+    def sendFpgaUpgradePack(self, node_id, dat):
+        send_data = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    ]
+        send_data[0] = 0xFF
+        send_data[1] = 0x33
+        send_data[2] = len(dat) +4
+        check_sum = send_data[2]+sum(dat)
+        send_data[3:] = dat[:]
+        send_data.append(0x100 - (check_sum)&0xff)
+
+
+        send_times_high = len(send_data)//7
+        send_times_low = len(send_data)%7
+
+        send_times_cnt = 0
+        send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+
+        if send_times_high >= 1:
+            print('2')
+            for send_times_cnt in send_times_high:
+                send[:7] = send_data[send_times_cnt*7:send_times_cnt*7+7]
+                self.send_can_command(node_id, send)
+                print(send_times_cnt)
+                print(" ".join(hex(k) for k in send))
+
+        print(send_times_cnt)
+        send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+        if (send_times_low >= 1):
+            send[:send_times_low] = send_data[(send_times_cnt)*7:(send_times_cnt)*7+send_times_low]
+            self.send_can_command(node_id, send)
+            print(" ".join(hex(k) for k in send))
+
+        reboot_time = time.time()
+        data = ''
+        while True:
+            while (time.time() - reboot_time) > 5:
+                reboot_time = time.time()
+
+            while self.ser.inWaiting() > 0:
+                data = self.ser.read_all()
+                reboot_time = time.time()
+            if data != '':
+                data = self.find_can_command_format(data)
+                i = int(0)
+                self.lvds_rx_data = list()
+                while i < len(self.can_cmd):
+                    dat = self.can_cmd[i]
+                    print(" ".join(hex(k) for k in dat))
+                    if dat[3] == 0x02:  #PDO1（接收）
+                        pass
+                    elif dat[3] == 0x01: #PDO1（发送）
+                        if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
+                            if dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
+                                self.lvds_rx_data.append(dat[10])
+                                self.lvds_rx_data.append(dat[11])
+                                self.lvds_rx_data.append(dat[12])
+                                self.lvds_rx_data.append(dat[13])
+                        pass
+                    self.can_cmd.remove(dat)
+                print(bytes(self.lvds_rx_data))
+                break
+
+        return self.lvds_rx_data
+
+
+
+
+    def _crc32(self, v):
+      """
+        Generates the crc32 hash of the v.
+        @return: str, the str value for the crc32 of the v
+      """
+      return '0x%x' % (binascii.crc32(v) & 0xffffffff) #取crc32的八位数据 %x返回16进制
 
 
     #send_ctrl_220V_command
@@ -1028,10 +1159,13 @@ class ProgramUpdateThread(QThread):
         print('start receive_data_thread.')
         while True:
             time.sleep(0.001)
-            if self.ser.isOpen() and self.wait_receive == 1:
-                while self.ser.inWaiting() > 0:
-                    self.data_receive = self.ser.read_all()
-                    # self.wait_receive = 0
+            try:
+                if self.ser.isOpen() and self.wait_receive == 1:
+                    while self.ser.inWaiting() > 0:
+                        self.data_receive = self.ser.read_all()
+                        # self.wait_receive = 0
+            except:
+                print('receive error')
             # print('tick3=%d ' % (self.tick))
             pass
 
