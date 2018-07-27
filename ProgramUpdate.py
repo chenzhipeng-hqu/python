@@ -39,7 +39,7 @@ FILE_NAME_POWER         = str('..//bin//PowerBoard.bin')
 FILE_NAME_AUDIO         = str('..//bin//AudioBoard.bin')
 FILE_NAME_ANALOG_FPGA   = str('..//bin//AnalogFPGA.bin')
 FILE_NAME_DIGITAL_FPGA  = str('..//bin//DigitalFPGA.bin')
-FILE_NAME_LVDS_FPGA     = str('..//bin//lvds_ddr.bin')
+FILE_NAME_LVDS_FPGA     = str('..//bin//N10.bin')
 
 E_UPG_CMD_ERASE     = int(0x01)
 E_UPG_CMD_DATA      = int(0x02)
@@ -364,6 +364,8 @@ class ProgramUpdateThread(QThread):
                                 self.lvds_rx_data.append(dat[12])
                                 self.lvds_rx_data.append(dat[13])
                         pass
+                    elif dat[3] == 0x07 and dat[2] < 0x81:
+                        print(' 0x%02X Boot up' % (dat[2]))
                     self.can_cmd.remove(dat)
                 print(bytes(self.lvds_rx_data))
 
@@ -440,47 +442,63 @@ class ProgramUpdateThread(QThread):
                         while (time.time() - reboot_time) > 3:
                             revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
                             reboot_time = time.time()
-                        if len(revData) > 3 and revData[1] == 0x05 and revData[2] == 0x09 and revData[3] == 0x01:
+                        if len(revData) > 3 and revData[2] == 0x05 and revData[3] == 0x09 and revData[4] == 0x01:
                             print('into ISP model...')
                             break
 
+                    # 发送bin文件crc校验/长度/起始地址
+                    file_name = FILE_NAME_LVDS_FPGA
+                    Is_File_exist = int(0)
+                    while Is_File_exist == 0:
+                        Is_File_exist = os.path.exists(file_name)
+                        if Is_File_exist:
+                            self.size = os.path.getsize(file_name)
+                            creat_time = os.path.getmtime(file_name)
+                            print('')
+                            print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
+                            print('正在升级...  ',  end='')
+                            self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
+                        else:
+                            print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
+                            self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
+                            print('当前工作路径为：%s ' % (os.getcwd()))
+                            os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
+                            print('切换后工作路径为：%s ' % (os.getcwd()))
+                    with open(file_name, 'rb') as f_bin:
+                        print(self.size)
+                        f_bin_data = f_bin.read(self.size)
+                        fileCrc = binascii.crc32(f_bin_data)
+                        print(fileCrc)
+                        print(type(fileCrc))
+                    startAddr = 0x170000; # N10
+                    send_data = [0x05, 0x05, 0x00,
+                                0x00, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00
+                                ]
+                    send_data[3] = (fileCrc>>24)&0xff
+                    send_data[4] = (fileCrc>>16)&0xff
+                    send_data[5] = (fileCrc>>8)&0xff
+                    send_data[6] = (fileCrc)&0xff
+                    send_data[7] = (self.size>>24)&0xff
+                    send_data[8] = (self.size>>16)&0xff
+                    send_data[9] = (self.size>>8)&0xff
+                    send_data[10] = (self.size)&0xff
+                    send_data[11] = (startAddr>>24)&0xff
+                    send_data[12] = (startAddr>>16)&0xff
+                    send_data[13] = (startAddr>>8)&0xff
+                    send_data[14] = (startAddr)&0xff
+                    # print(" ".join(hex(k) for k in send_data))
 
-
-                    # send_data = [0xFF, 0x33, 0x0f, 0x05, 0x05, 0x00, (firmCrc>>24)&0xff, 0x02] # into bootloader
-                    # send_data = [(firmCrc>>16)&0xff, (firmCrc>>8)&0xff, (firmCrc)&0xff, (fileLen>>24)&0xff, (fileLen>>16)&0xff, (fileLen>>8)&0xff, (fileLen)&0xff, 0x02] # into bootloader
-                    # send_data = [0xFF, 0x33, 0x06, 0x05, 0x08, 0xED, 0x00, 0x02] # into bootloader
-                    # self.send_can_command(node_idx_need_program[0], send_data)
-                    # reboot_time = time.time()
-                    # while True:
-                        # while (time.time() - reboot_time) > 3:
-                            # self.send_can_command(node_idx_need_program[0], send_data)
-                            # reboot_time = time.time()
-
-                        # while self.ser.inWaiting() > 0:
-                            # reboot_time = time.time()
-                            # data = self.ser.read_all()
-                        # if data != '':
-                            # data = self.find_can_command_format(data)
-                            # i = int(0)
-                            # self.lvds_rx_data = list()
-                            # while i < len(self.can_cmd):
-                                # dat = self.can_cmd[i]
-                                # print(" ".join(hex(k) for k in dat))
-                                # if dat[3] == 0x02:  #PDO1（接收）
-                                    # pass
-                                # elif dat[3] == 0x01: #PDO1（发送）
-                                    # if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
-                                        # if dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
-                                            # self.lvds_rx_data.append(dat[10])
-                                            # self.lvds_rx_data.append(dat[11])
-                                            # self.lvds_rx_data.append(dat[12])
-                                            # self.lvds_rx_data.append(dat[13])
-                                    # pass
-                                # self.can_cmd.remove(dat)
-                            # print(bytes(self.lvds_rx_data))
-                            # print((self.lvds_rx_data))
-                            # if self.lvds_rx_data[1] == 0x05 and self.lvds_rx_data[2] == 0x09 and self.lvds_rx_data[3] == 0x01:
-                                # break
+                    reboot_time = time.time()
+                    revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
+                    while True:
+                        while (time.time() - reboot_time) > 3:
+                            revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
+                            reboot_time = time.time()
+                        if len(revData) > 0x0b and revData[3] == 0x05 and revData[4] == 0x01 and revData[5] == 0x00:
+                            print('into upgrade model...')
+                            break
 
                     self.Download_state = 2
                     break
@@ -589,30 +607,39 @@ class ProgramUpdateThread(QThread):
 
         send_times_high = len(send_data)//7
         send_times_low = len(send_data)%7
+        # print(send_times_high)
+        # print(send_times_low)
+
+        print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
 
         send_times_cnt = 0
         send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
 
         if send_times_high >= 1:
-            print('2')
-            for send_times_cnt in send_times_high:
-                send[:7] = send_data[send_times_cnt*7:send_times_cnt*7+7]
+            # print('send_times_high')
+            for i in range(0,send_times_high):
+                send[:7] = send_data[i*7:i*7+7]
                 self.send_can_command(node_id, send)
-                print(send_times_cnt)
-                print(" ".join(hex(k) for k in send))
+                # print(i)
+                # print('     %s' % " ".join(hex(k) for k in send))
+                send_times_cnt = i + 1
 
-        print(send_times_cnt)
+        # print(send_times_cnt)
         send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
         if (send_times_low >= 1):
+            # print('send_times_low')
             send[:send_times_low] = send_data[(send_times_cnt)*7:(send_times_cnt)*7+send_times_low]
             self.send_can_command(node_id, send)
-            print(" ".join(hex(k) for k in send))
+            # print('     %s' % " ".join(hex(k) for k in send))
 
         reboot_time = time.time()
         data = ''
+        self.lvds_rx_data = list()
         while True:
-            while (time.time() - reboot_time) > 5:
+            while (time.time() - reboot_time) > 3:
                 reboot_time = time.time()
+                # print('sendFpgaUpgradePack time_out')
+                return  self.lvds_rx_data
 
             while self.ser.inWaiting() > 0:
                 data = self.ser.read_all()
@@ -620,10 +647,9 @@ class ProgramUpdateThread(QThread):
             if data != '':
                 data = self.find_can_command_format(data)
                 i = int(0)
-                self.lvds_rx_data = list()
                 while i < len(self.can_cmd):
                     dat = self.can_cmd[i]
-                    print(" ".join(hex(k) for k in dat))
+                    # print(" ".join(hex(k) for k in dat))
                     if dat[3] == 0x02:  #PDO1（接收）
                         pass
                     elif dat[3] == 0x01: #PDO1（发送）
@@ -635,7 +661,9 @@ class ProgramUpdateThread(QThread):
                                 self.lvds_rx_data.append(dat[13])
                         pass
                     self.can_cmd.remove(dat)
-                print(bytes(self.lvds_rx_data))
+                print('     receive from FPGA: %s' % " ".join(hex(k) for k in self.lvds_rx_data))
+                # print('     ', end='')
+                # print(bytes(self.lvds_rx_data))
                 break
 
         return self.lvds_rx_data
@@ -675,7 +703,7 @@ class ProgramUpdateThread(QThread):
         send = send[0:6]+data+send[6:]
         send[18] = (send[2]+send[3]+send[14]+sum(data))&0xff
         send = self.send_command_ctrl_deal(send)
-        print(" ".join(hex(i) for i in send))
+        # print(" ".join(hex(i) for i in send))
         try:
             self.ser.write(send)
         except :
@@ -1170,7 +1198,7 @@ class ProgramUpdateThread(QThread):
             pass
 
     def find_can_command_format(self, data):
-        print('find_can_command_format...')
+        # print('find_can_command_format...start')
         # print(type(data))
         data = list(data)
         # print(type(data))
@@ -1197,6 +1225,7 @@ class ProgramUpdateThread(QThread):
         # print(", ".join(hex(k) for k in self.can_cmd[0]))
         # for i, dat in enumerate(self.can_cmd):
             # print(" ".join(hex(i) for i in dat))
+        # print('find_can_command_format... end')
         return data
 
 
