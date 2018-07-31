@@ -466,8 +466,8 @@ class ProgramUpdateThread(QThread):
                             print('切换后工作路径为：%s ' % (os.getcwd()))
                     with open(file_name, 'rb') as f_bin:
                         print(self.size)
-                        f_bin_data = f_bin.read(self.size)
-                        fileCrc = binascii.crc32(f_bin_data)
+                        self.f_bin_data = f_bin.read(self.size)
+                        fileCrc = binascii.crc32(self.f_bin_data)
                         print(fileCrc)
                         print(type(fileCrc))
                     startAddr = 0x170000; # N10
@@ -500,7 +500,9 @@ class ProgramUpdateThread(QThread):
                             print('into upgrade model...')
                             break
 
+                    self.send_file_ret = 1
                     self.Download_state = 2
+                    self.send_file_tell = -1
                     break
 
                 if seq == 10 and len(node_idx_need_program) <=0:
@@ -526,8 +528,11 @@ class ProgramUpdateThread(QThread):
                     break;
                 elif seq >=8 and len(node_idx_need_program)>0:
                     print('send_FPGA_file_data')
-                    self.Download_state = 3
-                    break
+                    file_name = FILE_NAME_LVDS_FPGA
+                    self.send_file_ret = self.sendFpgaFile(file_name, self.send_file_ret, node_idx_need_program)
+                    if self.send_file_ret == 0 :
+                        self.Download_state = 3
+                    break;
                 # print('send_file_ret=%d' % (self.send_file_ret))
 
         elif self.Download_state == 3: #----start--- 发送重启命令
@@ -592,16 +597,10 @@ class ProgramUpdateThread(QThread):
 
 
     def sendFpgaUpgradePack(self, node_id, dat):
-        send_data = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    ]
-        send_data[0] = 0xFF
-        send_data[1] = 0x33
+        send_data = [0xFF, 0x33, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         send_data[2] = len(dat) +4
         check_sum = send_data[2]+sum(dat)
-        send_data[3:] = dat[:]
+        send_data = send_data[:3] + list(dat)
         send_data.append(0x100 - (check_sum)&0xff)
 
 
@@ -610,7 +609,7 @@ class ProgramUpdateThread(QThread):
         # print(send_times_high)
         # print(send_times_low)
 
-        print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
+        # print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
 
         send_times_cnt = 0
         send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
@@ -620,6 +619,7 @@ class ProgramUpdateThread(QThread):
             for i in range(0,send_times_high):
                 send[:7] = send_data[i*7:i*7+7]
                 self.send_can_command(node_id, send)
+                time.sleep(0.002)
                 # print(i)
                 # print('     %s' % " ".join(hex(k) for k in send))
                 send_times_cnt = i + 1
@@ -638,7 +638,8 @@ class ProgramUpdateThread(QThread):
         while True:
             while (time.time() - reboot_time) > 3:
                 reboot_time = time.time()
-                # print('sendFpgaUpgradePack time_out')
+                print('sendFpgaUpgradePack time_out')
+                print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
                 return  self.lvds_rx_data
 
             while self.ser.inWaiting() > 0:
@@ -668,7 +669,108 @@ class ProgramUpdateThread(QThread):
 
         return self.lvds_rx_data
 
+    def sendFpgaFile(self, file_name, send_file_state, node_id_need_program):
 
+        if send_file_state == 0: # 初始化变量，升级中只执行一次
+            send_file_state = 1
+
+        if send_file_state == 1:
+            packetLen = 230
+            packetNum = (self.size + packetLen - 1) // packetLen
+            packetIndex = 0
+            current_pos = 0
+            # packetIndex = 0xb36
+            # current_pos = 1484513
+            current_packerLen = 0
+            MAX_TRY_TIMES = 20
+
+            while (current_pos < self.size):
+                zero_count = 0
+
+                for k in range(current_pos, self.size):
+                    if self.f_bin_data[k] == 0:
+                        zero_count = zero_count + 1
+                    else:
+                        break
+
+                    if zero_count > 65500:
+                        zero_count = 65500
+                        break
+
+                current_pos = k
+
+                if self.size <= (current_pos + packetLen):
+                    current_packerLen = self.size - current_pos
+                    packed_timeout = 300
+                else:
+                    current_packerLen = packetLen
+
+                send_data = [0x05, 0x06, 0x00,
+                            0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x00, 0x00, 0x00
+                            ]
+                send_data[2] = (packetIndex>>24)&0xff
+                send_data[3] = (packetIndex>>16)&0xff
+                send_data[4] = (packetIndex>>8)&0xff
+                send_data[5] = (packetIndex)&0xff
+                send_data[6] = (packetNum>>24)&0xff
+                send_data[7] = (packetNum>>16)&0xff
+                send_data[8] = (packetNum>>8)&0xff
+                send_data[9] = (packetNum)&0xff
+                send_data[10] = (zero_count>>8)&0xff
+                send_data[11] = (zero_count)&0xff
+
+                send_data = send_data[:12] + list(self.f_bin_data[current_pos:current_pos+current_packerLen])
+
+                try_times = 0
+                while try_times < MAX_TRY_TIMES:
+                    revData = self.sendFpgaUpgradePack(node_id_need_program[0], send_data)
+                    if len(revData) >= 0x0A and len(revData) <= 0x0C and revData[3] == 0x05 and revData[4] == 0x01:
+                        packetIndex2 = revData[7]<<24 | revData[8]<<16 | revData[9]<<8 | revData[10]
+                        if  revData[6] == 0x06 and packetIndex2 == packetIndex:
+                            break
+
+                    elif len(revData) >= 0x04 and len(revData) <= 0x08:
+                        for i, rev_dat in enumerate(revData):
+                            if revData[i] == 0x05 and revData[i+1] == 0x07:
+                                if 1 == revData[i+2]:
+                                    self.message_singel.emit('升级成功! \r\n')
+                                    print('升级成功')
+                                else:
+                                    self.message_singel.emit('CRC 校验错误! \r\n')
+                                    print('CRC 校验错误')
+                                break
+                        if i < 0x03:
+                            break
+
+                    try_times = try_times + 1
+
+                if try_times >= MAX_TRY_TIMES:
+                    self.message_singel.emit('try_times = %d \r\n' % (try_times))
+                    print('try_times = %d' % (try_times))
+                    try_times = 0
+                    break
+
+                packetIndex = packetIndex + 1
+                current_pos = current_pos + current_packerLen
+                print('current_pos = %d' % current_pos)
+                self.processBar_singel.emit((current_pos/self.size)*100)
+
+            if current_pos < self.size:
+                self.message_singel.emit('升级失败! \r\n')
+                print('升级失败')
+
+            send_file_state = 2
+
+        elif send_file_state == 2:
+            send_file_state = 3
+
+        elif send_file_state == 3:
+            send_file_state = 0
+
+
+        return send_file_state
 
 
     def _crc32(self, v):
