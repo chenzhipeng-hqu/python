@@ -470,84 +470,85 @@ class ProgramUpdateThread(QThread):
                     break
                 elif seq >=8 and len(node_idx_need_program)>0:
                     print('into FPGA bootloader...')
-                    # send_data = [0xF0] #查询版本
-                    send_data = [0x28] # into bootloader
-                    self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
+                    for node_id in node_idx_need_program:
+                        # send_data = [0xF0] #查询版本
+                        send_data = [0x28] # into bootloader
+                        self.sendFpgaUpgradePack(node_id, send_data)
 
-                    send_data = [0x05, 0x08] # into isp model
-                    reboot_time = time.time()
-                    revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
-                    while True:
-                        while (time.time() - reboot_time) > 3:
-                            revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
-                            reboot_time = time.time()
-                        if len(revData) > 3 and revData[2] == 0x05 and revData[3] == 0x09 and revData[4] == 0x01:
-                            print('into ISP model...')
-                            break
+                        send_data = [0x05, 0x08] # into isp model
+                        reboot_time = time.time()
+                        revData = self.sendFpgaUpgradePack(node_id, send_data)
+                        while True:
+                            while (time.time() - reboot_time) > 3:
+                                revData = self.sendFpgaUpgradePack(node_id, send_data)
+                                reboot_time = time.time()
+                            if len(revData) > 3 and revData[2] == 0x05 and revData[3] == 0x09 and revData[4] == 0x01:
+                                print('into ISP model...')
+                                break
 
-                    # 发送bin文件crc校验/长度/起始地址
-                    if self.lvdsStartAddr == 0x000000:
-                        file_name = FILE_NAME_LVDS_LVDS_FPGA
-                    elif self.lvdsStartAddr == 0x170000:
-                        file_name = FILE_NAME_LVDS_N10_FPGA
-                    elif self.lvdsStartAddr == 0x2e0000:
-                        file_name = FILE_NAME_LVDS_N86_1_FPGA
+                        # 发送bin文件crc校验/长度/起始地址
+                        if self.lvdsStartAddr == 0x000000:
+                            file_name = FILE_NAME_LVDS_LVDS_FPGA
+                        elif self.lvdsStartAddr == 0x170000:
+                            file_name = FILE_NAME_LVDS_N10_FPGA
+                        elif self.lvdsStartAddr == 0x2e0000:
+                            file_name = FILE_NAME_LVDS_N86_1_FPGA
 
-                    # self.AllNodeList[10][2] = str(file_name)
-                    print('file=%s' % (file_name))
-                    print('file=%s' % (self.AllNodeList[10][2]))
+                        # self.AllNodeList[10][2] = str(file_name)
+                        print('file=%s' % (file_name))
+                        print('file=%s' % (self.AllNodeList[10][2]))
 
-                    Is_File_exist = int(0)
-                    while Is_File_exist == 0:
-                        Is_File_exist = os.path.exists(file_name)
-                        if Is_File_exist:
-                            self.size = os.path.getsize(file_name)
-                            creat_time = os.path.getmtime(file_name)
-                            print('')
-                            print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
-                            print('正在升级...  ',  end='')
-                            self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
-                        else:
-                            print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
-                            self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
-                            print('当前工作路径为：%s ' % (os.getcwd()))
-                            os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
-                            print('切换后工作路径为：%s ' % (os.getcwd()))
-                    with open(file_name, 'rb') as f_bin:
-                        print(self.size)
-                        self.f_bin_data = f_bin.read(self.size)
-                        fileCrc = binascii.crc32(self.f_bin_data)
-                        print(fileCrc)
-                        print(type(fileCrc))
-                    startAddr = self.lvdsStartAddr; # N10
-                    send_data = [0x05, 0x05, 0x00,
-                                0x00, 0x00, 0x00, 0x00,
-                                0x00, 0x00, 0x00, 0x00,
-                                0x00, 0x00, 0x00, 0x00
-                                ]
-                    send_data[3] = (fileCrc>>24)&0xff
-                    send_data[4] = (fileCrc>>16)&0xff
-                    send_data[5] = (fileCrc>>8)&0xff
-                    send_data[6] = (fileCrc)&0xff
-                    send_data[7] = (self.size>>24)&0xff
-                    send_data[8] = (self.size>>16)&0xff
-                    send_data[9] = (self.size>>8)&0xff
-                    send_data[10] = (self.size)&0xff
-                    send_data[11] = (startAddr>>24)&0xff
-                    send_data[12] = (startAddr>>16)&0xff
-                    send_data[13] = (startAddr>>8)&0xff
-                    send_data[14] = (startAddr)&0xff
-                    # print(" ".join(hex(k) for k in send_data))
+                        Is_File_exist = int(0)
+                        while Is_File_exist == 0:
+                            Is_File_exist = os.path.exists(file_name)
+                            if Is_File_exist:
+                                self.size = os.path.getsize(file_name)
+                                creat_time = os.path.getmtime(file_name)
+                                print('')
+                                print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
+                                print('正在升级...  ',  end='')
+                                self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
+                            else:
+                                print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
+                                self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
+                                print('当前工作路径为：%s ' % (os.getcwd()))
+                                os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
+                                print('切换后工作路径为：%s ' % (os.getcwd()))
+                        with open(file_name, 'rb') as f_bin:
+                            print(self.size)
+                            self.f_bin_data = f_bin.read(self.size)
+                            fileCrc = binascii.crc32(self.f_bin_data)
+                            print(fileCrc)
+                            print(type(fileCrc))
+                        startAddr = self.lvdsStartAddr; # N10
+                        send_data = [0x05, 0x05, 0x00,
+                                    0x00, 0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x00
+                                    ]
+                        send_data[3] = (fileCrc>>24)&0xff
+                        send_data[4] = (fileCrc>>16)&0xff
+                        send_data[5] = (fileCrc>>8)&0xff
+                        send_data[6] = (fileCrc)&0xff
+                        send_data[7] = (self.size>>24)&0xff
+                        send_data[8] = (self.size>>16)&0xff
+                        send_data[9] = (self.size>>8)&0xff
+                        send_data[10] = (self.size)&0xff
+                        send_data[11] = (startAddr>>24)&0xff
+                        send_data[12] = (startAddr>>16)&0xff
+                        send_data[13] = (startAddr>>8)&0xff
+                        send_data[14] = (startAddr)&0xff
+                        # print(" ".join(hex(k) for k in send_data))
 
-                    reboot_time = time.time()
-                    revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
-                    while True:
-                        while (time.time() - reboot_time) > 3:
-                            revData = self.sendFpgaUpgradePack(node_idx_need_program[0], send_data)
-                            reboot_time = time.time()
-                        if len(revData) > 0x0b and revData[3] == 0x05 and revData[4] == 0x01 and revData[5] == 0x00:
-                            print('into upgrade model...')
-                            break
+                        reboot_time = time.time()
+                        revData = self.sendFpgaUpgradePack(node_id, send_data)
+                        while True:
+                            while (time.time() - reboot_time) > 3:
+                                revData = self.sendFpgaUpgradePack(node_id, send_data)
+                                reboot_time = time.time()
+                            if len(revData) > 0x0b and revData[3] == 0x05 and revData[4] == 0x01 and revData[5] == 0x00:
+                                print('into upgrade model...')
+                                break
 
                     self.send_file_ret = 1
                     self.Download_state = 2
@@ -686,7 +687,7 @@ class ProgramUpdateThread(QThread):
         while True:
             while (time.time() - reboot_time) > 1:
                 reboot_time = time.time()
-                print('sendFpgaUpgradePack time_out')
+                print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
                 print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
                 return  self.lvds_rx_data
 
@@ -702,7 +703,8 @@ class ProgramUpdateThread(QThread):
                     if dat[3] == 0x02:  #PDO1（接收）
                         pass
                     elif dat[3] == 0x01: #PDO1（发送）
-                        if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
+                        # if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
+                        if dat[6] == node_id: # LVDS_IN_BOARD
                             if dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
                                 self.lvds_rx_data.append(dat[10])
                                 self.lvds_rx_data.append(dat[11])
@@ -710,7 +712,7 @@ class ProgramUpdateThread(QThread):
                                 self.lvds_rx_data.append(dat[13])
                         pass
                     self.can_cmd.remove(dat)
-                print('     receive from FPGA: %s' % " ".join(hex(k) for k in self.lvds_rx_data))
+                print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in self.lvds_rx_data)))
                 # print('     ', end='')
                 # print(bytes(self.lvds_rx_data))
                 break
@@ -771,34 +773,35 @@ class ProgramUpdateThread(QThread):
 
                 send_data = send_data[:12] + list(self.f_bin_data[current_pos:current_pos+current_packerLen])
 
-                try_times = 0
-                while try_times < MAX_TRY_TIMES:
-                    revData = self.sendFpgaUpgradePack(node_id_need_program[0], send_data)
-                    if len(revData) >= 0x0A and len(revData) <= 0x0C and revData[3] == 0x05 and revData[4] == 0x01:
-                        packetIndex2 = revData[7]<<24 | revData[8]<<16 | revData[9]<<8 | revData[10]
-                        if  revData[6] == 0x06 and packetIndex2 == packetIndex:
-                            break
-
-                    elif len(revData) >= 0x04 and len(revData) <= 0x08:
-                        for i, rev_dat in enumerate(revData):
-                            if revData[i] == 0x05 and revData[i+1] == 0x07:
-                                if 1 == revData[i+2]:
-                                    self.message_singel.emit('升级成功! \r\n')
-                                    print('升级成功')
-                                else:
-                                    self.message_singel.emit('CRC 校验错误! \r\n')
-                                    print('CRC 校验错误')
-                                break
-                        if i < 0x03:
-                            break
-
-                    try_times = try_times + 1
-
-                if try_times >= MAX_TRY_TIMES:
-                    self.message_singel.emit('try_times = %d \r\n' % (try_times))
-                    print('try_times = %d' % (try_times))
+                for node_id in node_id_need_program:
                     try_times = 0
-                    break
+                    while try_times < MAX_TRY_TIMES:
+                        revData = self.sendFpgaUpgradePack(node_id, send_data)
+                        if len(revData) >= 0x0A and len(revData) <= 0x0C and revData[3] == 0x05 and revData[4] == 0x01:
+                            packetIndex2 = revData[7]<<24 | revData[8]<<16 | revData[9]<<8 | revData[10]
+                            if  revData[6] == 0x06 and packetIndex2 == packetIndex:
+                                break
+
+                        elif len(revData) >= 0x04 and len(revData) <= 0x08:
+                            for i, rev_dat in enumerate(revData):
+                                if revData[i] == 0x05 and revData[i+1] == 0x07:
+                                    if 1 == revData[i+2]:
+                                        self.message_singel.emit('升级成功! \r\n')
+                                        print('升级成功')
+                                    else:
+                                        self.message_singel.emit('CRC 校验错误! \r\n')
+                                        print('CRC 校验错误')
+                                    break
+                            if i < 0x04:
+                                break
+
+                        try_times = try_times + 1
+
+                    if try_times >= MAX_TRY_TIMES:
+                        self.message_singel.emit('try_times = %d \r\n' % (try_times))
+                        print('try_times = %d' % (try_times))
+                        try_times = 0
+                        break
 
                 packetIndex = packetIndex + 1
                 current_pos = current_pos + current_packerLen
