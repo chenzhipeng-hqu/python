@@ -16,7 +16,7 @@ import binascii
 import threading
 import serial.tools.list_ports
 from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox)
-from PyQt5.QtCore import (pyqtSignal, QTimer, QThread)
+from PyQt5.QtCore import (pyqtSignal, QTimer, QThread, QTime)
 from PyQt5 import QtCore, QtGui
 
 import UI_ProgramUpdate
@@ -39,7 +39,9 @@ FILE_NAME_POWER         = str('..//bin//PowerBoard.bin')
 FILE_NAME_AUDIO         = str('..//bin//AudioBoard.bin')
 FILE_NAME_ANALOG_FPGA   = str('..//bin//AnalogFPGA.bin')
 FILE_NAME_DIGITAL_FPGA  = str('..//bin//DigitalFPGA.bin')
-FILE_NAME_LVDS_FPGA     = str('..//bin//N10.bin')
+FILE_NAME_LVDS_LVDS_FPGA     = str('..//bin//lvds_ddr.bin')
+FILE_NAME_LVDS_N10_FPGA     = str('..//bin//N10.bin')
+FILE_NAME_LVDS_N86_1_FPGA     = str('..//bin//N86_1.bin')
 
 E_UPG_CMD_ERASE     = int(0x01)
 E_UPG_CMD_DATA      = int(0x02)
@@ -162,6 +164,38 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         #ctrl_220V_button
         self.ctrl_220V_button.clicked.connect(self.ctrl_220V)
 
+        #Lvds_combobox
+        self.Lvds_comboBox.currentIndexChanged.connect(self.lvds_select_addr)
+
+
+
+    #Lvds_combobox
+    def lvds_select_addr(self):
+        source = self.sender()
+        # print(source.currentIndex(), end=' ')
+        # print(source.currentText())
+
+        if source.currentText() == 'LVDS' or source.currentText() == 'NORMAL':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0x000000
+        elif source.currentText() == 'N10':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0x170000
+        elif source.currentText() == 'N86_1':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0x2e0000
+        elif source.currentText() == 'N81':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0x450000
+        elif source.currentText() == 'PT320':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0x5C0000
+        elif source.currentText() == 'N86_2':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0x730000
+        elif source.currentText() == 'PT320_2':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0x8A0000
+        elif source.currentText() == 'EXT_2':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0xA10000
+        elif source.currentText() == 'Bootloader':
+            self.ProgramUpdate_thread.lvdsStartAddr = 0xB80000
+
+        print(hex(self.ProgramUpdate_thread.lvdsStartAddr))
+
     #ctrl_220V
     def ctrl_220V(self, pressed):
         source = self.sender()
@@ -188,6 +222,10 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.ProgramUpdate_thread.selectNodeID(pressed, str(source.id_))
 
     def download_process(self):
+
+        now_time = time.strftime("%H:%M:%S", time.localtime())
+        self.timeEdit.setTime(QTime.fromString(now_time, 'hh:mm:ss'))
+        print(now_time)
         source = self.sender()
         # print(dir(source))
         # print(self.Download_combo.currentText())
@@ -290,6 +328,7 @@ class ProgramUpdateThread(QThread):
         self.data_receive = ''
         self.wait_receive = int(1)
         self.can_cmd = list()
+        self.lvdsStartAddr = 0x170000
 
         #node_id_list
         self.node_id_need_program = list()
@@ -310,7 +349,7 @@ class ProgramUpdateThread(QThread):
             ( 7     , PCIE_BASE_BOARD     , FILE_NAME_PCIE_BASE       , list()    , list() ),\
             ( 8     , ANALOG_FPGA_BOARD   , FILE_NAME_ANALOG_FPGA     , list()    , list() ),\
             ( 9     , DIGITAL_FPGA_BOARD  , FILE_NAME_DIGITAL_FPGA    , list()    , list() ),\
-            ( 10    , LVDS_FPGA_BOARD     , FILE_NAME_LVDS_FPGA       , list()    , list() )\
+            ( 10    , LVDS_FPGA_BOARD     , FILE_NAME_LVDS_N10_FPGA       , list()    , list() )\
             ]
 
 
@@ -447,7 +486,17 @@ class ProgramUpdateThread(QThread):
                             break
 
                     # 发送bin文件crc校验/长度/起始地址
-                    file_name = FILE_NAME_LVDS_FPGA
+                    if self.lvdsStartAddr == 0x000000:
+                        file_name = FILE_NAME_LVDS_LVDS_FPGA
+                    elif self.lvdsStartAddr == 0x170000:
+                        file_name = FILE_NAME_LVDS_N10_FPGA
+                    elif self.lvdsStartAddr == 0x2e0000:
+                        file_name = FILE_NAME_LVDS_N86_1_FPGA
+
+                    # self.AllNodeList[10][2] = str(file_name)
+                    print('file=%s' % (file_name))
+                    print('file=%s' % (self.AllNodeList[10][2]))
+
                     Is_File_exist = int(0)
                     while Is_File_exist == 0:
                         Is_File_exist = os.path.exists(file_name)
@@ -470,7 +519,7 @@ class ProgramUpdateThread(QThread):
                         fileCrc = binascii.crc32(self.f_bin_data)
                         print(fileCrc)
                         print(type(fileCrc))
-                    startAddr = 0x170000; # N10
+                    startAddr = self.lvdsStartAddr; # N10
                     send_data = [0x05, 0x05, 0x00,
                                 0x00, 0x00, 0x00, 0x00,
                                 0x00, 0x00, 0x00, 0x00,
@@ -528,7 +577,6 @@ class ProgramUpdateThread(QThread):
                     break;
                 elif seq >=8 and len(node_idx_need_program)>0:
                     print('send_FPGA_file_data')
-                    file_name = FILE_NAME_LVDS_FPGA
                     self.send_file_ret = self.sendFpgaFile(file_name, self.send_file_ret, node_idx_need_program)
                     if self.send_file_ret == 0 :
                         self.Download_state = 3
@@ -636,7 +684,7 @@ class ProgramUpdateThread(QThread):
         data = ''
         self.lvds_rx_data = list()
         while True:
-            while (time.time() - reboot_time) > 3:
+            while (time.time() - reboot_time) > 1:
                 reboot_time = time.time()
                 print('sendFpgaUpgradePack time_out')
                 print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
@@ -883,7 +931,7 @@ class ProgramUpdateThread(QThread):
     # openSerial
     def openSerial(self, COMn):
         try:
-            self.ser = serial.Serial(COMn, 115200, timeout=0.0000001)  #/dev/ttyUSB0
+            self.ser = serial.Serial(COMn, 115200, timeout=0.001)  #/dev/ttyUSB0
 
             if  self.ser.isOpen():
                 print("打开成功 -> %s" % (self.ser.port))
