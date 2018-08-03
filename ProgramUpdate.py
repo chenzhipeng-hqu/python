@@ -15,11 +15,14 @@ import serial
 import binascii
 import threading
 import serial.tools.list_ports
+from enum import Enum, unique
 from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox)
 from PyQt5.QtCore import (pyqtSignal, QTimer, QThread, QTime)
 from PyQt5 import QtCore, QtGui
 
 import UI_ProgramUpdate
+# import CANalystDriver
+from CANalystDriver import *
 
 
 DEBUG = int(0)
@@ -64,6 +67,22 @@ DIGITAL_FPGA_BOARD  = int(0x08)
 LVDS_FPGA_BOARD     = int(0x09)
 
 nowTime = lambda:int(round(time.time()*1000))
+
+@unique       #如果要限制定义枚举时，不能定义相同值的成员。可以使用装饰器@unique【要导入unique模块】
+class FPGA_CMD(Enum):
+    GET_SW_VERSION  = 0x00
+    ACK             = 0x01
+    RET_SW_VERSION  = 0x02
+    GET_HW_INFO     = 0x03
+    RET_HW_INFO     = 0x04
+    START_UPGRADE   = 0x05
+    SEND_DATA       = 0x06
+    RET_CRC         = 0x07
+    SWITCH_TO_ISP   = 0x08
+    RET_ISP         = 0x09
+    SWITCH_MAP      = 0x0a
+    SET_LVDS_PARAM  = 0x0b
+    SET_OUTPUT_TIM  = 0x0c
 
 '''
 '''
@@ -372,12 +391,40 @@ class ProgramUpdateThread(QThread):
         self.refreshBoardFlag = 0
         self.send_file_state = int(1)
         self.Download_state = int(0)
+        self.receive_can_data = list()
+
+        #----can driver----
+        index = 0
+        can_num = 0
+        self.canDll = CANalystDriver(VCI_USBCAN2A, index, can_num)
+        self.canDll.VCI_OpenDevice(0)
+        initConfig = VCI_INIT_CONFIG()
+        initConfig.AccCode = 0x80000008
+        initConfig.AccMask = 0xFFFFFFFF
+        initConfig.Reserved = 0
+        initConfig.Filter = 0
+        initConfig.Timing0 = 0x00
+        initConfig.Timing1 = 0x14
+        initConfig.Mode = 0
+        self.canDll.VCI_InitCAN(ctypes.byref(initConfig))
+        self.canDll.VCI_StartCAN()
+        # self.canDll.thread_1.start()
+
+        ubyte_array_8 = ctypes.c_ubyte * 8
+        data = ubyte_array_8(1, 2, 3, 4, 5, 6, 7, 8)
+        ubyte_array_3 = ctypes.c_ubyte * 3
+        reserved = ubyte_array_3(0, 0, 0)
+
+        vci_can_obj = VCI_CAN_OBJ(0x712, 0, 0, 1, 0, 0, 8, data, reserved)
+
+        self.canDll.VCI_Transmit(ctypes.byref(vci_can_obj), 1)
 
     def run(self):
         while True:
             # print('tick2=%d ' % (self.tick))
             if self.refreshBoardFlag == 1:
                 self.refreshBoard()
+                # self.ser.close()
 
             if self.download_process_flag == 1:
                 # self.download_process()
@@ -415,6 +462,7 @@ class ProgramUpdateThread(QThread):
 
     def download_process2(self):
         if self.Download_state == 0: #---- 初始化数据---
+            # if  1:
             if  self.ser.isOpen():
                 self.message_singel.emit('下载程序...\r\n')
                 print('下载程序...')
@@ -425,7 +473,7 @@ class ProgramUpdateThread(QThread):
                 print('please select uart and open it!')
                 self.message_singel.emit('请检查串口并选择节点！\r\n')
                 self.download_process_flag = 0
-                self.Download_state = 1
+                self.Download_state = 0
                 return
 
         if self.Download_state == 1: #---- 复位看门狗---
@@ -521,7 +569,7 @@ class ProgramUpdateThread(QThread):
                             print(fileCrc)
                             print(type(fileCrc))
                         startAddr = self.lvdsStartAddr; # N10
-                        send_data = [0x05, 0x05, 0x00,
+                        send_data = [0x05, FPGA_CMD.START_UPGRADE.value, 0x00,
                                     0x00, 0x00, 0x00, 0x00,
                                     0x00, 0x00, 0x00, 0x00,
                                     0x00, 0x00, 0x00, 0x00
@@ -546,7 +594,7 @@ class ProgramUpdateThread(QThread):
                             while (time.time() - reboot_time) > 3:
                                 revData = self.sendFpgaUpgradePack(node_id, send_data)
                                 reboot_time = time.time()
-                            if len(revData) > 0x0b and revData[3] == 0x05 and revData[4] == 0x01 and revData[5] == 0x00:
+                            if len(revData) > 0x0b and revData[3] == 0x05 and revData[4] == FPGA_CMD.ACK.value and revData[5] == 0x00:
                                 print('into upgrade model...')
                                 break
 
@@ -668,7 +716,7 @@ class ProgramUpdateThread(QThread):
             for i in range(0,send_times_high):
                 send[:7] = send_data[i*7:i*7+7]
                 self.send_can_command(node_id, send)
-                time.sleep(0.002)
+                # time.sleep(0.002)
                 # print(i)
                 # print('     %s' % " ".join(hex(k) for k in send))
                 send_times_cnt = i + 1
@@ -681,15 +729,74 @@ class ProgramUpdateThread(QThread):
             self.send_can_command(node_id, send)
             # print('     %s' % " ".join(hex(k) for k in send))
 
+        receiveCanData = self.receiveCanCmdUart(node_id, 1)
+        # receiveCanData = self.receiveCanCmdCanDevice(node_id, 1)
+
+        if len(receiveCanData) <= 0:  # time_out
+            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
+            print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
+        else:
+            print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+
+        return receiveCanData
+
+    def receiveCanCmdCanDevice(self, node_id, wait_time):
+        VCI_CAN_OBJ_ARRAY_2500 = VCI_CAN_OBJ * 2500 # 结构体定义数组传入
+        receive_data = VCI_CAN_OBJ_ARRAY_2500()
+        self.receive_can_data.clear()
+
+        reboot_time = time.time()
+
+        length = self.canDll.VCI_Receive(ctypes.byref(receive_data), 2500, wait_time*1000)
+        if length > 0:
+            print('receive length: %d' % length)
+            for i in range(length):
+                # print('i=%d ' % i, end='')
+                # print('ID=%02X ' % receive_data[i].ID, end='')  # 帧ID
+
+                # if receive_data[i].TimeFlag != 0: # 时间标识
+                    # print('时间标识：%d ' % (receive_data[i].TimeStamp), end='')
+
+                # if receive_data[i].ExternFlag == 0:
+                    # print('标准帧 ', end='')
+                # else:
+                    # print('扩展帧 ', end='')
+
+                # if receive_data[i].RemoteFlag == 0:
+                    # print('数据帧 ', end='')
+                    # if receive_data[i].DataLen > (8):
+                        # receive_data[i].DataLen = 8
+                    # print('DataLen=%d ' % receive_data[i].DataLen, end='')
+                    # print('数据：%s' % " ".join(hex(k) for k in receive_data[i].Data), end='')
+                    # # print(type(receive_data[i].Data))
+                    # # print('数据：%02X'list(receive_data[i].Data), end='')
+                # else:
+                    # print('远程帧 ', end='')
+
+                # print('')
+
+                if receive_data[i].ID == 0x181:
+                    if receive_data[i].Data[0] == node_id:
+                        if receive_data[i].Data[2] >= receive_data[i].Data[3]:
+                            self.receive_can_data.append(receive_data[i].Data[4])
+                            self.receive_can_data.append(receive_data[i].Data[5])
+                            self.receive_can_data.append(receive_data[i].Data[6])
+                            self.receive_can_data.append(receive_data[i].Data[7])
+            else:
+                pass
+
+        return self.receive_can_data
+
+    def receiveCanCmdUart(self, node_id, wait_time):
         reboot_time = time.time()
         data = ''
-        self.lvds_rx_data = list()
+        self.receive_can_data.clear()
         while True:
-            while (time.time() - reboot_time) > 1:
+            while (time.time() - reboot_time) > wait_time:
                 reboot_time = time.time()
-                print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
-                print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
-                return  self.lvds_rx_data
+                # print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
+                # print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
+                return  self.receive_can_data
 
             while self.ser.inWaiting() > 0:
                 data = self.ser.read_all()
@@ -706,18 +813,17 @@ class ProgramUpdateThread(QThread):
                         # if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
                         if dat[6] == node_id: # LVDS_IN_BOARD
                             if dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
-                                self.lvds_rx_data.append(dat[10])
-                                self.lvds_rx_data.append(dat[11])
-                                self.lvds_rx_data.append(dat[12])
-                                self.lvds_rx_data.append(dat[13])
+                                self.receive_can_data.append(dat[10])
+                                self.receive_can_data.append(dat[11])
+                                self.receive_can_data.append(dat[12])
+                                self.receive_can_data.append(dat[13])
                         pass
                     self.can_cmd.remove(dat)
-                print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in self.lvds_rx_data)))
+                print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in self.receive_can_data)))
                 # print('     ', end='')
-                # print(bytes(self.lvds_rx_data))
+                # print(bytes(self.receive_can_data))
                 break
-
-        return self.lvds_rx_data
+        return self.receive_can_data
 
     def sendFpgaFile(self, file_name, send_file_state, node_id_need_program):
 
@@ -755,7 +861,7 @@ class ProgramUpdateThread(QThread):
                 else:
                     current_packerLen = packetLen
 
-                send_data = [0x05, 0x06, 0x00,
+                send_data = [0x05, FPGA_CMD.SEND_DATA.value, 0x00,
                             0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00
@@ -779,13 +885,13 @@ class ProgramUpdateThread(QThread):
                         revData = self.sendFpgaUpgradePack(node_id, send_data)
                         if len(revData) >= 0x0A and len(revData) <= 0x0C and revData[3] == 0x05 and revData[4] == 0x01:
                             packetIndex2 = revData[7]<<24 | revData[8]<<16 | revData[9]<<8 | revData[10]
-                            if  revData[6] == 0x06 and packetIndex2 == packetIndex:
+                            if  revData[6] == FPGA_CMD.SEND_DATA.value and packetIndex2 == packetIndex:
                                 break
 
-                        elif len(revData) >= 0x04 and len(revData) <= 0x08:
+                        elif len(revData) > 0x04 and len(revData) <= 0x08:
                             for i, rev_dat in enumerate(revData):
                                 if revData[i] == 0x05 and revData[i+1] == 0x07:
-                                    if 1 == revData[i+2]:
+                                    if FPGA_CMD.ACK.value == revData[i+2]:
                                         self.message_singel.emit('升级成功! \r\n')
                                         print('升级成功')
                                     else:
@@ -797,7 +903,7 @@ class ProgramUpdateThread(QThread):
 
                         try_times = try_times + 1
 
-                    if try_times >= MAX_TRY_TIMES:
+                    if try_times > MAX_TRY_TIMES:
                         self.message_singel.emit('try_times = %d \r\n' % (try_times))
                         print('try_times = %d' % (try_times))
                         try_times = 0
@@ -846,6 +952,21 @@ class ProgramUpdateThread(QThread):
             self.send_can_command(node_idx_exist, send_data)
 
     def send_can_command(self, node_id, data):
+        self.send_can_command_uart(node_id, data)
+        # self.send_can_command_candriver(node_id, data)
+
+
+    def send_can_command_candriver(self, node_id, data):
+        ubyte_array_8 = ctypes.c_ubyte * 8
+        data = ubyte_array_8( data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7])
+        ubyte_array_3 = ctypes.c_ubyte * 3
+        reserved = ubyte_array_3(0, 0, 0)
+
+        vci_can_obj = VCI_CAN_OBJ(0x200|node_id, 0, 0, 1, 0, 0, 8, data, reserved)
+
+        self.canDll.VCI_Transmit(ctypes.byref(vci_can_obj), 1)
+
+    def send_can_command_uart(self, node_id, data):
         send = [0xAA, 0xAA,
                 node_id, 0x02, 0x00, 0x00,
                 # data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
@@ -1598,23 +1719,25 @@ if __name__ == "__main__":
 
     print('当前工作路径为：%s ' % (os.getcwd()))
     print('当前运行程序为：%s ' % (sys.argv[0]))
+    run_time = nowTime()
 
-    #每一pyqt5应用程序必须创建一个应用程序对象。sys.argv参数是一个列表，从命令行输入参数。
-    app = QApplication(sys.argv)
+    try:
+        #每一pyqt5应用程序必须创建一个应用程序对象。sys.argv参数是一个列表，从命令行输入参数。
+        app = QApplication(sys.argv)
 
+        ui = UI_MainWindow()
 
-    ui = UI_MainWindow()
+        # ui.setupUi(MainWindow)
 
-    # ui.setupUi(MainWindow)
+        # MainWindow.show()
 
+        #系统exit()方法确保应用程序干净的退出
+        #的exec_()方法有下划线。因为执行是一个Python关键词。因此，exec_()代替
+        sys.exit(app.exec_())
+    except:
+        print('catch error!')
 
-    # MainWindow.show()
-
-
-    #系统exit()方法确保应用程序干净的退出
-    #的exec_()方法有下划线。因为执行是一个Python关键词。因此，exec_()代替
-    sys.exit(app.exec_())
-
-    print('runing time is {}s '.format((nowTime()-run_time)/1000))
+    finally:
+        print('runing time is {}s '.format((nowTime()-run_time)/1000))
 
     pass
