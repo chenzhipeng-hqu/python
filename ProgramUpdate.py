@@ -501,13 +501,13 @@ class ProgramUpdateThread(QThread):
                     print(" ".join(hex(i) for i in node_idx_need_program))
 
                     for node_id in node_idx_need_program:
-                        self.send_reset_iwdg_command(self.ser, node_id)
+                        self.send_reset_iwdg_command(node_id)
                         self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                         data = ''
                         reboot_time = time.time()
                         while True:
                             while (time.time() - reboot_time) > 15:
-                                self.send_reset_iwdg_command(self.ser, node_id)
+                                self.send_reset_iwdg_command(node_id)
                                 self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                                 reboot_time = time.time()
 
@@ -522,7 +522,7 @@ class ProgramUpdateThread(QThread):
 
                                 self.send_start_command(self.ser, node_id) #------- 发送启动命令
                                 QThread.msleep(1)
-                                self.send_erase_commane(self.ser, node_id) #------- 发送擦除扇区命令
+                                self.send_erase_commane(node_id) #------- 发送擦除扇区命令
                                 QThread.msleep(1)
                                 break;
 
@@ -665,7 +665,7 @@ class ProgramUpdateThread(QThread):
                 # print(id(node_idx_need_program))
                 print(" ".join(hex(i) for i in node_idx_need_program))
                 if seq <=7 and len(node_idx_need_program)>0:
-                    self.send_command_reboot(self.ser, node_idx_need_program)
+                    self.send_command_reboot(node_idx_need_program)
                     reboot_time = time.time()
                     print('reboot_time=%d' % reboot_time)
                     self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
@@ -1244,13 +1244,13 @@ class ProgramUpdateThread(QThread):
             data = ''
             node_id_cnt = int(0)
             for node_id in self.node_id_need_program:
-                self.send_reset_iwdg_command(self.ser, node_id)
+                self.send_reset_iwdg_command(node_id)
                 self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                 reboot_time = time.time()
                 self.wait_receive = 0
                 while True:
                     while (time.time() - reboot_time) > 15:
-                        self.send_reset_iwdg_command(self.ser, node_id)
+                        self.send_reset_iwdg_command(node_id)
                         self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                         reboot_time = time.time()
 
@@ -1270,7 +1270,7 @@ class ProgramUpdateThread(QThread):
                     #----end-----
 
                     #----start--- 发送擦除扇区命令
-                        self.send_erase_commane(self.ser, node_id)
+                        self.send_erase_commane(node_id)
                         QThread.msleep(1)
                     #----end-----
 
@@ -1329,7 +1329,7 @@ class ProgramUpdateThread(QThread):
                 self.Download_state = 3
 
         elif self.Download_state == 3: #----start--- 发送重启命令
-            self.send_command_reboot(self.ser, self.node_id_need_program)
+            self.send_command_reboot(self.node_id_need_program)
             Is_upgrade_OK = int(1)
             reboot_start_time = time.time()
             reboot_time = time.time()
@@ -1429,7 +1429,7 @@ class ProgramUpdateThread(QThread):
                 # for (send_cnt) in  range(size_high+1):
                 #----start--- 发送装载数据命令
                     # print('send_file_data ...2')
-                    self.send_data_command(self.ser, node_id_need_program)
+                    self.send_data_command(node_id_need_program)
                 #----end-----
 
                     if(send_cnt == size_high):                                 #最后1K字节发送
@@ -1484,7 +1484,7 @@ class ProgramUpdateThread(QThread):
                     send_tell = f_bin.tell()
 
                 #----start--- 发送烧录命令
-                    self.send_program_command(self.ser, check_sum_1K, node_id_need_program)
+                    self.send_program_command(check_sum_1K, node_id_need_program)
                 #----end-----
                     QThread.msleep(80)
 
@@ -1572,7 +1572,7 @@ class ProgramUpdateThread(QThread):
             pass
         else:
             print('there is no version, maybe in boot')
-            return 'Boot'
+            return 'Boot', 'Boot'
 
         if data[28] == DIGITAL_VIDEO_BOARD or data[28] == LVDS_IN_BOARD or data[28] == ANALOG_VIDEO_BOARD:
             year2 = ((data[29] >> 2)&0x3f)
@@ -1613,54 +1613,20 @@ class ProgramUpdateThread(QThread):
         # print(send_data2 is send_data)
         return send_data
 
-    def send_reset_iwdg_command(self, ser, node_id):
-        # send = [AA AA 12 02 00 00 99 00 00 00 00 00 00 06 08 00 00 00 BB 55 55]
-        send = [0xAA, 0xAA,
-                node_id, 0x02, 0x00, 0x00,
-                0x99, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, E_CMD_RESER,
-                0x08, 0x00, 0x00, 0x00,
-                0x15,
-                0x55 , 0x55
-                ]
-        send[18] = (send[2]+send[3]+send[6]+send[13]+send[14])&0xff
-        send = self.send_command_ctrl_deal(send)
-        # print(" ".join(hex(i) for i in send))
-        ser.write(send)
+    def send_reset_iwdg_command(self, node_id):
+        send = [ 0x99, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, E_CMD_RESER ]
+        self.send_can_command(node_id, send)
         print("发送重启指令：节点： 0x%02X " % (node_id))
-        # print("send_reset_command...1.1 node_id = 0x%02X " % (node_id))
 
-    def send_erase_commane(self, ser, node_id):
-        send = [0xAA, 0xAA,
-                node_id, 0x02, 0x00, 0x00,
-                0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, E_CMD_UPDATE,
-                0x08, 0x00, 0x00, 0x00,
-                0x20,
-                0x55 , 0x55
-                ]
-        send[18] = (send[2]+send[3]+send[6]+send[9]+send[13]+send[14])&0xff
-        send = self.send_command_ctrl_deal(send)
-        # print(" ".join(hex(i) for i in send))
-        ser.write(send)
-        print("send_erase_commane...2  node_id = 0x%02X " % (node_id))
-        # y = str(bytearray(send))
-        # print(y)
+    def send_erase_commane(self, node_id):
+        send = [ 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, E_CMD_UPDATE ]
+        self.send_can_command(node_id, send)
+        print("send_erase_commane...  node_id = 0x%02X " % (node_id))
 
-    def send_data_command(self, ser, node_ids):
-        # print("send_data_command...1")
+    def send_data_command(self, node_ids):
+        send = [ 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, E_CMD_UPDATE ]
         for node_id in node_ids:
-            send = [0xAA, 0xAA,
-                    0x12, 0x02, 0x00, 0x00,
-                    0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, E_CMD_UPDATE,
-                    0x08, 0x00, 0x00, 0x00,
-                    0x20,
-                    0x55 , 0x55
-                    ]
-            send[2] = node_id
-            send[18] = (send[2]+send[3]+send[6]+send[13]+send[14])&0xff
-            send = self.send_command_ctrl_deal(send)
-            # print(" ".join(hex(i) for i in send))
-            ser.write(send)
-            # print("send_data_command...3  node_id = 0x%02X " % (node_id))
+            self.send_can_command(node_id, send)
 
     def send_1K_bin_data(self, ser, f_bin, node_ids):
         check_sum_1K = int()
@@ -1701,47 +1667,24 @@ class ProgramUpdateThread(QThread):
         # print(f_bin.tell())
         return check_sum_1K
 
-    def send_program_command(self, ser, check_sum, node_ids):
-        for node_id in node_ids:
-            send = [0xAA, 0xAA,
-                    0x12, 0x02, 0x00, 0x00,
+    def send_program_command(self, check_sum, node_ids):
+        send = [
                     0x03,
-                    0x08, 0x00, 0x00, 0x00,
-                    0x20,
-                    0x55 , 0x55
-                    ]
-            send_check_sum_1K = [(check_sum>>0)&0xff,
-                                    (check_sum>>8)&0xff,
-                                    (check_sum>>16)&0xff,
-                                    (check_sum>>24)&0xff,
-                                    0x00,
-                                    0x00,
-                                    0x02
-                                ]
-            send[2] = node_id
-            check_sum_1K_program = (send[2]+send[3]+send[6]+send[7]+sum(send_check_sum_1K))&0xff
-            send[11] = check_sum_1K_program
-            send = send[0:7:1] +send_check_sum_1K + send[7::1]
-            send = self.send_command_ctrl_deal(send)
-            ser.write(send)
-            # print(hex(check_sum_1K_program))
-            # print(send)
-            # print("send_program_command...4  node_id = 0x%02X " % (node_id))
-
-    def send_command_reboot(self, ser, node_ids):
+                    (check_sum>>0)&0xff,
+                    (check_sum>>8)&0xff,
+                    (check_sum>>16)&0xff,
+                    (check_sum>>24)&0xff,
+                    0x00,
+                    0x00,
+                    0x02
+                ]
         for node_id in node_ids:
-            send = [0xAA, 0xAA,
-                    0x12, 0x02, 0x00, 0x00,
-                    0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-                    0x08, 0x00, 0x00, 0x00,
-                    0x22,
-                    0x55 , 0x55
-                    ]
-            send[2] = node_id
-            send[18] = (send[2]+send[3]+send[6]+send[13]+send[14])&0xff
-            send = self.send_command_ctrl_deal(send)
-            # print(" ".join(hex(i) for i in send))
-            ser.write(send)
+            self.send_can_command(node_id, send)
+
+    def send_command_reboot(self, node_ids):
+        send = [ 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 ]
+        for node_id in node_ids:
+            self.send_can_command(node_id, send)
             print("send_command_reboot...  node_id = 0x%02X " % (node_id))
 
     def TimeStampToTime(self, timestamp):
@@ -1775,7 +1718,7 @@ if __name__ == "__main__":
         #的exec_()方法有下划线。因为执行是一个Python关键词。因此，exec_()代替
         sys.exit(app.exec_())
     except:
-        print('catch error!')
+        print('catch error!!!')
 
     finally:
         print('runing time is {}s '.format((nowTime()-run_time)/1000))
