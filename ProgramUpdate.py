@@ -66,6 +66,10 @@ ANALOG_FPGA_BOARD   = int(0x07)
 DIGITAL_FPGA_BOARD  = int(0x08)
 LVDS_FPGA_BOARD     = int(0x09)
 
+USE_UART = 0
+USE_CANALYST_II = 1
+CAN_DRIVER = USE_UART
+
 nowTime = lambda:int(round(time.time()*1000))
 
 @unique       #如果要限制定义枚举时，不能定义相同值的成员。可以使用装饰器@unique【要导入unique模块】
@@ -347,7 +351,8 @@ class ProgramUpdateThread(QThread):
         self.data_receive = ''
         self.wait_receive = int(1)
         self.can_cmd = list()
-        self.lvdsStartAddr = 0x170000
+        self.lvdsStartAddr = 0x000000
+        # self.lvdsStartAddr = 0x170000
 
         #node_id_list
         self.node_id_need_program = list()
@@ -394,37 +399,43 @@ class ProgramUpdateThread(QThread):
         self.receive_can_data = list()
 
         #----can driver----
-        index = 0
-        can_num = 0
-        self.canDll = CANalystDriver(VCI_USBCAN2A, index, can_num)
-        self.canDll.VCI_OpenDevice(0)
-        initConfig = VCI_INIT_CONFIG()
-        initConfig.AccCode = 0x80000008
-        initConfig.AccMask = 0xFFFFFFFF
-        initConfig.Reserved = 0
-        initConfig.Filter = 0
-        initConfig.Timing0 = 0x00
-        initConfig.Timing1 = 0x14
-        initConfig.Mode = 0
-        self.canDll.VCI_InitCAN(ctypes.byref(initConfig))
-        self.canDll.VCI_StartCAN()
-        # self.canDll.thread_1.start()
+        if CAN_DRIVER == USE_UART:
+            pass
+        else:
+            index = 0
+            can_num = 0
+            self.canDll = CANalystDriver(VCI_USBCAN2A, index, can_num)
+            self.canDll.VCI_OpenDevice(0)
+            initConfig = VCI_INIT_CONFIG()
+            initConfig.AccCode = 0x80000008
+            initConfig.AccMask = 0xFFFFFFFF
+            initConfig.Reserved = 0
+            initConfig.Filter = 0
+            initConfig.Timing0 = 0x00
+            initConfig.Timing1 = 0x14
+            initConfig.Mode = 0
+            self.canDll.VCI_InitCAN(ctypes.byref(initConfig))
+            self.canDll.VCI_StartCAN()
+            # self.canDll.thread_1.start()
 
-        ubyte_array_8 = ctypes.c_ubyte * 8
-        data = ubyte_array_8(1, 2, 3, 4, 5, 6, 7, 8)
-        ubyte_array_3 = ctypes.c_ubyte * 3
-        reserved = ubyte_array_3(0, 0, 0)
+            ubyte_array_8 = ctypes.c_ubyte * 8
+            data = ubyte_array_8(1, 2, 3, 4, 5, 6, 7, 8)
+            ubyte_array_3 = ctypes.c_ubyte * 3
+            reserved = ubyte_array_3(0, 0, 0)
 
-        vci_can_obj = VCI_CAN_OBJ(0x712, 0, 0, 1, 0, 0, 8, data, reserved)
+            vci_can_obj = VCI_CAN_OBJ(0x712, 0, 0, 1, 0, 0, 8, data, reserved)
 
-        self.canDll.VCI_Transmit(ctypes.byref(vci_can_obj), 1)
+            self.canDll.VCI_Transmit(ctypes.byref(vci_can_obj), 1)
 
     def run(self):
         while True:
             # print('tick2=%d ' % (self.tick))
             if self.refreshBoardFlag == 1:
                 self.refreshBoard()
-                # self.ser.close()
+                if CAN_DRIVER == USE_UART:
+                    pass
+                else:
+                    self.ser.close()
 
             if self.download_process_flag == 1:
                 # self.download_process()
@@ -462,8 +473,7 @@ class ProgramUpdateThread(QThread):
 
     def download_process2(self):
         if self.Download_state == 0: #---- 初始化数据---
-            # if  1:
-            if  self.ser.isOpen():
+            if  self.ser.isOpen() or CAN_DRIVER == USE_CANALYST_II:
                 self.message_singel.emit('下载程序...\r\n')
                 print('下载程序...')
                 self.run_time = nowTime()
@@ -729,8 +739,10 @@ class ProgramUpdateThread(QThread):
             self.send_can_command(node_id, send)
             # print('     %s' % " ".join(hex(k) for k in send))
 
-        receiveCanData = self.receiveCanCmdUart(node_id, 1)
-        # receiveCanData = self.receiveCanCmdCanDevice(node_id, 1)
+        if CAN_DRIVER == USE_UART:
+            receiveCanData = self.receiveCanCmdUart(node_id, 3)
+        else:
+            receiveCanData = self.receiveCanCmdCanDevice(node_id, 3)
 
         if len(receiveCanData) <= 0:  # time_out
             print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
@@ -888,16 +900,21 @@ class ProgramUpdateThread(QThread):
                             if  revData[6] == FPGA_CMD.SEND_DATA.value and packetIndex2 == packetIndex:
                                 break
 
-                        elif len(revData) > 0x04 and len(revData) <= 0x08:
+                        elif len(revData) >= 0x04 and len(revData) <= 0x08:
+                            if len(revData) == 0x04:
+                                if revData[0] != 0x05:
+                                    continue
+
                             for i, rev_dat in enumerate(revData):
-                                if revData[i] == 0x05 and revData[i+1] == 0x07:
-                                    if FPGA_CMD.ACK.value == revData[i+2]:
+                                if revData[i] == 0x05 and revData[i+1] == FPGA_CMD.RET_CRC.value:
+                                    if 1 == revData[i+2]:
                                         self.message_singel.emit('升级成功! \r\n')
                                         print('升级成功')
                                     else:
                                         self.message_singel.emit('CRC 校验错误! \r\n')
                                         print('CRC 校验错误')
                                     break
+                            print(i)
                             if i < 0x04:
                                 break
 
@@ -917,6 +934,10 @@ class ProgramUpdateThread(QThread):
             if current_pos < self.size:
                 self.message_singel.emit('升级失败! \r\n')
                 print('升级失败')
+            else:
+                # self.message_singel.emit('升级成功! \r\n')
+                # print('升级成功')
+                pass
 
             send_file_state = 2
 
@@ -952,8 +973,10 @@ class ProgramUpdateThread(QThread):
             self.send_can_command(node_idx_exist, send_data)
 
     def send_can_command(self, node_id, data):
-        self.send_can_command_uart(node_id, data)
-        # self.send_can_command_candriver(node_id, data)
+        if CAN_DRIVER == USE_UART:
+            self.send_can_command_uart(node_id, data)
+        else:
+            self.send_can_command_candriver(node_id, data)
 
 
     def send_can_command_candriver(self, node_id, data):
