@@ -45,6 +45,11 @@ FILE_NAME_DIGITAL_FPGA  = str('..//bin//DigitalFPGA.bin')
 FILE_NAME_LVDS_LVDS_FPGA     = str('..//bin//lvds_ddr.bin')
 FILE_NAME_LVDS_N10_FPGA     = str('..//bin//N10.bin')
 FILE_NAME_LVDS_N86_1_FPGA     = str('..//bin//N86_1.bin')
+FILE_NAME_LVDS_N81_FPGA     = str('..//bin//N81.bin')
+FILE_NAME_LVDS_PT320_FPGA     = str('..//bin//PT320.bin')
+FILE_NAME_LVDS_N86_2_FPGA     = str('..//bin//N86_2.bin')
+FILE_NAME_LVDS_PT320_2_FPGA     = str('..//bin//PT320_2.bin')
+FILE_NAME_LVDS_BOOT_FPGA     = str('..//bin//boot_test.bin')
 
 E_UPG_CMD_ERASE     = int(0x01)
 E_UPG_CMD_DATA      = int(0x02)
@@ -551,6 +556,18 @@ class ProgramUpdateThread(QThread):
                             file_name = FILE_NAME_LVDS_N10_FPGA
                         elif self.lvdsStartAddr == 0x2e0000:
                             file_name = FILE_NAME_LVDS_N86_1_FPGA
+                        elif self.lvdsStartAddr == 0x450000:
+                            file_name = FILE_NAME_LVDS_N81_FPGA
+                        elif self.lvdsStartAddr == 0x5C0000:
+                            file_name = FILE_NAME_LVDS_PT320_FPGA
+                        elif self.lvdsStartAddr == 0x730000:
+                            file_name = FILE_NAME_LVDS_N86_2_FPGA
+                        elif self.lvdsStartAddr == 0x8A0000:
+                            file_name = FILE_NAME_LVDS_PT320_2_FPGA
+                        elif self.lvdsStartAddr == 0xA10000:
+                            file_name = FILE_NAME_LVDS_PT320_2_FPGA
+                        elif self.lvdsStartAddr == 0xBB0000:
+                            file_name = FILE_NAME_LVDS_BOOT_FPGA
 
                         # self.AllNodeList[10][2] = str(file_name)
                         print('file=%s' % (file_name))
