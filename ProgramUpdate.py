@@ -660,6 +660,7 @@ class ProgramUpdateThread(QThread):
                 # print('send_file_ret=%d' % (self.send_file_ret))
 
         elif self.Download_state == 3: #----start--- 发送重启命令
+            data = ''
             for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
                 print('reboot: seq=%d' % (seq))
                 # print(id(node_idx_need_program))
@@ -686,9 +687,19 @@ class ProgramUpdateThread(QThread):
                         if len(node_idx_need_program) <= 0:
                             QThread.sleep(5)
                             print('烧录 OK....')
-                            if seq < 7 :
+                            if seq <= 7 :
                                 self.Download_state = 1
                                 return
+                    if len(node_idx_need_program) > 0:
+                        self.Download_state = 1
+                        print('升级失败节点: %s' % " ".join(hex(i) for i in self.node_id_need_program))
+                        self.message_singel.emit('---升级失败节点 --> ' )
+                        for node_id in node_idx_need_program:
+                            self.message_singel.emit(str(hex(node_id)) + ', ')
+                        node_idx_need_program.clear()
+                        self.message_singel.emit(' 请刷新节点，重新选择失败节点升级！！！ \r\n')
+                        return
+
 
                     # self.Download_state = 1
                     # break
@@ -1232,6 +1243,7 @@ class ProgramUpdateThread(QThread):
 
         if self.Download_state == 1: #---- 复位看门狗---
             if  self.ser.isOpen() and len(self.node_id_need_program) > 0:
+                self.wait_receive = 0
                 self.message_singel.emit('下载程序...\r\n')
                 self.run_time = nowTime()
             else:
@@ -1247,7 +1259,6 @@ class ProgramUpdateThread(QThread):
                 self.send_reset_iwdg_command(node_id)
                 self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
                 reboot_time = time.time()
-                self.wait_receive = 0
                 while True:
                     while (time.time() - reboot_time) > 15:
                         self.send_reset_iwdg_command(node_id)
@@ -1277,7 +1288,6 @@ class ProgramUpdateThread(QThread):
                             # data = ''
                         break;
                         data = ''
-                self.wait_receive = 1
             QThread.sleep(2)
             self.Download_state = 2
 
@@ -1335,7 +1345,6 @@ class ProgramUpdateThread(QThread):
             reboot_time = time.time()
             self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
             # print(reboot_time)
-            self.wait_receive = 0
             while (time.time() - reboot_time) < 20:
                 while self.ser.inWaiting() > 0:
                     data = self.ser.read_all()
@@ -1352,7 +1361,6 @@ class ProgramUpdateThread(QThread):
                 if len(self.node_id_need_program) <= 0:
                     print('烧录 OK， 请关闭软件!....')
                     break
-            self.wait_receive = 1
 
             # self.Download_state = 4
 
@@ -1374,6 +1382,7 @@ class ProgramUpdateThread(QThread):
 
             self.Download_state = 1
             self.download_process_flag = 0
+            self.wait_receive = 1
 
 
     def send_file_data(self, file_name, send_file_state, send_tell, node_id_need_program):
@@ -1719,6 +1728,8 @@ if __name__ == "__main__":
         sys.exit(app.exec_())
     except:
         print('catch error!!!')
+        while True:
+            pass
 
     finally:
         print('runing time is {}s '.format((nowTime()-run_time)/1000))
