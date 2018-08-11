@@ -1,1 +1,2 @@
-start ./ProgramUpdate/ProgramUpdate.exe
+cd 	./ProgramUpdate
+start 	./ProgramUpdate.exe
