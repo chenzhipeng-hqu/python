@@ -33,6 +33,7 @@ CAN_CTRL = int(0xA5)
 CAN_TAIL = int(0x55)
 PACK_SIZE = int(1024)
 READ_SIZE = int(8)
+
 FILE_NAME_PCIE_BASE     = str('..//bin//PcieBaseBoard.bin')
 FILE_NAME_DIGITAL_VIDEO = str('..//bin//DigitalVideo.bin')
 FILE_NAME_ANALOG_VIDEO  = str('..//bin//AnalogVideo.bin')
@@ -96,18 +97,14 @@ class FPGA_CMD(Enum):
     SET_OUTPUT_TIM  = 0x0c
 
 
-'''
-直接继承界面类
-'''
 class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
-
+    '''
+    直接继承界面类
+    '''
     def __init__(self):
         super(UI_MainWindow,self).__init__()
 
-        # self.MainWindow = QWidget()
-
         self.setupUi(self)
-        # self.setupUi(self.MainWindow)
 
         # self.GroupBox.resize(self.GroupBox.sizeHint())
         # self.MainWindow.resize(self.MainWindow.sizeHint())
@@ -118,7 +115,6 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         #----end---- 
 
         self.initUI()
-        # self.MainWindow.show()
 
     def initUI(self):
 
@@ -136,7 +132,6 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Light, brush)
         for i in range(8):
             for j in range(11):
-                # self.NodeID_button.append(QPushButton(hex(i*16+j), self))
                 self.NodeID_button.append(QPushButton(self.gridLayoutWidget_2))
                 self.NodeID_button[i*11+j].setEnabled(False)
                 self.NodeID_button[i*11+j].setText("")
@@ -158,7 +153,6 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.BoxID_checkBox[i].setChecked(False)
             self.BoxID_checkBox[i].setAutoRepeat(False)
             self.BoxID_checkBox[i].setTristate(False)
-            # self.BoxID_checkBox[i].setCheckable(False)
             # # self.BoxID_checkBox[i*8+j].clicked[bool].connect(self.selectNodeID)
             self.gridLayout_3.addWidget(self.BoxID_checkBox[i], 1, i+1, 1, 1)
 
@@ -539,32 +533,22 @@ class ProgramUpdateThread(QThread):
                 elif seq <= 9 and len(node_idx_need_program)>0:
                     print('into Analog/Digital FPGA bootloader...')
                     blockNum = 0
-                    file_name = FILE_NAME_DIGITAL_FPGA
-                    with open(file_name, 'rb') as f_mcs:
-                        for i, line in enumerate(f_mcs):
-                            # print(line[7])
-                            # print(type(line[8]))
-                            # print(type(ord('4')))
-                            if line.__len__()>10  and ord('4') == line[8] and ord('0') == line[7]:
-                                # print(line)
-                                blockNum = blockNum + 1
-                                # print(blockNum)
-                            # if i >2:
-                                # break
-                        print(blockNum)
-
-                    # send = 'ls\n'
                     if seq == 9:
                         boardType = 'digital'
                     elif seq == 8:
                         boardType = 'analog'
+                    with open(file_name, 'rb') as f_mcs:
+                        for i, line in enumerate(f_mcs):
+                            if line.__len__()>10  and ord('4') == line[8] and ord('0') == line[7]:
+                                blockNum = blockNum + 1
+
                     send = 'enterUpgrade tvs200 %s bin %d\n' % (boardType, blockNum)
+                    print(send)
                     for node_id in node_idx_need_program:
                         self.sendFpgaUpgradeCmd_AD(node_id, send)
                         receiveCanData = self.receiveCanCmdUart(node_id, 3)
                         receiveCanData = bytes(receiveCanData)
                         print(receiveCanData.decode())
-                        # print(receiveCanData)
                         if 'OK enterUpg 00 #A4\n' in receiveCanData.decode():
                             print('cmp OK! enterUpgrade model.')
                         else:
@@ -581,15 +565,13 @@ class ProgramUpdateThread(QThread):
                             totalLength = 0
                             binSum = 0
                             binData = [0xff] * 65536
-                            print(binData[0])
                             offset = 0
                             for i, line in enumerate(f_mcs):
                                 if not isFileEnd:
-                                    # if ord('1') == line[8] and ord('0') == line[7]:
-                                        # print(line)
                                     lineData = self.str2hex(line)
                                     if lineData[0]+5 != len(lineData):
                                         continue
+                                        print('lineData err!!!!!!!')
                                         print(lineData)
 
                                     if lineData[3] == 0x04: #segment address
@@ -773,7 +755,7 @@ class ProgramUpdateThread(QThread):
                     print('seq=%d' % (seq))
                     print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
                     self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
-                    self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！ ')
+                    self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！ \r\n')
                     self.Download_state = 0
                     self.download_process_flag = 0
                     self.wait_receive = 1
@@ -870,19 +852,15 @@ class ProgramUpdateThread(QThread):
                     # node_idx_need_program.clear()
 
     def upgradeSection(self, node_id, addr, length, binSum, boardType, binData):
-        # addr = 2097152
-        # binSum =3449270
+        isSendFail = False
         send = 'loadBin %s %x %x %x ' % (boardType, addr, length, binSum&0x7fffffff)
         byteSum = 0;
         for dat_ in send:
             byteSum = byteSum + ord(dat_)
         send = send + ('%x\n' % (byteSum))
-        # print(type(send))
-        # print(send)
-        # print(node_id)
         self.sendFpgaUpgradeCmd_AD(node_id, send)
         print(send)
-        # time.sleep(0.01)
+
         if CAN_DRIVER == USE_UART:
             receiveCanData = self.receiveCanCmdUart(node_id, 3)
         else:
@@ -894,12 +872,7 @@ class ProgramUpdateThread(QThread):
             receiveCanData = bytes(receiveCanData)
             print(receiveCanData.decode())
 
-        # print(type(binData))
-        # input('wait')
         self.sendFpgaUpgradeData_AD(node_id, binData, length)
-        # self.sendFpgaUpgradeCmd_AD(node_id, '\n')
-        # time.sleep(0.01)
-        # input('wait')
 
         if CAN_DRIVER == USE_UART:
             receiveCanData = self.receiveCanCmdUart(node_id, 5)
@@ -908,20 +881,17 @@ class ProgramUpdateThread(QThread):
 
         if len(receiveCanData) <= 0:  # time_out
             print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
+            isSendFail = True
         else:
             receiveCanData = bytes(receiveCanData)
             print(receiveCanData.decode())
             if 'OK %X' % (binSum) in receiveCanData.decode():
-                return False
+                isSendFail = False
             else:
-                return True
+                isSendFail = True
                 print('     receive err!!!!!!!!!!!!!!!!!!!!!!!\r\n')
-        # input('wait')
 
-
-
-        # print(binData)
-        # time.sleep(0.1)
+        return isSendFail
 
 
     def str2hex(self, line):
@@ -932,11 +902,7 @@ class ProgramUpdateThread(QThread):
                 # data = '%c%c' % (line[idx], line[idx+1])
                 lineData.append(int('%c%c' % (line[idx], line[idx+1]), 16))
                 # print(type(lineData[0]))
-            # else:
-                # print('end')
-                # pass
             idx = idx + 2
-        # print(lineData)
 
         return lineData
 
@@ -1880,16 +1846,9 @@ class ProgramUpdateThread(QThread):
         ctrl_times = int(0)
         for send_i, send_data_each in enumerate(send_data2[2:-2]):
             if send_data_each == CAN_HEAD or send_data_each == CAN_CTRL or send_data_each == CAN_TAIL :
-                # print(send_i, send_data_each)
                 send_data.insert(send_i+ctrl_times+2, CAN_CTRL)
                 ctrl_times = ctrl_times + 1
-                # send_i = send_i + 1
-                # print(send_data)
-                # print(send_data2)
 
-        # print(send_data)
-        # print(send_data2)
-        # print(send_data2 is send_data)
         return send_data
 
     def send_reset_iwdg_command(self, node_id):
@@ -1909,12 +1868,8 @@ class ProgramUpdateThread(QThread):
 
     def send_1K_bin_data(self, ser, f_bin, node_ids):
         check_sum_1K = int()
-        # print(f_bin.seek(1024))
-        # print(f_bin.tell())
         for i in range(0, PACK_SIZE//READ_SIZE):
             f_bin_data = f_bin.read(READ_SIZE)
-            # f_bin_data = [ 0x88, 0x00, 0x00, 0x00, 0x00, 0xA0, 0x5A, 0x01]
-            # f_bin_data = [ 0xA5, 0xA5, 0xA5, 0x00, 0x00, 0xA5, 0x00, 0x01]
             # byte = ord(f_bin_data)
             # print( hex(byte))
             f_bin_data = list(f_bin_data)
@@ -1928,22 +1883,13 @@ class ProgramUpdateThread(QThread):
                             ]
                 send_data[2] = node_id
                 check_sum = (send_data[2]+send_data[3]+send_data[6]+sum(f_bin_data))
-                # print(hex(check_sum))
-                # check = list(check_sum)
-                # send_data.append(check)
                 send_data[10] = check_sum&0xff
                 send_data = send_data[0:6:1] +f_bin_data + send_data[6::1]
 
                 send_data = self.send_command_ctrl_deal(send_data)
-                # print(i)
-                # if(i >= 21):
-                    # print(send_data)
-                # print(" ".join(hex(i) for i in send_data))
                 ser.write(send_data) #数据写回
-                # input("按回车键继续")
 
             check_sum_1K += sum(f_bin_data)
-        # print(f_bin.tell())
         return check_sum_1K
 
     def send_program_command(self, check_sum, node_ids):
@@ -1988,10 +1934,6 @@ if __name__ == "__main__":
         app = QApplication(sys.argv)
 
         ui = UI_MainWindow()
-
-        # ui.setupUi(MainWindow)
-
-        # MainWindow.show()
 
         ui.show()
 
