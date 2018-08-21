@@ -7,6 +7,7 @@ In this example, we create a simple window in PyQt5.
 author: chenzhipeng3472
 last edited: 04-July-2018
 """
+__author__ = 'chenzhipeng3472'
 
 import os
 import sys
@@ -40,8 +41,8 @@ FILE_NAME_DIGITAL_IO    = str('..//bin//IoBoardDigital.bin')
 FILE_NAME_ANALOG_IO     = str('..//bin//IoBoardAnalog.bin')
 FILE_NAME_POWER         = str('..//bin//PowerBoard.bin')
 FILE_NAME_AUDIO         = str('..//bin//AudioBoard.bin')
-FILE_NAME_ANALOG_FPGA   = str('..//bin//AnalogFPGA.bin')
-FILE_NAME_DIGITAL_FPGA  = str('..//bin//DigitalFPGA.bin')
+FILE_NAME_ANALOG_FPGA   = str('..//bin//AnalogFPGA.mcs')
+FILE_NAME_DIGITAL_FPGA  = str('..//bin//DigitalFPGA.mcs')
 FILE_NAME_LVDS_LVDS_FPGA     = str('..//bin//lvds_ddr.bin')
 FILE_NAME_LVDS_N10_FPGA     = str('..//bin//N10.bin')
 FILE_NAME_LVDS_N86_1_FPGA     = str('..//bin//N86_1.bin')
@@ -49,6 +50,7 @@ FILE_NAME_LVDS_N81_FPGA     = str('..//bin//N81.bin')
 FILE_NAME_LVDS_PT320_FPGA     = str('..//bin//PT320.bin')
 FILE_NAME_LVDS_N86_2_FPGA     = str('..//bin//N86_2.bin')
 FILE_NAME_LVDS_PT320_2_FPGA     = str('..//bin//PT320_2.bin')
+FILE_NAME_LVDS_N10_2_FPGA     = str('..//bin//N10_2.bin')
 FILE_NAME_LVDS_BOOT_FPGA     = str('..//bin//boot_test.bin')
 
 E_UPG_CMD_ERASE     = int(0x01)
@@ -93,16 +95,19 @@ class FPGA_CMD(Enum):
     SET_LVDS_PARAM  = 0x0b
     SET_OUTPUT_TIM  = 0x0c
 
+
 '''
+直接继承界面类
 '''
 class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
     def __init__(self):
         super(UI_MainWindow,self).__init__()
 
-        self.MainWindow = QWidget()
+        # self.MainWindow = QWidget()
 
-        self.setupUi(self.MainWindow)
+        self.setupUi(self)
+        # self.setupUi(self.MainWindow)
 
         # self.GroupBox.resize(self.GroupBox.sizeHint())
         # self.MainWindow.resize(self.MainWindow.sizeHint())
@@ -113,7 +118,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         #----end---- 
 
         self.initUI()
-        self.MainWindow.show()
+        # self.MainWindow.show()
 
     def initUI(self):
 
@@ -378,7 +383,7 @@ class ProgramUpdateThread(QThread):
             ( 7     , PCIE_BASE_BOARD     , FILE_NAME_PCIE_BASE       , list()    , list() ),\
             ( 8     , ANALOG_FPGA_BOARD   , FILE_NAME_ANALOG_FPGA     , list()    , list() ),\
             ( 9     , DIGITAL_FPGA_BOARD  , FILE_NAME_DIGITAL_FPGA    , list()    , list() ),\
-            ( 10    , LVDS_FPGA_BOARD     , FILE_NAME_LVDS_N10_FPGA       , list()    , list() )\
+            ( 10    , LVDS_FPGA_BOARD     , FILE_NAME_LVDS_N10_FPGA   , list()    , list() )\
             ]
 
 
@@ -531,8 +536,142 @@ class ProgramUpdateThread(QThread):
                     self.Download_state = 2
                     self.send_file_tell = -1
                     break
-                elif seq >=8 and len(node_idx_need_program)>0:
-                    print('into FPGA bootloader...')
+                elif seq <= 9 and len(node_idx_need_program)>0:
+                    print('into Analog/Digital FPGA bootloader...')
+                    blockNum = 0
+                    file_name = FILE_NAME_DIGITAL_FPGA
+                    with open(file_name, 'rb') as f_mcs:
+                        for i, line in enumerate(f_mcs):
+                            # print(line[7])
+                            # print(type(line[8]))
+                            # print(type(ord('4')))
+                            if line.__len__()>10  and ord('4') == line[8] and ord('0') == line[7]:
+                                # print(line)
+                                blockNum = blockNum + 1
+                                # print(blockNum)
+                            # if i >2:
+                                # break
+                        print(blockNum)
+
+                    # send = 'ls\n'
+                    if seq == 9:
+                        boardType = 'digital'
+                    elif seq == 8:
+                        boardType = 'analog'
+                    send = 'enterUpgrade tvs200 %s bin %d\n' % (boardType, blockNum)
+                    for node_id in node_idx_need_program:
+                        self.sendFpgaUpgradeCmd_AD(node_id, send)
+                        receiveCanData = self.receiveCanCmdUart(node_id, 3)
+                        receiveCanData = bytes(receiveCanData)
+                        print(receiveCanData.decode())
+                        # print(receiveCanData)
+                        if 'OK enterUpg 00 #A4\n' in receiveCanData.decode():
+                            print('cmp OK! enterUpgrade model.')
+                        else:
+                            print('cmp ERR!')
+
+                        self.size = os.path.getsize(file_name)
+
+                        with open(file_name, 'rb') as f_mcs:
+                            isFileEnd = False
+                            isSendFail = False
+                            addr = 0
+                            curBlock = 0
+                            length = 0
+                            totalLength = 0
+                            binSum = 0
+                            binData = [0xff] * 65536
+                            print(binData[0])
+                            offset = 0
+                            for i, line in enumerate(f_mcs):
+                                if not isFileEnd:
+                                    # if ord('1') == line[8] and ord('0') == line[7]:
+                                        # print(line)
+                                    lineData = self.str2hex(line)
+                                    if lineData[0]+5 != len(lineData):
+                                        continue
+                                        print(lineData)
+
+                                    if lineData[3] == 0x04: #segment address
+                                        # print(lineData)
+                                        if length > 0:
+                                            curBlock = curBlock + 1
+                                            self.processBar_singel.emit((curBlock/blockNum)*100)
+                                            # upgrade Section
+                                            isSendFail = self.upgradeSection(node_id, addr, length, binSum, boardType, binData)
+                                            totalLength = totalLength + length
+                                            length = 0
+                                            binSum = 0
+                                            pass
+                                        else:
+                                            #file head, update UI
+                                            pass
+
+                                        if lineData[0] == 0x02:
+                                            addr = lineData[4]
+                                            addr = (addr<<8) | lineData[5]
+                                            addr <<= 16
+                                        elif lineData[0] == 0x01:
+                                            addr = lineData[4]
+                                            addr <<= 16
+
+                                        pass
+                                    elif lineData[3] == 0x01: # end file
+                                        if length > 0:
+                                            curBlock = curBlock + 1
+                                            # upgrade Section
+                                            isSendFail = self.upgradeSection(node_id, addr, length, binSum, boardType, binData)
+                                            self.processBar_singel.emit((curBlock/blockNum)*100)
+                                            totalLength = totalLength + length
+                                            length = 0
+                                            binSum = 0
+
+                                        # print(lineData)
+                                        isFileEnd = True
+                                        pass
+                                    elif lineData[3] == 0x00: # data
+                                        length = length + lineData[0]
+                                        offset = lineData[1]
+                                        offset = offset<<8 | lineData[2]
+                                        for i in range(0, lineData[0]):
+                                            # print(binData[0])
+                                            binData[i+offset] = lineData[i+4]
+                                            binSum = binSum + lineData[i+4]
+
+                                        # if lineData[0] == 0x02: # 最后一行数据
+                                            # print(lineData)
+                                        pass
+                    # upgrade
+                    if not isSendFail:
+                        send = 'upgrade %s %d \n' % (boardType, totalLength)
+                        self.sendFpgaUpgradeCmd_AD(node_id, send)
+                        print(send)
+
+                        if CAN_DRIVER == USE_UART:
+                            receiveCanData = self.receiveCanCmdUart(node_id, 20)
+                        else:
+                            receiveCanData = self.receiveCanCmdCanDevice(node_id, 20)
+
+                        if len(receiveCanData) <= 0:  # time_out
+                            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
+                        else:
+                            receiveCanData = bytes(receiveCanData)
+                            print(receiveCanData.decode())
+
+                            if 'OK Upgrade finish!' in receiveCanData.decode():
+                                print('升级成功\n')
+                                self.message_singel.emit('升级成功 --> ' + str(hex(node_id)) + ' \r\n')
+                            else:
+                                isSendFail = True
+
+                    if isSendFail:
+                        self.message_singel.emit('升级失败 --> ' + str(hex(node_id)) + ' \r\n')
+                        print('升级失败！！！！！！！\n')
+
+
+
+                elif seq == 10 and len(node_idx_need_program)>0:
+                    print('into LVDS FPGA bootloader...')
                     for node_id in node_idx_need_program:
                         # send_data = [0xF0] #查询版本
                         send_data = [0x28] # into bootloader
@@ -565,7 +704,7 @@ class ProgramUpdateThread(QThread):
                         elif self.lvdsStartAddr == 0x8A0000:
                             file_name = FILE_NAME_LVDS_PT320_2_FPGA
                         elif self.lvdsStartAddr == 0xA10000:
-                            file_name = FILE_NAME_LVDS_PT320_2_FPGA
+                            file_name = FILE_NAME_LVDS_N10_2_FPGA
                         elif self.lvdsStartAddr == 0xBB0000:
                             file_name = FILE_NAME_LVDS_BOOT_FPGA
 
@@ -651,7 +790,7 @@ class ProgramUpdateThread(QThread):
                     if self.send_file_ret == 0 :
                         self.Download_state = 3
                     break;
-                elif seq >=8 and len(node_idx_need_program)>0:
+                elif seq == 10 and len(node_idx_need_program)>0:
                     print('send_FPGA_file_data')
                     self.send_file_ret = self.sendFpgaFile(file_name, self.send_file_ret, node_idx_need_program)
                     if self.send_file_ret == 0 :
@@ -703,7 +842,7 @@ class ProgramUpdateThread(QThread):
 
                     # self.Download_state = 1
                     # break
-                elif seq >= 8 and len(node_idx_need_program)>0:
+                elif seq == 10 and len(node_idx_need_program)>0:
                     print('reboot FPGA')
                     print('检查是否升级成功，请稍后...')
                     print("升级成功 --> ")
@@ -730,6 +869,76 @@ class ProgramUpdateThread(QThread):
 
                     # node_idx_need_program.clear()
 
+    def upgradeSection(self, node_id, addr, length, binSum, boardType, binData):
+        # addr = 2097152
+        # binSum =3449270
+        send = 'loadBin %s %x %x %x ' % (boardType, addr, length, binSum&0x7fffffff)
+        byteSum = 0;
+        for dat_ in send:
+            byteSum = byteSum + ord(dat_)
+        send = send + ('%x\n' % (byteSum))
+        # print(type(send))
+        # print(send)
+        # print(node_id)
+        self.sendFpgaUpgradeCmd_AD(node_id, send)
+        print(send)
+        # time.sleep(0.01)
+        if CAN_DRIVER == USE_UART:
+            receiveCanData = self.receiveCanCmdUart(node_id, 3)
+        else:
+            receiveCanData = self.receiveCanCmdCanDevice(node_id, 3)
+
+        if len(receiveCanData) <= 0:  # time_out
+            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
+        else:
+            receiveCanData = bytes(receiveCanData)
+            print(receiveCanData.decode())
+
+        # print(type(binData))
+        # input('wait')
+        self.sendFpgaUpgradeData_AD(node_id, binData, length)
+        # self.sendFpgaUpgradeCmd_AD(node_id, '\n')
+        # time.sleep(0.01)
+        # input('wait')
+
+        if CAN_DRIVER == USE_UART:
+            receiveCanData = self.receiveCanCmdUart(node_id, 5)
+        else:
+            receiveCanData = self.receiveCanCmdCanDevice(node_id, 5)
+
+        if len(receiveCanData) <= 0:  # time_out
+            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
+        else:
+            receiveCanData = bytes(receiveCanData)
+            print(receiveCanData.decode())
+            if 'OK %X' % (binSum) in receiveCanData.decode():
+                return False
+            else:
+                return True
+                print('     receive err!!!!!!!!!!!!!!!!!!!!!!!\r\n')
+        # input('wait')
+
+
+
+        # print(binData)
+        # time.sleep(0.1)
+
+
+    def str2hex(self, line):
+        lineData = list()
+        idx = 1
+        while idx < line.__len__()-1:
+            if (line[idx] != ord('\r') and line[idx+1] != ord('\n')):
+                # data = '%c%c' % (line[idx], line[idx+1])
+                lineData.append(int('%c%c' % (line[idx], line[idx+1]), 16))
+                # print(type(lineData[0]))
+            # else:
+                # print('end')
+                # pass
+            idx = idx + 2
+        # print(lineData)
+
+        return lineData
 
     def sendFpgaUpgradePack(self, node_id, dat):
         send_data = [0xFF, 0x33, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
@@ -833,8 +1042,8 @@ class ProgramUpdateThread(QThread):
         self.receive_can_data.clear()
         while True:
             while (time.time() - reboot_time) > wait_time:
-                reboot_time = time.time()
-                # print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
+                # reboot_time = time.time()
+                print('sendFpgaUpgradePack time_out node_id=0x%02X, diff_time=%d, wait_time=%d' % (node_id, time.time() - reboot_time, wait_time))
                 # print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
                 return  self.receive_can_data
 
@@ -859,7 +1068,7 @@ class ProgramUpdateThread(QThread):
                                 self.receive_can_data.append(dat[13])
                         pass
                     self.can_cmd.remove(dat)
-                print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in self.receive_can_data)))
+                # print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in self.receive_can_data)))
                 # print('     ', end='')
                 # print(bytes(self.receive_can_data))
                 break
@@ -1551,6 +1760,67 @@ class ProgramUpdateThread(QThread):
         # print('find_can_command_format... end')
         return data
 
+    def sendFpgaUpgradeData_AD(self, node_id, dat, length):
+        send_data = list(dat)
+
+        # length = length
+        send_times_high = length//7
+        send_times_low = length%7
+        # print(send_times_high)
+        # print(send_times_low)
+
+        send_times_cnt = 0
+        send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+
+        if send_times_high >= 1:
+            # print('send_times_high')
+            for i in range(0,send_times_high):
+                send[:7] = send_data[i*7:i*7+7]
+                self.send_can_command(node_id, send)
+                send_times_cnt = i + 1
+                # time.sleep(0.001)
+
+        # print(send_times_cnt)
+        send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+        if (send_times_low >= 1):
+            # print('send_times_low')
+            send[:send_times_low] = send_data[(send_times_cnt)*7:(send_times_cnt)*7+send_times_low]
+            self.send_can_command(node_id, send)
+
+    def sendFpgaUpgradeCmd_AD(self, node_id, dat):
+        send_data = list(dat)
+        try:
+            for i, dat_ in enumerate(send_data):
+                # print(type(dat_))
+                send_data[i] = ord(dat_)
+                # print(type(str(dat_)))
+        except Exception as e:
+            # print('except')
+            print(e)
+
+        length = len(send_data)
+        send_times_high = length//7
+        send_times_low = length%7
+        # print(send_times_high)
+        # print(send_times_low)
+
+        send_times_cnt = 0
+        send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+
+        if send_times_high >= 1:
+            # print('send_times_high')
+            for i in range(0,send_times_high):
+                send[:7] = send_data[i*7:i*7+7]
+                self.send_can_command(node_id, send)
+                send_times_cnt = i + 1
+
+        # print(send_times_cnt)
+        send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+        if (send_times_low >= 1):
+            # print('send_times_low')
+            send[:send_times_low] = send_data[(send_times_cnt)*7:(send_times_cnt)*7+send_times_low]
+            self.send_can_command(node_id, send)
+
 
     def timeout_slot(self):
         self.tick = self.tick + 1
@@ -1723,15 +1993,21 @@ if __name__ == "__main__":
 
         # MainWindow.show()
 
+        ui.show()
+
         #系统exit()方法确保应用程序干净的退出
         #的exec_()方法有下划线。因为执行是一个Python关键词。因此，exec_()代替
-        sys.exit(app.exec_())
-    except:
+        app.exec_()
+    except Exception as e:
         print('catch error!!!')
+        print(e)
         while True:
+            time.sleep(3)
             pass
 
     finally:
         print('runing time is {}s '.format((nowTime()-run_time)/1000))
+        #系统exit()方法确保应用程序干净的退出
+        sys.exit()
 
     pass
