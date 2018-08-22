@@ -17,7 +17,7 @@ import binascii
 import threading
 import serial.tools.list_ports
 from enum import Enum, unique
-from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox)
+from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox, QComboBox)
 from PyQt5.QtCore import (pyqtSignal, QTimer, QThread, QTime)
 from PyQt5 import QtCore, QtGui
 
@@ -96,6 +96,38 @@ class FPGA_CMD(Enum):
     SET_LVDS_PARAM  = 0x0b
     SET_OUTPUT_TIM  = 0x0c
 
+class SerialComboBox(QComboBox):
+    '''
+    串口选择框
+    '''
+    popupAboutToBeShown = pyqtSignal(str)
+
+    def __init__(self, parent = None):
+        super(SerialComboBox,self).__init__(parent)
+        self.setMaxVisibleItems(10)
+        plist = list(serial.tools.list_ports.comports())
+        for i in range(0, len(plist)):
+            print(plist[i])
+            # self.message_singel(str(plist[i])+'\r\n')
+            self.addItem(str(plist[i].device))
+        print('')
+
+    # 重写showPopup函数
+    def showPopup(self):
+        # 先清空原有的选项
+        self.clear()
+        # self.addItem(" ")
+        # self.addItem( "请选择串口号")
+        # 获取接入的所有串口信息，插入combobox的选项中
+        plist = list(serial.tools.list_ports.comports())
+        for i in range(0, len(plist)):
+            print(plist[i])
+            # self.message_singel(str(plist[i])+'\r\n')
+            self.popupAboutToBeShown.emit(str(plist[i])+'\r\n')
+            self.addItem(str(plist[i].device))
+        print('')
+        QComboBox.showPopup(self)   # 弹出选项框
+
 
 class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
     '''
@@ -130,9 +162,18 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Light, brush)
+
+        self.ser_com_combo = SerialComboBox()
+        self.ser_com_combo.popupAboutToBeShown.connect(self.message_singel)
+        self.ser_com_combo.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.ser_com_combo.setDuplicatesEnabled(False)
+        self.ser_com_combo.setFrame(False)
+        self.ser_com_combo.setObjectName("ser_com_combo")
+        self.gridLayout.addWidget(self.ser_com_combo, 0, 0, 1, 1)
+
         for i in range(8):
             for j in range(11):
-                self.NodeID_button.append(QPushButton(self.gridLayoutWidget_2))
+                self.NodeID_button.append(QPushButton())
                 self.NodeID_button[i*11+j].setEnabled(False)
                 self.NodeID_button[i*11+j].setText("")
                 self.NodeID_button[i*11+j].setCheckable(True)
@@ -141,7 +182,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 self.NodeID_button[i*11+j].clicked[bool].connect(self.selectNodeID)
                 self.gridLayout_3.addWidget(self.NodeID_button[i*11+j], j+2, i+1, 1, 1)
 
-            self.BoxID_checkBox.append(QCheckBox('机箱 '+str(i), self.gridLayoutWidget_2))
+            self.BoxID_checkBox.append(QCheckBox('机箱 '+str(i)))
             self.BoxID_checkBox[i].setEnabled(False)
             font = QtGui.QFont()
             font.setPointSize(11)
@@ -157,8 +198,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.gridLayout_3.addWidget(self.BoxID_checkBox[i], 1, i+1, 1, 1)
 
         # DetectSerial
-        self.ser_detect_button.clicked.connect(self.DetectSerial)
-        self.ser_detect_button.setShortcut('F6')
+        # self.ser_detect_button.clicked.connect(self.DetectSerial)
 
         # message_singel
         self.ProgramUpdate_thread.message_singel.connect(self.message_singel)
@@ -169,7 +209,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         # openSerial
         self.ser_open_button.clicked.connect(self.openSerial)
-        self.ser_open_button.setShortcut('F7')
+        # self.ser_open_button.setShortcut('F7')
 
         #refreshBoard
         self.BoardRefresh_button.clicked.connect(self.refreshBoard)
@@ -258,17 +298,17 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         # print(self.Download_combo.currentText())
         self.ProgramUpdate_thread.download_process_flag = 1
 
-    # DetectSerial
-    def DetectSerial(self):
-        source = self.sender()
-        print(source)
-        print(source.text())
-        self.ser_com_combo.clear()
-        plist = list(serial.tools.list_ports.comports())
-        for i in range(0, len(plist)):
-            print(plist[i])
-            self.message_singel(str(plist[i])+'\r\n')
-            self.ser_com_combo.addItem(str(plist[i].device))
+    # # DetectSerial
+    # def DetectSerial(self):
+        # source = self.sender()
+        # print(source)
+        # print(source.text())
+        # self.ser_com_combo.clear()
+        # plist = list(serial.tools.list_ports.comports())
+        # for i in range(0, len(plist)):
+            # print(plist[i])
+            # self.message_singel(str(plist[i])+'\r\n')
+            # self.ser_com_combo.addItem(str(plist[i].device))
 
     # openSerial
     def openSerial(self):
