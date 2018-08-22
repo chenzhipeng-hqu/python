@@ -355,8 +355,8 @@ class ProgramUpdateThread(QThread):
         self.data_receive = ''
         self.wait_receive = int(1)
         self.can_cmd = list()
-        self.lvdsStartAddr = 0x000000
-        # self.lvdsStartAddr = 0x170000
+        # self.lvdsStartAddr = 0x000000
+        self.lvdsStartAddr = 0x170000
 
         #node_id_list
         self.node_id_need_program = list()
@@ -537,6 +537,24 @@ class ProgramUpdateThread(QThread):
                         boardType = 'digital'
                     elif seq == 8:
                         boardType = 'analog'
+
+                    Is_File_exist = int(0)
+                    while Is_File_exist == 0:
+                        Is_File_exist = os.path.exists(file_name)
+                        if Is_File_exist:
+                            self.size = os.path.getsize(file_name)
+                            creat_time = os.path.getmtime(file_name)
+                            print('')
+                            print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
+                            print('正在升级...  ',  end='')
+                            self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
+                        else:
+                            print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
+                            self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
+                            print('当前工作路径为：%s ' % (os.getcwd()))
+                            os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
+                            print('切换后工作路径为：%s ' % (os.getcwd()))
+
                     with open(file_name, 'rb') as f_mcs:
                         for i, line in enumerate(f_mcs):
                             if line.__len__()>10  and ord('4') == line[8] and ord('0') == line[7]:
@@ -587,6 +605,7 @@ class ProgramUpdateThread(QThread):
                                             pass
                                         else:
                                             #file head, update UI
+                                            self.processBar_singel.emit((curBlock/blockNum)*100)
                                             pass
 
                                         if lineData[0] == 0x02:
@@ -755,7 +774,7 @@ class ProgramUpdateThread(QThread):
                     print('seq=%d' % (seq))
                     print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
                     self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
-                    self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！ \r\n')
+                    self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！版本号正确即可。 \r\n')
                     self.Download_state = 0
                     self.download_process_flag = 0
                     self.wait_receive = 1
