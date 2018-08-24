@@ -71,7 +71,6 @@ class UpgradeMCU(QThread):
         if self.Download_state == DOWNLOAD_STATE.INITIALIZE.value: #---- 初始化数据---
             print('下载程序...')
             self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
-            print(dir(self.Download_state))
             pass
 
         elif self.Download_state == DOWNLOAD_STATE.ENTER_UPGRADE.value: #---- 复位看门狗---

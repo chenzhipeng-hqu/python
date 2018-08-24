@@ -25,6 +25,7 @@ import UI_ProgramUpdate
 # import CANalystDriver
 from CANalystDriver import *
 from Upgrade_MCU import UpgradeMCU
+from Upgrade_FPGA import UpgradeFPGA
 from Canopen_Protocol import CanopenProtocol
 
 
@@ -213,6 +214,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         # message_singel
         self.ProgramUpdate_thread.message_singel.connect(self.message_singel)
         self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
+        self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
         self.Msg_TextEdit.insertPlainText('欢迎使用，请选择串口。。。\r\n')
         textCursor = self.Msg_TextEdit.textCursor()
         textCursor.movePosition(textCursor.End)
@@ -232,6 +234,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         #processbar_singel
         self.ProgramUpdate_thread.processBar_singel.connect(self.processBar_singel)
         self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
+        self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
 
         #timeDisp_singel
         self.ProgramUpdate_thread.timeDisp_singel.connect(self.timeDisp_singel)
@@ -476,12 +479,18 @@ class ProgramUpdateThread(QThread):
         self.Download_state = int(0)
         self.receive_can_data = list()
 
-        #---- MCU download_creat----
-        self.MCU = UpgradeMCU()
-        #---end---
-
         #---- canopenprotocol----
         self.Canopen = CanopenProtocol()
+        #---end---
+
+        #---- MCU upgrade_creat----
+        self.MCU = UpgradeMCU()
+        self.MCU.setInterfaceDev(self.Canopen)
+        #---end---
+
+        #---- FPGA upgrade_creat----
+        self.FPGA = UpgradeFPGA()
+        self.FPGA.setInterfaceDev(self.Canopen)
         #---end---
 
         #----can driver----
@@ -573,7 +582,7 @@ class ProgramUpdateThread(QThread):
                     print(e)
             elif seq <= 9 and len(node_idx_need_program):
                 try:
-                    self.FPGA.downloadProcess(file_name, node_idx_need_program)
+                    self.FPGA.downloadProcess(board_type, file_name, node_idx_need_program)
                     break
                 except Exception as e:
                     print(e)
@@ -1433,7 +1442,6 @@ class ProgramUpdateThread(QThread):
                 print("打开成功 -> %s" % (self.ser.port))
                 self.message_singel.emit('打开成功 -> '+ COMn + '\r\n')
                 self.Canopen.setInterfaceDev(self.ser)
-                self.MCU.setInterfaceDev(self.Canopen)
                 ret = 0
             else:
                 self.download_process_flag = 0

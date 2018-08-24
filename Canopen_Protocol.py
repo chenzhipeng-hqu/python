@@ -80,10 +80,11 @@ class CanopenProtocol:
             time.sleep(0.001)
             while 0 < len(self.can_cmd):
                 dat = self.can_cmd.pop(0)
-                print(" ".join(hex(k) for k in dat))
+                # print(" ".join(hex(k) for k in dat))
                 if dat[3] == 0x02:  #PDO1（接收）
                     pass
-                elif dat[3] == 0x01: #PDO1（发送）
+                elif dat[3] == rev_type: #PDO1（发送）
+                    receive_data.append(dat)
                     pass
                 elif dat[3] == 0x07:
                     if dat[2] == node_id:
