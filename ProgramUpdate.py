@@ -24,6 +24,8 @@ from PyQt5 import QtCore, QtGui
 import UI_ProgramUpdate
 # import CANalystDriver
 from CANalystDriver import *
+from Upgrade_MCU import UpgradeMCU
+from Canopen_Protocol import CanopenProtocol
 
 
 DEBUG = int(0)
@@ -79,6 +81,14 @@ USE_CANALYST_II = 1
 CAN_DRIVER = USE_UART
 
 nowTime = lambda:int(round(time.time()*1000))
+
+# @unique       #如果要限制定义枚举时，不能定义相同值的成员。可以使用装饰器@unique【要导入unique模块】
+# class DOWNLOAD_STATE(Enum):
+    # INITIALIZE      = 0x00
+    # ENTER_UPGRADE   = 0x01
+    # SEND_FILE       = 0x02
+    # FINISH_UPGRADE  = 0x03
+
 
 @unique       #如果要限制定义枚举时，不能定义相同值的成员。可以使用装饰器@unique【要导入unique模块】
 class FPGA_CMD(Enum):
@@ -202,6 +212,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         # message_singel
         self.ProgramUpdate_thread.message_singel.connect(self.message_singel)
+        self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
         self.Msg_TextEdit.insertPlainText('欢迎使用，请选择串口。。。\r\n')
         textCursor = self.Msg_TextEdit.textCursor()
         textCursor.movePosition(textCursor.End)
@@ -220,6 +231,10 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         #processbar_singel
         self.ProgramUpdate_thread.processBar_singel.connect(self.processBar_singel)
+        self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
+
+        #timeDisp_singel
+        self.ProgramUpdate_thread.timeDisp_singel.connect(self.timeDisp_singel)
 
         #download_process
         self.download_button.clicked.connect(self.download_process)
@@ -289,10 +304,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.ProgramUpdate_thread.selectNodeID(pressed, str(source.id_))
 
     def download_process(self):
-
-        now_time = time.strftime("%H:%M:%S", time.localtime())
-        self.timeEdit.setTime(QTime.fromString(now_time, 'hh:mm:ss'))
-        print(now_time)
+        self.ProgramUpdate_thread.time_tick.setHMS(0, 0, 0)#初始时设置时间为  00：00：00
         source = self.sender()
         # print(dir(source))
         # print(self.Download_combo.currentText())
@@ -381,6 +393,10 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.BoxID_checkBox[(i>>4)].setCheckable(True)
             self.BoxID_checkBox[(i>>4)].setEnabled(True)
 
+    def timeDisp_singel(self, now_time):
+        self.timeDisp.setText(now_time.toString("hh:mm:ss"))
+        pass
+
 '''
 '''
 class ProgramUpdateThread(QThread):
@@ -388,11 +404,11 @@ class ProgramUpdateThread(QThread):
     refresh_singel = pyqtSignal(int, int, int, str, int)
     processBar_singel = pyqtSignal(int)
     message_singel = pyqtSignal(str)
+    timeDisp_singel = pyqtSignal(QTime)
 
     def __init__(self):
         super(ProgramUpdateThread, self).__init__()
         self.ser = serial.Serial()  #/dev/ttyUSB0
-        self.data_receive = ''
         self.wait_receive = int(1)
         self.can_cmd = list()
         # self.lvdsStartAddr = 0x000000
@@ -420,12 +436,30 @@ class ProgramUpdateThread(QThread):
             ( 10    , LVDS_FPGA_BOARD     , FILE_NAME_LVDS_N10_FPGA   , list()    , list() )\
             ]
 
+        self.AllBoardIndex = [\
+            (0                      ,     0                     ),\
+            (1                      ,     0                     ),\
+            (POWER_BOARD            ,     self.AllNodeList[3]   ),\
+            (3                      ,     0                     ),\
+            (IO_ANALOG_BOARD        ,     self.AllNodeList[1]   ),\
+            (AUDIO_BOARD            ,     self.AllNodeList[0]   ),\
+            (IO_DIGITAL_BOARD       ,     self.AllNodeList[2]   ),\
+            (ANALOG_VIDEO_BOARD     ,     self.AllNodeList[4]   ),\
+            (DIGITAL_VIDEO_BOARD    ,     self.AllNodeList[5]   ),\
+            (LVDS_IN_BOARD          ,     self.AllNodeList[6]   ),\
+            (PCIE_BASE_BOARD        ,     self.AllNodeList[7]   ),\
+            (ANALOG_FPGA_BOARD      ,     self.AllNodeList[8]   ),\
+            (DIGITAL_FPGA_BOARD     ,     self.AllNodeList[9]   ),\
+            (LVDS_FPGA_BOARD        ,     self.AllNodeList[10]  ),\
+            ]
+
 
         #----initialize----QTimer 任务
-        self.tick = int(0)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.timeout_slot)
         self.timer.start(1)
+        self.time_tick=QTime()
+        self.time_tick.setHMS(0,0,0)  #初始时设置时间为  00：00：00
         #----end---- 
 
         #----initialize----threading 任务
@@ -441,6 +475,14 @@ class ProgramUpdateThread(QThread):
         self.send_file_state = int(1)
         self.Download_state = int(0)
         self.receive_can_data = list()
+
+        #---- MCU download_creat----
+        self.MCU = UpgradeMCU()
+        #---end---
+
+        #---- canopenprotocol----
+        self.Canopen = CanopenProtocol()
+        #---end---
 
         #----can driver----
         if CAN_DRIVER == USE_UART:
@@ -473,7 +515,6 @@ class ProgramUpdateThread(QThread):
 
     def run(self):
         while True:
-            # print('tick2=%d ' % (self.tick))
             if self.refreshBoardFlag == 1:
                 self.refreshBoard()
                 if CAN_DRIVER == USE_UART:
@@ -483,37 +524,71 @@ class ProgramUpdateThread(QThread):
 
             if self.download_process_flag == 1:
                 # self.download_process()
-                self.download_process2()
+                # self.download_process2()
+                self.download_process3()
 
-            if self.data_receive != '':
-                self.data_receive = self.find_can_command_format(self.data_receive)
-                self.data_receive = ''
+            # if self.data_receive != '':
+                # self.Canopen.receiveData(self.data_receive)
+                # self.data_receive = ''
 
-                # if len(self.can_cmd) > 0:
-                i = int(0)
-                self.lvds_rx_data = list()
-                while i < len(self.can_cmd):
-                    dat = self.can_cmd[i]
-                    print(" ".join(hex(k) for k in dat))
-                    if dat[3] == 0x02:  #PDO1（接收）
-                        pass
-                    elif dat[3] == 0x01: #PDO1（发送）
-                        if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
-                            if dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
-                                self.lvds_rx_data.append(dat[10])
-                                self.lvds_rx_data.append(dat[11])
-                                self.lvds_rx_data.append(dat[12])
-                                self.lvds_rx_data.append(dat[13])
-                        pass
-                    elif dat[3] == 0x07 and dat[2] < 0x81:
-                        print(' 0x%02X Boot up' % (dat[2]))
-                    self.can_cmd.remove(dat)
-                print(bytes(self.lvds_rx_data))
+            # if self.data_receive != '':
+                # self.data_receive = self.find_can_command_format(self.data_receive)
+                # self.data_receive = ''
+
+                # # if len(self.can_cmd) > 0:
+                # i = int(0)
+                # self.lvds_rx_data = list()
+                # while i < len(self.can_cmd):
+                    # dat = self.can_cmd[i]
+                    # print(" ".join(hex(k) for k in dat))
+                    # if dat[3] == 0x02:  #PDO1（接收）
+                        # pass
+                    # elif dat[3] == 0x01: #PDO1（发送）
+                        # if dat[6] in self.AllNodeList[6][3]: # LVDS_IN_BOARD
+                            # if dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
+                                # self.lvds_rx_data.append(dat[10])
+                                # self.lvds_rx_data.append(dat[11])
+                                # self.lvds_rx_data.append(dat[12])
+                                # self.lvds_rx_data.append(dat[13])
+                        # pass
+                    # elif dat[3] == 0x07 and dat[2] < 0x81:
+                        # print(' 0x%02X Boot up' % (dat[2]))
+                    # self.can_cmd.remove(dat)
+                # print(bytes(self.lvds_rx_data))
 
 
             QThread.msleep(1)
 
             pass
+
+    def download_process3(self):
+        # self.wait_receive = 0
+
+        for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+            if seq <= 7 and len(node_idx_need_program) > 0:
+                try:
+                    self.MCU.downloadProcess(file_name, node_idx_need_program)
+                    break
+                except Exception as e:
+                    print(e)
+            elif seq <= 9 and len(node_idx_need_program):
+                try:
+                    self.FPGA.downloadProcess(file_name, node_idx_need_program)
+                    break
+                except Exception as e:
+                    print(e)
+                pass
+
+            elif seq <= 10 and len(node_idx_need_program):
+                pass
+
+            if seq >= 10 and len(node_idx_need_program) <= 0:
+                print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
+                # self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
+                self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！版本号正确即可。 \r\n')
+                self.download_process_flag = 0
+
+        # self.wait_receive = 1
 
     def download_process2(self):
         if self.Download_state == 0: #---- 初始化数据---
@@ -559,7 +634,8 @@ class ProgramUpdateThread(QThread):
                                 print("重启成功 节点 --> 0x%02X" % (data[23]))
                                 self.message_singel.emit('重启成功 --> ' + str(hex(data[23])) + ' \r\n')
 
-                                self.send_start_command(self.ser, node_id) #------- 发送启动命令
+                                # self.send_start_command(self.ser, node_id) #------- 发送启动命令
+                                self.Canopen.sendStartCmd(node_id) #------- 发送启动命令
                                 QThread.msleep(1)
                                 self.send_erase_commane(node_id) #------- 发送擦除扇区命令
                                 QThread.msleep(1)
@@ -604,7 +680,10 @@ class ProgramUpdateThread(QThread):
                     print(send)
                     for node_id in node_idx_need_program:
                         self.sendFpgaUpgradeCmd_AD(node_id, send)
-                        receiveCanData = self.receiveCanCmdUart(node_id, 3)
+                        if CAN_DRIVER == USE_UART:
+                            receiveCanData = self.receiveCanCmdUart(node_id, 3)
+                        else:
+                            receiveCanData = self.receiveCanCmdCanDevice(node_id, 20)
                         receiveCanData = bytes(receiveCanData)
                         print(receiveCanData.decode())
                         if 'OK enterUpg 00 #A4\n' in receiveCanData.decode():
@@ -1235,10 +1314,13 @@ class ProgramUpdateThread(QThread):
             self.send_can_command(node_idx_exist, send_data)
 
     def send_can_command(self, node_id, data):
-        if CAN_DRIVER == USE_UART:
-            self.send_can_command_uart(node_id, data)
-        else:
-            self.send_can_command_candriver(node_id, data)
+        try:
+            if CAN_DRIVER == USE_UART:
+                self.send_can_command_uart(node_id, data)
+            else:
+                self.send_can_command_candriver(node_id, data)
+        except Exception as e:
+            print(e)
 
 
     def send_can_command_candriver(self, node_id, data):
@@ -1252,23 +1334,28 @@ class ProgramUpdateThread(QThread):
         self.canDll.VCI_Transmit(ctypes.byref(vci_can_obj), 1)
 
     def send_can_command_uart(self, node_id, data):
-        send = [0xAA, 0xAA,
-                node_id, 0x02, 0x00, 0x00,
-                # data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
-                0x08, 0x00, 0x00, 0x00,
-                0x00,
-                0x55 , 0x55
-                ]
-        send = send[0:6]+data+send[6:]
-        send[18] = (send[2]+send[3]+send[14]+sum(data))&0xff
-        send = self.send_command_ctrl_deal(send)
-        # print(" ".join(hex(i) for i in send))
+        # send = [0xAA, 0xAA,
+                # node_id, 0x02, 0x00, 0x00,
+                # # data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+                # 0x08, 0x00, 0x00, 0x00,
+                # 0x00,
+                # 0x55 , 0x55
+                # ]
+        # send = send[0:6]+data+send[6:]
+        # send[18] = (send[2]+send[3]+send[14]+sum(data))&0xff
+        # send = self.send_command_ctrl_deal(send)
+        # # print(" ".join(hex(i) for i in send))
+        # try:
+            # self.ser.write(send)
+        # except :
+            # print("***打开失败,请检查串口是否被占用或其他异常!!!")
+            # self.message_singel.emit("***打开失败,请检查串口是否被占用或其他异常!!!\r\n")
+            # return
+
         try:
-            self.ser.write(send)
-        except :
-            print("***打开失败,请检查串口是否被占用或其他异常!!!")
-            self.message_singel.emit("***打开失败,请检查串口是否被占用或其他异常!!!\r\n")
-            return
+            self.Canopen.sendData(self.Canopen.PDO1_Rx, node_id, 8, data)
+        except Exception as e:
+            print(e)
 
     # download_select
     def downloadSelect(self, download_select):
@@ -1345,14 +1432,17 @@ class ProgramUpdateThread(QThread):
             if  self.ser.isOpen():
                 print("打开成功 -> %s" % (self.ser.port))
                 self.message_singel.emit('打开成功 -> '+ COMn + '\r\n')
+                self.Canopen.setInterfaceDev(self.ser)
+                self.MCU.setInterfaceDev(self.Canopen)
                 ret = 0
             else:
                 self.download_process_flag = 0
                 print("打开失败,请检查串口后重启程序!")
                 self.message_singel.emit("打开失败,请检查串口后重启程序!\r\n")
                 ret = 1
-        except:
+        except Exception as e:
             self.download_process_flag = 0
+            print(e)
             print("***打开失败,请检查串口是否被占用或其他异常!!!")
             self.message_singel.emit("***打开失败,请检查串口是否被占用或其他异常!!!\r\n")
             ret = 1
@@ -1694,19 +1784,7 @@ class ProgramUpdateThread(QThread):
 
 
                             for node_id in node_id_need_program:
-                                send_data = [0xAA, 0xAA,
-                                            0x12, 0x03, 0x00, 0x00,
-                                            0x08, 0x00, 0x00, 0x00,
-                                            0x31,
-                                            0x55 , 0x55
-                                            ]
-                                send_data[2] = node_id
-                                check_sum = (send_data[2]+send_data[3]+send_data[6]+sum(f_bin_data))
-                                send_data[10] = check_sum&0xff
-                                send_data = send_data[0:6:1] +f_bin_data + send_data[6::1]
-
-                                send_data = self.send_command_ctrl_deal(send_data)
-                                self.ser.write(send_data) #数据写回
+                                self.Canopen.sendData(self.Canopen.PDO2_Rx, node_id, len(f_bin_data), f_bin_data)
                             check_sum_1K += sum(f_bin_data)
                             send_file_state = 3
                             # send_file_ret = 1
@@ -1747,12 +1825,9 @@ class ProgramUpdateThread(QThread):
             try:
                 if self.ser.isOpen() and self.wait_receive == 1:
                     while self.ser.inWaiting() > 0:
-                        self.data_receive = self.ser.read_all()
-                        # self.wait_receive = 0
-            except:
-                print('receive error')
-            # print('tick3=%d ' % (self.tick))
-            pass
+                        self.Canopen.receiveData(self.ser.read_all())
+            except Exception as err:
+                print(err)
 
     def find_can_command_format(self, data):
         # print('find_can_command_format...start')
@@ -1848,9 +1923,9 @@ class ProgramUpdateThread(QThread):
 
 
     def timeout_slot(self):
-        self.tick = self.tick + 1
-        # if (self.tick % 1000 == 0):
-            # print('tick1=%d ' % (self.tick))
+        self.time_tick = self.time_tick.addMSecs(1)
+        if self.time_tick.msec() % 1000 == 0 and self.download_process_flag == 1:
+            self.timeDisp_singel.emit(self.time_tick)
 
     def send_start_command(self, ser, node_id):
         send = [0xAA, 0xAA,
@@ -1934,19 +2009,7 @@ class ProgramUpdateThread(QThread):
             f_bin_data = list(f_bin_data)
 
             for node_id in node_ids:
-                send_data = [0xAA, 0xAA,
-                            0x12, 0x03, 0x00, 0x00,
-                            0x08, 0x00, 0x00, 0x00,
-                            0x31,
-                            0x55 , 0x55
-                            ]
-                send_data[2] = node_id
-                check_sum = (send_data[2]+send_data[3]+send_data[6]+sum(f_bin_data))
-                send_data[10] = check_sum&0xff
-                send_data = send_data[0:6:1] +f_bin_data + send_data[6::1]
-
-                send_data = self.send_command_ctrl_deal(send_data)
-                ser.write(send_data) #数据写回
+                self.Canopen.sendData(self.Canopen.PDO2_Rx, node_id, 8, f_bin_data)
 
             check_sum_1K += sum(f_bin_data)
         return check_sum_1K
@@ -1975,10 +2038,10 @@ class ProgramUpdateThread(QThread):
         timeStruct = time.localtime(timestamp)
         return time.strftime('%Y-%m-%d %H:%M:%S',timeStruct)
 
-'''
-main
-'''
 if __name__ == "__main__":
+    '''
+    main
+    '''
     if sys.stdout.isatty():
         default_encoding = sys.stdout.encoding
     else:
@@ -1986,6 +2049,7 @@ if __name__ == "__main__":
 
     print('当前工作路径为：%s ' % (os.getcwd()))
     print('当前运行程序为：%s ' % (sys.argv[0]))
+
     run_time = nowTime()
 
     try:

@@ -208,40 +208,18 @@
              </widget>
             </item>
             <item row="2" column="0">
-             <widget class="QTimeEdit" name="timeEdit">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+             <widget class="QLabel" name="timeDisp">
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="text">
+               <string>00:00:00</string>
+              </property>
+              <property name="textFormat">
+               <enum>Qt::AutoText</enum>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
-              </property>
-              <property name="readOnly">
-               <bool>true</bool>
-              </property>
-              <property name="buttonSymbols">
-               <enum>QAbstractSpinBox::NoButtons</enum>
-              </property>
-              <property name="correctionMode">
-               <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
-              </property>
-              <property name="currentSection">
-               <enum>QDateTimeEdit::SecondSection</enum>
-              </property>
-              <property name="displayFormat">
-               <string>hh:mm:ss</string>
-              </property>
-              <property name="currentSectionIndex">
-               <number>2</number>
-              </property>
-              <property name="time">
-               <time>
-                <hour>0</hour>
-                <minute>0</minute>
-                <second>1</second>
-               </time>
               </property>
              </widget>
             </item>
