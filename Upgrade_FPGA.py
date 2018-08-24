@@ -55,11 +55,11 @@ class UpgradeFPGA(QThread):
 
         while 0 < len(can_cmd):
             dat = can_cmd.pop(0)
-            if dat[6] == node_id and dat[8] >= dat[9]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
-                receive_data.append(dat[10])
-                receive_data.append(dat[11])
-                receive_data.append(dat[12])
-                receive_data.append(dat[13])
+            if dat[0] == node_id and dat[2] >= dat[3]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
+                receive_data.append(dat[4])
+                receive_data.append(dat[5])
+                receive_data.append(dat[6])
+                receive_data.append(dat[7])
 
         return receive_data
 

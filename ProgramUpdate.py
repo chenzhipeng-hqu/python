@@ -23,10 +23,10 @@ from PyQt5 import QtCore, QtGui
 
 import UI_ProgramUpdate
 # import CANalystDriver
-from CANalystDriver import *
+from CANalystII_Driver import *
 from Upgrade_MCU import UpgradeMCU
 from Upgrade_FPGA import UpgradeFPGA
-from Canopen_Protocol import CanopenProtocol
+from Canopen_Protocol import (CanopenProtocol, USE_UART, USE_CANALYST_II)
 
 
 DEBUG = int(0)
@@ -77,8 +77,8 @@ ANALOG_FPGA_BOARD   = int(0x07)
 DIGITAL_FPGA_BOARD  = int(0x08)
 LVDS_FPGA_BOARD     = int(0x09)
 
-USE_UART = 0
-USE_CANALYST_II = 1
+# USE_UART = 0
+# USE_CANALYST_II = 1
 CAN_DRIVER = USE_UART
 
 nowTime = lambda:int(round(time.time()*1000))
@@ -121,6 +121,7 @@ class SerialComboBox(QComboBox):
             print(plist[i])
             # self.message_singel(str(plist[i])+'\r\n')
             self.addItem(str(plist[i].device))
+        self.addItem('CANalystII')
         print('')
 
     # 重写showPopup函数
@@ -136,6 +137,7 @@ class SerialComboBox(QComboBox):
             # self.message_singel(str(plist[i])+'\r\n')
             self.popupAboutToBeShown.emit(str(plist[i])+'\r\n')
             self.addItem(str(plist[i].device))
+        self.addItem('CANalystII')
         print('')
         QComboBox.showPopup(self)   # 弹出选项框
 
@@ -412,7 +414,7 @@ class ProgramUpdateThread(QThread):
     def __init__(self):
         super(ProgramUpdateThread, self).__init__()
         self.ser = serial.Serial()  #/dev/ttyUSB0
-        self.wait_receive = int(1)
+        self.wait_receive = int(0)
         self.can_cmd = list()
         # self.lvdsStartAddr = 0x000000
         self.lvdsStartAddr = 0x170000
@@ -494,42 +496,45 @@ class ProgramUpdateThread(QThread):
         #---end---
 
         #----can driver----
-        if CAN_DRIVER == USE_UART:
-            pass
-        else:
-            index = 0
-            can_num = 0
-            self.canDll = CANalystDriver(VCI_USBCAN2A, index, can_num)
-            self.canDll.VCI_OpenDevice(0)
-            initConfig = VCI_INIT_CONFIG()
-            initConfig.AccCode = 0x80000008
-            initConfig.AccMask = 0xFFFFFFFF
-            initConfig.Reserved = 0
-            initConfig.Filter = 0
-            initConfig.Timing0 = 0x00
-            initConfig.Timing1 = 0x14
-            initConfig.Mode = 0
-            self.canDll.VCI_InitCAN(ctypes.byref(initConfig))
-            self.canDll.VCI_StartCAN()
-            # self.canDll.thread_1.start()
+        # if CAN_DRIVER == USE_UART:
+            # pass
+        # else:
+            # index = 0
+            # can_num = 0
+            # self.canDll = CANalystDriver(VCI_USBCAN2A, index, can_num)
+            # self.canDll.VCI_OpenDevice(0)
+            # initConfig = VCI_INIT_CONFIG()
+            # initConfig.AccCode = 0x80000008
+            # initConfig.AccMask = 0xFFFFFFFF
+            # initConfig.Reserved = 0
+            # initConfig.Filter = 0
+            # initConfig.Timing0 = 0x00
+            # initConfig.Timing1 = 0x14
+            # initConfig.Mode = 0
+            # self.canDll.VCI_InitCAN(ctypes.byref(initConfig))
+            # self.canDll.VCI_StartCAN()
+            # # self.canDll.thread_1.start()
 
-            ubyte_array_8 = ctypes.c_ubyte * 8
-            data = ubyte_array_8(1, 2, 3, 4, 5, 6, 7, 8)
-            ubyte_array_3 = ctypes.c_ubyte * 3
-            reserved = ubyte_array_3(0, 0, 0)
+            # ubyte_array_8 = ctypes.c_ubyte * 8
+            # data = ubyte_array_8(1, 2, 3, 4, 5, 6, 7, 8)
+            # ubyte_array_3 = ctypes.c_ubyte * 3
+            # reserved = ubyte_array_3(0, 0, 0)
 
-            vci_can_obj = VCI_CAN_OBJ(0x712, 0, 0, 1, 0, 0, 8, data, reserved)
+            # vci_can_obj = VCI_CAN_OBJ(0x712, 0, 0, 1, 0, 0, 8, data, reserved)
 
-            self.canDll.VCI_Transmit(ctypes.byref(vci_can_obj), 1)
+            # self.canDll.VCI_Transmit(ctypes.byref(vci_can_obj), 1)
+            # self.Canopen.setInterfaceDev(self.canDll, USE_CANALYST_II)
+            # print(CAN_DRIVER)
 
     def run(self):
         while True:
             if self.refreshBoardFlag == 1:
                 self.refreshBoard()
-                if CAN_DRIVER == USE_UART:
-                    pass
-                else:
-                    self.ser.close()
+                self.run_time = nowTime()
+                # if CAN_DRIVER == USE_UART:
+                    # pass
+                # else:
+                    # self.ser.close()
 
             if self.download_process_flag == 1:
                 # self.download_process()
@@ -593,7 +598,7 @@ class ProgramUpdateThread(QThread):
 
             if seq >= 10 and len(node_idx_need_program) <= 0:
                 print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
-                # self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
+                self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
                 self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！版本号正确即可。 \r\n')
                 self.download_process_flag = 0
 
@@ -601,7 +606,7 @@ class ProgramUpdateThread(QThread):
 
     def download_process2(self):
         if self.Download_state == 0: #---- 初始化数据---
-            if  self.ser.isOpen() or CAN_DRIVER == USE_CANALYST_II:
+            if  self.Canopen.devIsOpen():
                 self.message_singel.emit('下载程序...\r\n')
                 print('下载程序...')
                 self.run_time = nowTime()
@@ -1436,12 +1441,41 @@ class ProgramUpdateThread(QThread):
     # openSerial
     def openSerial(self, COMn):
         try:
-            self.ser = serial.Serial(COMn, 115200, timeout=0.001)  #/dev/ttyUSB0
+            if COMn == 'CANalystII':
+                index = 0
+                can_num = 0
+                self.canDll = CANalystDriver(VCI_USBCAN2A, index, can_num)
+                self.canDll.VCI_OpenDevice(0)
+                initConfig = VCI_INIT_CONFIG()
+                initConfig.AccCode = 0x80000008
+                initConfig.AccMask = 0xFFFFFFFF
+                initConfig.Reserved = 0
+                initConfig.Filter = 0
+                initConfig.Timing0 = 0x00
+                initConfig.Timing1 = 0x14
+                initConfig.Mode = 0
+                self.canDll.VCI_InitCAN(ctypes.byref(initConfig))
+                self.canDll.VCI_StartCAN()
+                # self.canDll.thread_1.start()
 
-            if  self.ser.isOpen():
+                ubyte_array_8 = ctypes.c_ubyte * 8
+                data = ubyte_array_8(1, 2, 3, 4, 5, 6, 7, 8)
+                ubyte_array_3 = ctypes.c_ubyte * 3
+                reserved = ubyte_array_3(0, 0, 0)
+
+                vci_can_obj = VCI_CAN_OBJ(0x712, 0, 0, 1, 0, 0, 8, data, reserved)
+
+                self.canDll.VCI_Transmit(ctypes.byref(vci_can_obj), 1)
+                self.Canopen.setInterfaceDev(self.canDll, USE_CANALYST_II)
+            else:
+                self.ser = serial.Serial(COMn, 115200, timeout=0.001)  #/dev/ttyUSB0
+                self.Canopen.setInterfaceDev(self.ser, USE_UART)
+
+            # if  self.ser.isOpen():
+            if  self.Canopen.devIsOpen():
                 print("打开成功 -> %s" % (self.ser.port))
                 self.message_singel.emit('打开成功 -> '+ COMn + '\r\n')
-                self.Canopen.setInterfaceDev(self.ser)
+                self.wait_receive = 1
                 ret = 0
             else:
                 self.download_process_flag = 0
@@ -1458,10 +1492,11 @@ class ProgramUpdateThread(QThread):
 
     def closeSerial(self):
         try:
-            if  self.ser.isOpen():
-                self.ser.close()
+            if  self.Canopen.devIsOpen():
+                self.Canopen.devClose()
                 print("关闭成功 -> %s" % (self.ser.port))
                 self.message_singel.emit('关闭成功 -> '+ str(self.ser.port) + '\r\n')
+                self.wait_receive = 0
                 ret = 0
             else:
                 print("关闭失败,请检查串口后重启程序!")
@@ -1479,7 +1514,8 @@ class ProgramUpdateThread(QThread):
 
     #BoardRefresh_button
     def refreshBoard(self):
-        if  self.ser.isOpen():
+        if  self.Canopen.devIsOpen():
+        # if  self.ser.isOpen():
             self.message_singel.emit('刷新节点...')
             pass
         else:
@@ -1517,39 +1553,69 @@ class ProgramUpdateThread(QThread):
         for node_id_temp in range(0x72, 0x80):
             node_id_all.append(node_id_temp)
 
-        data = ''
-        self.wait_receive = 0
-        for node_id in node_id_all:
-            self.send_start_command(self.ser, node_id)
-            QThread.msleep(5)
-            while self.ser.inWaiting() > 0:
-                data = self.ser.read_all()
-            if data != '' and len(data)>20:
-                data = self.find_start_head(data)
-                # print(" ".join(hex(i) for i in data))
 
-                version_mcu, version_fpga = self.find_version(data)
+        for node_id in node_id_all:
+            self.Canopen.sendStartCmd(node_id) #------- 发送启动命令
+            can_cmd = self.Canopen.getRevData(0x81, node_id, 5)
+
+            if len(can_cmd):
+                try:
+                    version_mcu, version_fpga = self.MCU.findVersion(can_cmd)
+                except Exception as err:
+                    print(err)
 
                 for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
-                    if seq < 8 and data[7] == board_type:
-                        node_idx_exist.append((data[6]))
-                        self.node_id_all_exist.append(data[6])
-                        self.box_id_exist.append(data[6]>>4)
-                        self.refresh_singel.emit(3, data[6], seq, version_mcu, self.download_select)
+                    if seq < 8 and can_cmd[0][1] == board_type:
+                        node_idx_exist.append((can_cmd[0][0]))
+                        self.node_id_all_exist.append(can_cmd[0][0])
+                        self.box_id_exist.append(can_cmd[0][0]>>4)
+                        self.refresh_singel.emit(3, can_cmd[0][0], seq, version_mcu, self.download_select)
                         if self.download_select == 2:
-                            self.node_id_need_program.append(data[6])
-                            node_idx_need_program.append((data[6]))
-                    elif seq >=8 and data[7] == board_type:
-                        node_idx_exist.append((data[6]))
-                        self.node_id_all_exist.append(data[6])
-                        self.box_id_exist.append(data[6]>>4)
-                        self.refresh_singel.emit(3, data[6], seq, version_fpga, self.download_select)
+                            self.node_id_need_program.append(can_cmd[0][0])
+                            node_idx_need_program.append((can_cmd[0][0]))
+                    elif seq >=8 and can_cmd[0][1] == board_type:
+                        node_idx_exist.append((can_cmd[0][0]))
+                        self.node_id_all_exist.append(can_cmd[0][0])
+                        self.box_id_exist.append(can_cmd[0][0]>>4)
+                        self.refresh_singel.emit(3, can_cmd[0][0], seq, version_fpga, self.download_select)
                         if self.download_select == 2:
-                            self.node_id_need_program.append(data[6])
-                            node_idx_need_program.append((data[6]))
+                            self.node_id_need_program.append(can_cmd[0][0])
+                            node_idx_need_program.append((can_cmd[0][0]))
 
-                data = ''
-        self.wait_receive = 1
+        # data = ''
+        # self.wait_receive = 0
+        # for node_id in node_id_all:
+            # # self.send_start_command(self.ser, node_id)
+            # self.Canopen.sendStartCmd(node_id) #------- 发送启动命令
+            # QThread.msleep(5)
+            # while self.ser.inWaiting() > 0:
+                # data = self.ser.read_all()
+            # if data != '' and len(data)>20:
+                # data = self.find_start_head(data)
+                # # print(" ".join(hex(i) for i in data))
+
+                # version_mcu, version_fpga = self.find_version(data)
+
+                # for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+                    # if seq < 8 and data[7] == board_type:
+                        # node_idx_exist.append((data[6]))
+                        # self.node_id_all_exist.append(data[6])
+                        # self.box_id_exist.append(data[6]>>4)
+                        # self.refresh_singel.emit(3, data[6], seq, version_mcu, self.download_select)
+                        # if self.download_select == 2:
+                            # self.node_id_need_program.append(data[6])
+                            # node_idx_need_program.append((data[6]))
+                    # elif seq >=8 and data[7] == board_type:
+                        # node_idx_exist.append((data[6]))
+                        # self.node_id_all_exist.append(data[6])
+                        # self.box_id_exist.append(data[6]>>4)
+                        # self.refresh_singel.emit(3, data[6], seq, version_fpga, self.download_select)
+                        # if self.download_select == 2:
+                            # self.node_id_need_program.append(data[6])
+                            # node_idx_need_program.append((data[6]))
+
+                # data = ''
+        # self.wait_receive = 1
 
         print('\r\nnode_id_all_exist:', end=' ')
         print(", ".join(hex(i) for i in self.node_id_all_exist))
@@ -1831,9 +1897,8 @@ class ProgramUpdateThread(QThread):
         while True:
             time.sleep(0.001)
             try:
-                if self.ser.isOpen() and self.wait_receive == 1:
-                    while self.ser.inWaiting() > 0:
-                        self.Canopen.receiveData(self.ser.read_all())
+                if self.wait_receive == 1:
+                    self.Canopen.receiveData()
             except Exception as err:
                 print(err)
 

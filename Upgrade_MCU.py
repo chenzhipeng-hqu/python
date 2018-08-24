@@ -286,6 +286,38 @@ class UpgradeMCU(QThread):
 
         return send_tell, send_file_state
 
+    def findVersion(self, data):
+        from ProgramUpdate import DIGITAL_VIDEO_BOARD, LVDS_IN_BOARD, ANALOG_VIDEO_BOARD
+        version_mcu = ''
+        version_fpga = ''
+        if len(data) == 2:
+            pass
+        else:
+            print('version length error!!! len = %d' % len(data))
+            return 'Boot', 'Boot'
+
+        if data[1][1] == DIGITAL_VIDEO_BOARD or data[1][1] == LVDS_IN_BOARD or data[1][1] == ANALOG_VIDEO_BOARD:
+            year2 = ((data[1][2] >> 2)&0x3f)
+            month2 = (((data[1][2]<<2)&0x0c) | ((data[1][3]>>6)&0x03))&0x0f
+            day2 = (data[1][3]>>1)&0x1f
+
+            year = ((data[1][4] >> 2)&0x3f)
+            month = (((data[1][4]<<2)&0x0c) | ((data[1][5]>>6)&0x03))&0x0f
+            day = (data[1][5]>>1)&0x1f
+
+            version_fpga = str(year2)+'_'+str(month2)+'_'+str(day2)
+
+        else:
+            year = ((data[1][2] >> 2)&0x3f)
+            month = (((data[1][2]<<2)&0x0c) | ((data[1][3]>>6)&0x03))&0x0f
+            day = (data[1][3]>>1)&0x1f
+            hour = ((data[1][3]<<4)&0x10) | data[1][4]>>4
+            minute = ((data[1][4]&0x0f)<<2) | ((data[1][5]>>6)&0x0f)
+
+        version_mcu = str(year)+'_'+str(month)+'_'+str(day)
+
+        return version_mcu, version_fpga
+
     def TimeStampToTime(self, timestamp):
         timeStruct = time.localtime(timestamp)
         return time.strftime('%Y-%m-%d %H:%M:%S',timeStruct)
