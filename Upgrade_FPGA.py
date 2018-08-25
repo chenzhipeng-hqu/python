@@ -332,3 +332,6 @@ class UpgradeFPGA(QThread):
     def TimeStampToTime(self, timestamp):
         timeStruct = time.localtime(timestamp)
         return time.strftime('%Y-%m-%d %H:%M:%S',timeStruct)
+
+
+

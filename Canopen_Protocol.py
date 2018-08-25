@@ -136,17 +136,22 @@ class CanopenProtocol:
                     # print(" ".join(hex(k) for k in dat))
                     if dat[3] == 0x02:  #PDO1（接收）
                         pass
-                    elif dat[3] == rev_type: #PDO1（发送）
+                    elif dat[3] == 0x07 and dat[2] == node_id: #上电返回
+                        receive_data.append(dat)
+
+                    elif dat[3] == rev_type and dat[2] >= 0x80: #PDO1（发送）
                         receive_data.append(dat[6:14])
-                        pass
+
                     elif dat[3] == 0x07:
                         if dat[2] == node_id:
                             receive_data.append(dat)
                         elif 0 == node_id:  # 获取所有nodeid的启动命令
                             receive_data.append(dat)
+
                         print(' 0x%02X Boot up' % (dat[2]))
                     elif dat[2] == rev_type and dat[3] == 0x00:  # 0x81 启动命令 返回
                         receive_data.append(dat[6:14])
+
 
                 if len(receive_data):
                     # print(receive_data)

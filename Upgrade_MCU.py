@@ -111,12 +111,15 @@ class UpgradeMCU(QThread):
             self.send_command_reboot(node_idx_need_program)
             self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
             receive_data = self.getRevData(0x07, 0, 20000)
-            if len(receive_data) and receive_data[0][2] in node_idx_need_program:
-                self.message_singel.emit('升级成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
-                node_idx_need_program.remove(receive_data[0][2])
-            else:
-                print(" ".join(hex(k) for k in receive_data))
-                print('reboot err!!')
+            try:
+                if len(receive_data) and receive_data[0][2] in node_idx_need_program:
+                    self.message_singel.emit('升级成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
+                    node_idx_need_program.remove(receive_data[0][2])
+                else:
+                    print('reboot err!!')
+                    print(" ".join(hex(k) for k in receive_data[0]))
+            except Exception as err:
+                print(err)
 
             self.Download_state = DOWNLOAD_STATE.FINISH_UPGRADE.value
             pass

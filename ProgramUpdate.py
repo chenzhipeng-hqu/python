@@ -26,6 +26,7 @@ import UI_ProgramUpdate
 from CANalystII_Driver import *
 from Upgrade_MCU import UpgradeMCU
 from Upgrade_FPGA import UpgradeFPGA
+from Upgrade_LVDS import UpgradeLVDS
 from Canopen_Protocol import (CanopenProtocol, USE_UART, USE_CANALYST_II)
 
 
@@ -217,6 +218,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.ProgramUpdate_thread.message_singel.connect(self.message_singel)
         self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
         self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
+        self.ProgramUpdate_thread.LVDS.message_singel.connect(self.message_singel)
         self.Msg_TextEdit.insertPlainText('欢迎使用，请选择串口。。。\r\n')
         textCursor = self.Msg_TextEdit.textCursor()
         textCursor.movePosition(textCursor.End)
@@ -237,6 +239,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.ProgramUpdate_thread.processBar_singel.connect(self.processBar_singel)
         self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
         self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
+        self.ProgramUpdate_thread.LVDS.processBar_singel.connect(self.processBar_singel)
 
         #timeDisp_singel
         self.ProgramUpdate_thread.timeDisp_singel.connect(self.timeDisp_singel)
@@ -262,22 +265,30 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         # print(source.currentIndex(), end=' ')
         # print(source.currentText())
 
-        if source.currentText() == 'LVDS' or source.currentText() == 'NORMAL':
+        if source.currentText() == 'LVDS':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x000000
+
         elif source.currentText() == 'N10':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x170000
+
         elif source.currentText() == 'N86_1':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x2e0000
+
         elif source.currentText() == 'N81':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x450000
+
         elif source.currentText() == 'PT320':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x5C0000
+
         elif source.currentText() == 'N86_2':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x730000
+
         elif source.currentText() == 'PT320_2':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x8A0000
-        elif source.currentText() == 'EXT_2':
+
+        elif source.currentText() == 'EXT_2' or source.currentText() == 'NORMAL':
             self.ProgramUpdate_thread.lvdsStartAddr = 0xA10000
+
         elif source.currentText() == 'Bootloader':
             self.ProgramUpdate_thread.lvdsStartAddr = 0xB80000
 
@@ -417,7 +428,7 @@ class ProgramUpdateThread(QThread):
         self.wait_receive = int(0)
         self.can_cmd = list()
         # self.lvdsStartAddr = 0x000000
-        self.lvdsStartAddr = 0x170000
+        self.lvdsStartAddr = 0xA10000
 
         #node_id_list
         self.node_id_need_program = list()
@@ -493,6 +504,11 @@ class ProgramUpdateThread(QThread):
         #---- FPGA upgrade_creat----
         self.FPGA = UpgradeFPGA()
         self.FPGA.setInterfaceDev(self.Canopen)
+        #---end---
+
+        #---- LVDS upgrade_creat----
+        self.LVDS = UpgradeLVDS()
+        self.LVDS.setInterfaceDev(self.Canopen)
         #---end---
 
         #----can driver----
@@ -579,7 +595,7 @@ class ProgramUpdateThread(QThread):
         # self.wait_receive = 0
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
-            if seq <= 7 and len(node_idx_need_program) > 0:
+            if seq <= 7 and len(node_idx_need_program):
                 try:
                     self.MCU.downloadProcess(file_name, node_idx_need_program)
                     break
@@ -594,9 +610,33 @@ class ProgramUpdateThread(QThread):
                 pass
 
             elif seq <= 10 and len(node_idx_need_program):
+                try:
+                    if self.lvdsStartAddr == 0x000000:
+                        file_name = FILE_NAME_LVDS_LVDS_FPGA
+                    elif self.lvdsStartAddr == 0x170000:
+                        file_name = FILE_NAME_LVDS_N10_FPGA
+                    elif self.lvdsStartAddr == 0x2e0000:
+                        file_name = FILE_NAME_LVDS_N86_1_FPGA
+                    elif self.lvdsStartAddr == 0x450000:
+                        file_name = FILE_NAME_LVDS_N81_FPGA
+                    elif self.lvdsStartAddr == 0x5C0000:
+                        file_name = FILE_NAME_LVDS_PT320_FPGA
+                    elif self.lvdsStartAddr == 0x730000:
+                        file_name = FILE_NAME_LVDS_N86_2_FPGA
+                    elif self.lvdsStartAddr == 0x8A0000:
+                        file_name = FILE_NAME_LVDS_PT320_2_FPGA
+                    elif self.lvdsStartAddr == 0xA10000:
+                        file_name = FILE_NAME_LVDS_N10_2_FPGA
+                    elif self.lvdsStartAddr == 0xBB0000:
+                        file_name = FILE_NAME_LVDS_BOOT_FPGA
+
+                    self.LVDS.downloadProcess(self.lvdsStartAddr, file_name, node_idx_need_program)
+                    break
+                except Exception as e:
+                    print(e)
                 pass
 
-            if seq >= 10 and len(node_idx_need_program) <= 0:
+            elif seq >= 10 and len(node_idx_need_program) <= 0:
                 print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
                 self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
                 self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！版本号正确即可。 \r\n')
@@ -818,7 +858,7 @@ class ProgramUpdateThread(QThread):
                             while (time.time() - reboot_time) > 3:
                                 revData = self.sendFpgaUpgradePack(node_id, send_data)
                                 reboot_time = time.time()
-                            if len(revData) > 3 and revData[2] == 0x05 and revData[3] == 0x09 and revData[4] == 0x01:
+                            if len(revData) > 3 and revData[3] == 0x05 and revData[4] == 0x09 and revData[5] == 0x01:
                                 print('into ISP model...')
                                 break
 
