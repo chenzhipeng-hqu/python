@@ -45,6 +45,9 @@ LVDS_IN_BOARD       = int(0x09)
 # DIGITAL_FPGA_BOARD  = int(0x08)
 # LVDS_FPGA_BOARD     = int(0x09)
 
+BOX_ID_MAX = int(8)
+BOARD_NUM_MAX = int(11)
+
 nowTime = lambda:int(round(time.time()*1000))
 
 class SerialComboBox(QComboBox):
@@ -97,7 +100,8 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
     def initUI(self):
 
         self.NodeID_button =list()
-        self.BoxID_checkBox =list()
+        self.BoxID_checkBox = [self.Box0_checkBox, self.Box1_checkBox, self.Box2_checkBox, self.Box3_checkBox,
+                                self.Box4_checkBox, self.Box5_checkBox, self.Box6_checkBox, self.Box7_checkBox]
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(85, 85, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -117,31 +121,19 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.ser_com_combo.setObjectName("ser_com_combo")
         self.gridLayout.addWidget(self.ser_com_combo, 0, 0, 1, 1)
 
-        for i in range(8):
-            for j in range(11):
+        for i in range(BOX_ID_MAX):
+            for j in range(BOARD_NUM_MAX):
                 self.NodeID_button.append(QPushButton())
-                self.NodeID_button[i*11+j].setEnabled(False)
-                self.NodeID_button[i*11+j].setText("")
-                self.NodeID_button[i*11+j].setCheckable(True)
-                self.NodeID_button[i*11+j].setFlat(True)
-                self.NodeID_button[i*11+j].setPalette(palette)
-                self.NodeID_button[i*11+j].clicked[bool].connect(self.selectNodeID)
-                self.gridLayout_3.addWidget(self.NodeID_button[i*11+j], j+2, i+1, 1, 1)
-
-            self.BoxID_checkBox.append(QCheckBox('机箱 '+str(i)))
-            self.BoxID_checkBox[i].setEnabled(False)
-            font = QtGui.QFont()
-            font.setPointSize(11)
-            font.setBold(True)
-            font.setWeight(75)
-            self.BoxID_checkBox[i].setFont(font)
-            self.BoxID_checkBox[i].setFocusPolicy(QtCore.Qt.StrongFocus)
-            self.BoxID_checkBox[i].setLayoutDirection(QtCore.Qt.LeftToRight)
-            self.BoxID_checkBox[i].setChecked(False)
-            self.BoxID_checkBox[i].setAutoRepeat(False)
-            self.BoxID_checkBox[i].setTristate(False)
-            # # self.BoxID_checkBox[i*8+j].clicked[bool].connect(self.selectNodeID)
-            self.gridLayout_3.addWidget(self.BoxID_checkBox[i], 1, i+1, 1, 1)
+                self.NodeID_button[i*BOARD_NUM_MAX+j].setEnabled(False)
+                self.NodeID_button[i*BOARD_NUM_MAX+j].setText("")
+                self.NodeID_button[i*BOARD_NUM_MAX+j].setCheckable(True)
+                self.NodeID_button[i*BOARD_NUM_MAX+j].setFlat(True)
+                self.NodeID_button[i*BOARD_NUM_MAX+j].setPalette(palette)
+                self.NodeID_button[i*BOARD_NUM_MAX+j].clicked[bool].connect(self.selectNodeID)
+                self.gridLayout_3.addWidget(self.NodeID_button[i*BOARD_NUM_MAX+j], j+2, i+1, 1, 1)
+            # self.BoxID_checkBox[i].stateChanged.connect(self.download_select)
+            # self.BoxID_checkBox[i].id_ = i
+        self.allNodeID_checkBox.id_ = BOX_ID_MAX
 
         # message_singel
         self.ProgramUpdate_thread.message_singel.connect(self.message_singel)
@@ -237,13 +229,10 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
     #allNodeID_checkBox
     def download_select(self, state):
         source = self.sender()
-        # print(source.currentIndex(), end=' ')
         # print(source.text())
-        if state == QtCore.Qt.Unchecked:
-            self.ProgramUpdate_thread.downloadSelect(0)
-
-        elif state == QtCore.Qt.Checked:
-            self.ProgramUpdate_thread.downloadSelect(2)
+        # print(state)
+        # print(source.id_)
+        self.ProgramUpdate_thread.downloadSelect(state, source.id_)
 
     #selectNodeID 
     def selectNodeID(self, pressed):
@@ -274,6 +263,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 source.setText('关闭')
                 source.setChecked(True)
                 self.groupBox_3.setEnabled(True)
+                self.allNodeID_checkBox.setEnabled(True)
             else:
                 source.setChecked(False)
 
@@ -312,16 +302,16 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
     #refresh_singel
     def refresh_singel(self, cmd, i, j, version ,is_down):
-        if is_down == 2:
-            is_down = True
+        # if is_down == QtCore.Qt.Checked:
+            # is_down = True
 
         if cmd == 1:  # clear node_id
-            self.NodeID_button[i*11+j].setText('    ')
-            self.NodeID_button[i*11+j].setCheckable(False)
-            self.NodeID_button[i*11+j].setEnabled(False)
-            self.NodeID_button[i*11+j].setFlat(True)
-            # self.NodeID_button[i*8+j].clicked[bool].connect(self.selectNodeID)
-            # self.NodeID_button[i*8+j].clicked[bool].disconnect(self.selectNodeID)
+            self.NodeID_button[i*BOARD_NUM_MAX+j].setText('    ')
+            self.NodeID_button[i*BOARD_NUM_MAX+j].setCheckable(False)
+            self.NodeID_button[i*BOARD_NUM_MAX+j].setEnabled(False)
+            self.NodeID_button[i*BOARD_NUM_MAX+j].setFlat(True)
+            # self.NodeID_button[i*BOX_ID_MAX+j].clicked[bool].connect(self.selectNodeID)
+            # self.NodeID_button[i*BOX_ID_MAX+j].clicked[bool].disconnect(self.selectNodeID)
 
         if cmd == 2:  # clear box_id
             # self.BoxID_button[i].setText('    ')
@@ -331,16 +321,16 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         if cmd == 3:  # set node_id
             # print('cmd=%d, i=0x%02X, j=%d' % (cmd, i, j))
-            self.NodeID_button[(i>>4)*11+j].setFlat(False)
-            self.NodeID_button[(i>>4)*11+j].setText(str(version))
-            self.NodeID_button[(i>>4)*11+j].setCheckable(True)
-            self.NodeID_button[(i>>4)*11+j].setChecked(is_down)
-            self.NodeID_button[(i>>4)*11+j].setEnabled(True)
+            self.NodeID_button[(i>>4)*BOARD_NUM_MAX+j].setFlat(False)
+            self.NodeID_button[(i>>4)*BOARD_NUM_MAX+j].setText(str(version))
+            self.NodeID_button[(i>>4)*BOARD_NUM_MAX+j].setCheckable(True)
+            self.NodeID_button[(i>>4)*BOARD_NUM_MAX+j].setChecked(is_down)
+            self.NodeID_button[(i>>4)*BOARD_NUM_MAX+j].setEnabled(True)
             if j >= 8 :
-                self.NodeID_button[(i>>4)*11+j].id_ = i | 0x80   # 最高位置1 表示FPGA板
+                self.NodeID_button[(i>>4)*BOARD_NUM_MAX+j].id_ = i | 0x80   # 最高位置1 表示FPGA板
             else:
-                self.NodeID_button[(i>>4)*11+j].id_ = i
-            # self.NodeID_button[(i>>4)*8+j].clicked[bool].connect(self.selectNodeID)
+                self.NodeID_button[(i>>4)*BOARD_NUM_MAX+j].id_ = i
+            # self.NodeID_button[(i>>4)*BOX_ID_MAX+j].clicked[bool].connect(self.selectNodeID)
             # self.BoardTypeUI.BoxID_button[(i>>4)].setText('Box '+str(i>>4))
             self.BoxID_checkBox[(i>>4)].setCheckable(True)
             self.BoxID_checkBox[(i>>4)].setEnabled(True)
@@ -362,7 +352,7 @@ class ProgramUpdateThread(QThread):
 
     def __init__(self):
         super(ProgramUpdateThread, self).__init__()
-        self.ser = serial.Serial()  #/dev/ttyUSB0
+        # self.ser = serial.Serial()  #/dev/ttyUSB0
         self.wait_receive = int(0)
         self.lvdsStartAddr = 0xA10000 # 默认一个起始下载地址，防止没选择地址的时候擦出0地址的数据
 
@@ -385,7 +375,7 @@ class ProgramUpdateThread(QThread):
             ( 7     , 0x0a      , str('..//bin//PcieBaseBoard.bin') , list()        , list() ),   # 7.pcie_base_board
             ( 8     , 0x07      , str('..//bin//AnalogFPGA.mcs')    , list()        , list() ),   # 8.analog_fpga_board
             ( 9     , 0x08      , str('..//bin//DigitalFPGA.mcs')   , list()        , list() ),   # 9.digital_fpga_board
-            [ 10    , 0x09      , str('..//bin//lvds_debug_test.bin')           , list()        , list() ]    # 10.lvds_fpga_board 此处使用列表，需要修改file_name 
+            [ 10    , 0x09      , str('..//bin//lvds_test.bin')     , list()        , list() ]    # 10.lvds_fpga_board 此处使用列表，需要修改file_name 
             ]
 
         #----initialize----QTimer 任务
@@ -445,7 +435,12 @@ class ProgramUpdateThread(QThread):
                 break
 
             elif seq <= 9 and len(node_idx_need_program):
-                self.FPGA.downloadProcess(board_type, file_name, node_idx_need_program)
+                if seq == 9:
+                    boardType = 'digital'
+                elif seq == 8:
+                    boardType = 'analog'
+
+                self.FPGA.downloadProcess(boardType, file_name, node_idx_need_program)
                 break
 
             elif seq <= 10 and len(node_idx_need_program):
@@ -473,7 +468,7 @@ class ProgramUpdateThread(QThread):
             self.send_can_command(node_idx_exist, send_data)
 
     # download_select
-    def downloadSelect(self, download_select):
+    def downloadSelect(self, download_select, id_):
 
         self.download_select = download_select
         self.refreshBoard()
@@ -610,8 +605,8 @@ class ProgramUpdateThread(QThread):
             self.refreshBoardFlag = 0
             return
 
-        for i in range(8):
-            for j in range(11):
+        for i in range(BOX_ID_MAX):
+            for j in range(BOARD_NUM_MAX):
                 self.refresh_singel.emit(1, i, j, ' ', 0)
             self.refresh_singel.emit(2, i, j,' ', 0)
 
@@ -655,7 +650,7 @@ class ProgramUpdateThread(QThread):
                         self.node_id_all_exist.append(can_cmd[0][0])
                         self.box_id_exist.append(can_cmd[0][0]>>4)
                         self.refresh_singel.emit(3, can_cmd[0][0], seq, version_mcu, self.download_select)
-                        if self.download_select == 2:
+                        if self.download_select == QtCore.Qt.Checked:
                             self.node_id_need_program.append(can_cmd[0][0])
                             node_idx_need_program.append((can_cmd[0][0]))
                     elif seq >=8 and can_cmd[0][1] == board_type:
@@ -663,7 +658,7 @@ class ProgramUpdateThread(QThread):
                         self.node_id_all_exist.append(can_cmd[0][0])
                         self.box_id_exist.append(can_cmd[0][0]>>4)
                         self.refresh_singel.emit(3, can_cmd[0][0], seq, version_fpga, self.download_select)
-                        if self.download_select == 2:
+                        if self.download_select == QtCore.Qt.Checked:
                             self.node_id_need_program.append(can_cmd[0][0])
                             node_idx_need_program.append((can_cmd[0][0]))
 

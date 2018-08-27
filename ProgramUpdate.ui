@@ -212,6 +212,11 @@
             </item>
             <item row="2" column="0">
              <widget class="QLabel" name="timeDisp">
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
               <property name="layoutDirection">
                <enum>Qt::LeftToRight</enum>
               </property>

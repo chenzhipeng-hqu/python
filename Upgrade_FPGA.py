@@ -63,7 +63,7 @@ class UpgradeFPGA(QThread):
 
         return receive_data
 
-    def downloadProcess(self, board_type, file_name, node_idx_need_program):
+    def downloadProcess(self, boardType, file_name, node_idx_need_program):
 
         isDownloadFinish = False
 
@@ -73,13 +73,8 @@ class UpgradeFPGA(QThread):
             pass
 
         elif self.Download_state == DOWNLOAD_STATE.ENTER_UPGRADE.value: #---- 复位看门狗---
-            from ProgramUpdate import (ANALOG_FPGA_BOARD, DIGITAL_FPGA_BOARD)
             print('into Analog/Digital FPGA bootloader...')
             self.blockNum = 0
-            if board_type == DIGITAL_FPGA_BOARD:
-                boardType = 'digital'
-            elif board_type == ANALOG_FPGA_BOARD:
-                boardType = 'analog'
             Is_File_exist = int(0)
             while Is_File_exist == 0:
                 Is_File_exist = os.path.exists(file_name)
