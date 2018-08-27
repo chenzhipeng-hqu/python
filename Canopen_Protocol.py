@@ -77,6 +77,7 @@ class CanopenProtocol:
             self.__dev.close()
 
         elif CAN_DRIVER == USE_CANALYST_II:
+            self.__dev.VCI_CloseDevice()
             pass
 
     def sendData(self, send_type, node_id, length, data):

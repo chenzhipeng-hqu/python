@@ -89,6 +89,8 @@ class CANalystDriver:
         # print(VCI_OpenDevice)    # 两种调用动态库方法的方式
         # print(self.canDll.VCI_OpenDevice)
 
+        return ret
+
     def VCI_CloseDevice(self):
         VCI_CloseDevice = getattr(self.canDll, 'VCI_CloseDevice')
         ret = VCI_CloseDevice(self.DeviceType, self.DeviceInd)

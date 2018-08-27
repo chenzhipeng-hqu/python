@@ -5,6 +5,9 @@
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -257,6 +260,13 @@
             <property name="readOnly">
              <bool>true</bool>
             </property>
+            <property name="html">
+             <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Arial'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;欢迎使用，请选择串口号...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -266,6 +276,9 @@
      </item>
      <item row="1" column="0">
       <widget class="QGroupBox" name="groupBox_3">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="title">
         <string>板卡节点</string>
        </property>
@@ -293,7 +306,7 @@
           <item row="10" column="0">
            <widget class="QCheckBox" name="PcieBase_checkBox_2">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -361,7 +374,7 @@
           <item row="5" column="0">
            <widget class="QCheckBox" name="PScontrol_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -393,7 +406,7 @@
           <item row="2" column="0">
            <widget class="QCheckBox" name="Audio_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -432,7 +445,7 @@
           <item row="7" column="0">
            <widget class="QCheckBox" name="DigitalVideo_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -464,7 +477,7 @@
           <item row="9" column="0">
            <widget class="QCheckBox" name="PcieBase_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -496,7 +509,7 @@
           <item row="3" column="0">
            <widget class="QCheckBox" name="AnalogIO_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -528,7 +541,7 @@
           <item row="6" column="0">
            <widget class="QCheckBox" name="AnalogVideo_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -560,7 +573,7 @@
           <item row="11" column="0">
            <widget class="QCheckBox" name="PcieBase_checkBox_3">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -662,7 +675,7 @@
           <item row="8" column="0">
            <widget class="QCheckBox" name="LVDS_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -694,7 +707,7 @@
           <item row="1" column="0">
            <widget class="QCheckBox" name="allNodeID_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -882,7 +895,7 @@
           <item row="12" column="0">
            <widget class="QCheckBox" name="PcieBase_checkBox_4">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -949,17 +962,20 @@
           <item row="0" column="8">
            <widget class="QPushButton" name="download_button">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="text">
              <string>开始下载</string>
+            </property>
+            <property name="shortcut">
+             <string>F8</string>
             </property>
            </widget>
           </item>
           <item row="4" column="0">
            <widget class="QCheckBox" name="DigitalIO_checkBox">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="font">
              <font>
@@ -990,6 +1006,9 @@
           </item>
           <item row="0" column="1">
            <widget class="QComboBox" name="Lvds_comboBox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
               <horstretch>0</horstretch>

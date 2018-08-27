@@ -91,11 +91,12 @@ class UpgradeFPGA(QThread):
                     print('正在升级...  ',  end='')
                     self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:
-                    print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
+                    print("找不到该文件  %s , 请放置该文件到该目录下,放置后自动开始下载" % (file_name))
                     self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
-                    print('当前工作路径为：%s ' % (os.getcwd()))
-                    os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
-                    print('切换后工作路径为：%s ' % (os.getcwd()))
+                    time.sleep(3)
+                    # print('当前工作路径为：%s ' % (os.getcwd()))
+                    # os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
+                    # print('切换后工作路径为：%s ' % (os.getcwd()))
 
             with open(file_name, 'rb') as f_mcs:
                 for i, line in enumerate(f_mcs):

@@ -11,6 +11,9 @@ last edited: 04-July-2018
 __author__ = 'chenzhipeng3472'
 
 import os
+import sys
+sys.path.append(os.getcwd())
+
 import time
 
 from enum import Enum, unique
