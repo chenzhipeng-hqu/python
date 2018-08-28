@@ -129,6 +129,7 @@ class UpgradeFPGA(QThread):
                                 print(lineData)
 
                             if lineData[3] == 0x04: #segment address
+                            # if lineData[3] == 0x04 or lineData[3] == 0x01: #segment address    # end file: 
                                 # print(lineData)
                                 if length > 0:
                                     curBlock = curBlock + 1
@@ -145,12 +146,12 @@ class UpgradeFPGA(QThread):
                                     pass
 
                                 if lineData[0] == 0x02:
-                                    addr = lineData[4]
-                                    addr = (addr<<8) | lineData[5]
-                                    addr <<= 16
+                                    # addr = lineData[4]
+                                    addr = ((lineData[4]<<8) | lineData[5]) << 16
+                                    # addr <<= 16
                                 elif lineData[0] == 0x01:
-                                    addr = lineData[4]
-                                    addr <<= 16
+                                    addr = lineData[4] << 16
+                                    # addr <<= 16
 
                                 pass
                             elif lineData[3] == 0x01: # end file
@@ -224,7 +225,6 @@ class UpgradeFPGA(QThread):
             byteSum = byteSum + ord(dat_)
         send = send + ('%x\n' % (byteSum))
         self.sendFpgaUpgradeCmd_AD(node_id, send)
-        print(send)
 
         receive_data = bytes(self.getRevData(0x01, node_id, 3000)).decode()
 
@@ -238,29 +238,29 @@ class UpgradeFPGA(QThread):
         receive_data = bytes(self.getRevData(0x01, node_id, 3000)).decode()
 
         if len(receive_data) <= 0:  # time_out
+            print(receive_data)
+            print(send)
             print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
             isSendFail = True
         else:
-            print(receive_data)
+            # print(receive_data)
             if 'OK' in receive_data:
             # if 'OK %X' % (binSum) in receive_data:
                 isSendFail = False
             else:
-                isSendFail = True
+                print(receive_data)
+                print(send)
                 print('     receive err!!!!!!!!!!!!!!!!!!!!!!!\r\n')
+                isSendFail = True
 
         return isSendFail
 
     def sendFpgaUpgradeCmd_AD(self, node_id, dat):
         send_data = list(dat)
-        try:
-            for i, dat_ in enumerate(send_data):
-                # print(type(dat_))
-                send_data[i] = ord(dat_)
-                # print(type(str(dat_)))
-        except Exception as e:
-            # print('except')
-            print(e)
+        for i, dat_ in enumerate(send_data):
+            # print(type(dat_))
+            send_data[i] = ord(dat_)
+            # print(type(str(dat_)))
 
         length = len(send_data)
         send_times_high = length//7

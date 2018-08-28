@@ -73,6 +73,7 @@ class UpgradeMCU(QThread):
 
         if self.Download_state == DOWNLOAD_STATE.INITIALIZE.value: #---- 初始化数据---
             print('下载程序...')
+            self.processBar_singel.emit(0)
             self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
             pass
 
@@ -113,16 +114,32 @@ class UpgradeMCU(QThread):
         elif self.Download_state == DOWNLOAD_STATE.REBOOT.value: #----start--- 发送重启命令
             self.send_command_reboot(node_idx_need_program)
             self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
-            receive_data = self.getRevData(0x07, 0, 20000)
-            try:
-                if len(receive_data) and receive_data[0][2] in node_idx_need_program:
-                    self.message_singel.emit('升级成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
-                    node_idx_need_program.remove(receive_data[0][2])
-                else:
-                    print('reboot err!!')
-                    print(" ".join(hex(k) for k in receive_data[0]))
-            except Exception as err:
-                print(err)
+            reboot_time = time.time()
+            while (time.time() - reboot_time) < 20:
+
+                receive_data = self.getRevData(0x07, 0, 20000)
+                try:
+                    if len(receive_data) and receive_data[0][2] in node_idx_need_program:
+                        self.message_singel.emit('升级成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
+                        self.__dev.sendStartCmd(receive_data[0][2]) #------- 发送启动命令
+                        node_idx_need_program.remove(receive_data[0][2])
+                        reboot_time = time.time()
+                        if len(node_idx_need_program) <= 0:
+                            break
+                            print('烧录 OK....')
+                except Exception as err:
+                    print(err)
+
+            print(time.time() - reboot_time)
+
+            QThread.sleep(5)
+
+            if len(node_idx_need_program):
+                self.message_singel.emit('---升级失败节点 --> ' )
+                for node_id in node_idx_need_program:
+                    self.message_singel.emit(str(hex(node_id)) + ', ')
+                node_idx_need_program.clear()
+                self.message_singel.emit(' 请刷新节点，重新选择失败节点升级！！！ \r\n')
 
             self.Download_state = DOWNLOAD_STATE.FINISH_UPGRADE.value
             pass
@@ -203,11 +220,9 @@ class UpgradeMCU(QThread):
                     print(" ".join(hex(i) for i in node_id_need_program))
                     self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:
-                    print("找不到该文件  %s , 请放置该文件到该目录下,放置后请按回车键确认" % (file_name))
+                    print("找不到该文件  %s , 请放置该文件到该目录下,放置后自动开始下载" % (file_name))
                     self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
-                    print('当前工作路径为：%s ' % (os.getcwd()))
-                    os.chdir(".//bin")  # 如果找不到bin文件路径就切换到当前目录下找到bin文件夹
-                    print('切换后工作路径为：%s ' % (os.getcwd()))
+                    time.sleep(3)
 
         # # print("size_high %d, size_low %d, size_low_8_high %d  , size_low_8_low %d " % (size_high, size_low, size_low_8_high, size_low_8_low))
 
@@ -296,7 +311,7 @@ class UpgradeMCU(QThread):
         from ProgramUpdate import DIGITAL_VIDEO_BOARD, LVDS_IN_BOARD, ANALOG_VIDEO_BOARD
         version_mcu = ''
         version_fpga = ''
-        if len(data) == 2:
+        if len(data) >= 2:
             pass
         else:
             print('version length error!!! len = %d' % len(data))
