@@ -82,27 +82,39 @@ class UpgradeMCU(QThread):
             for node_id in node_idx_need_program:
                 start_time = time.time()
 
-                # while True:
                 print('reset iwdg: node_id=%d' % (node_id))
                 self.send_reset_iwdg_command(node_id)
                 self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
-                receive_data = self.getRevData(0x07, node_id, 15000)
 
-                if len(receive_data) and receive_data[0][2] == node_id:
-                    print("重启成功 节点 --> 0x%02X" % (receive_data[0][2]))
-                    self.message_singel.emit('重启成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
+                try_times = 0
 
-                    self.__dev.sendStartCmd(node_id) #------- 发送启动命令
-                    QThread.msleep(1)
+                while True:
+                    while (time.time()-start_time) > 15:
+                        self.send_reset_iwdg_command(node_id)
+                        start_time = time.time()
+                        try_times = try_times + 1
 
-                    self.send_erase_commane(node_id) #------- 发送擦除扇区命令
-                    QThread.msleep(1)
+                    receive_data = self.getRevData(self.__dev.NODE_GUARD, node_id, 15000)
 
-                    self.Download_state = DOWNLOAD_STATE.SEND_FILE.value
+                    if len(receive_data):
+                        print("重启成功 节点 --> 0x%02X" % (receive_data[0][2]))
+                        self.message_singel.emit('重启成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
 
-                else:
-                    print('iwdg reset err!!!!!')
-                    self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
+                        self.__dev.sendStartCmd(node_id) #------- 发送启动命令
+                        QThread.msleep(1)
+
+                        self.send_erase_commane(node_id) #------- 发送擦除扇区命令
+                        QThread.msleep(1)
+
+                        break
+                    else:
+                        if try_times > 2:
+                            node_idx_need_program.remove(node_id)
+                            self.message_singel.emit('重启失败 --> ' + str(hex(node_id)) + ', 请稍后重启机箱再升级. \r\n')
+                            break
+                        print('iwdg reset err times %d !!!!!' % (try_times))
+
+            self.Download_state = DOWNLOAD_STATE.SEND_FILE.value
 
             QThread.sleep(2)
             self.send_file_ret = 1
@@ -123,7 +135,7 @@ class UpgradeMCU(QThread):
             reboot_time = time.time()
             while (time.time() - reboot_time) < 20:
 
-                receive_data = self.getRevData(0x07, 0, 20000)
+                receive_data = self.getRevData(self.__dev.NODE_GUARD, 0, 20000)
                 try:
                     if len(receive_data) and receive_data[0][2] in node_idx_need_program:
                         self.message_singel.emit('升级成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
@@ -135,8 +147,6 @@ class UpgradeMCU(QThread):
                             print('烧录 OK....')
                 except Exception as err:
                     print(err)
-
-            print(time.time() - reboot_time)
 
             QThread.sleep(5)
 

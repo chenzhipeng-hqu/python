@@ -625,7 +625,7 @@ class ProgramUpdateThread(QThread):
                 self.Canopen.setInterfaceDev(self.ser, USE_UART)
 
             if  self.Canopen.devIsOpen():
-                print("打开成功 -> %s" % (self.ser.port))
+                print("打开成功 -> %s" % (COMn))
                 self.message_singel.emit('打开成功 -> '+ COMn + '\r\n')
                 self.wait_receive = 1
                 ret = 0

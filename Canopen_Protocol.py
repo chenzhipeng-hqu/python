@@ -32,15 +32,24 @@ class CanopenProtocol:
     __CAN_CTRL = int(0xA5)
     __CAN_TAIL = int(0x55)
 
-    PDO1_Tx = 0x0180
-    PDO2_Tx = 0x0280
-    PDO3_Tx = 0x0380
-    PDO4_Tx = 0x0480
+    NMT = 0x00<<7
+    SYNC = 0x01<<7
+    TIME_STAMP = 0x02<<7
+    PDO1_Tx = 0x03<<7
+    PDO1_Rx = 0x04<<7
+    PDO2_Tx = 0x05<<7
+    PDO2_Rx = 0x06<<7
+    PDO3_Tx = 0x07<<7
+    PDO3_Rx = 0x08<<7
+    PDO4_Tx = 0x09<<7
+    PDO4_Rx = 0x0a<<7
+    SDO_Tx = 0x0b<<7
+    SDO_Rx = 0x0c<<7
+    NODE_GUARD = 0x0e<<7
+    LSS = 0x0f<<7
 
-    PDO1_Rx = 0x0200
-    PDO2_Rx = 0x0300
-    PDO3_Rx = 0x0400
-    PDO4_Rx = 0x0500
+    TO_MASTER = 0x0081
+
 
     def __init__(self):
         pass
@@ -135,23 +144,29 @@ class CanopenProtocol:
                 while 0 < len(self.can_cmd):
                     dat = self.can_cmd.pop(0)
                     # print(" ".join(hex(k) for k in dat))
-                    if dat[3] == 0x02:  #PDO1（接收）
+                    can_id = (dat[3]<<8 | dat[2])
+                    if node_id == 0:
+                        if can_id >= rev_type|node_id: #上电返回
+                            receive_data.append(dat)
                         pass
-                    elif dat[3] == 0x07 and dat[2] == node_id: #上电返回
-                        receive_data.append(dat)
+                    else:
+                        if dat[3] == 0x02:  #PDO1（接收）
+                            pass
+                        elif dat[3] == 0x01 and dat[2] == 0x81: #PDO1（发送）
+                            receive_data.append(dat[6:14])
 
-                    elif dat[3] == rev_type and dat[2] >= 0x80: #PDO1（发送）
-                        receive_data.append(dat[6:14])
-
-                    elif dat[3] == 0x07:
-                        if dat[2] == node_id:
-                            receive_data.append(dat)
-                        elif 0 == node_id:  # 获取所有nodeid的启动命令
+                        elif can_id == rev_type|node_id: #上电返回
                             receive_data.append(dat)
 
-                        print(' 0x%02X Boot up' % (dat[2]))
-                    elif dat[2] == rev_type and dat[3] == 0x00:  # 0x81 启动命令 返回
-                        receive_data.append(dat[6:14])
+                        elif dat[3] == 0x07:
+                            # if dat[2] == node_id:
+                                # receive_data.append(dat)
+                            # elif 0 == node_id:  # 获取所有nodeid的启动命令
+                                # receive_data.append(dat)
+
+                            print(' 0x%02X Boot up' % (dat[2]))
+                        elif dat[2] == rev_type and dat[3] == 0x00:  # 0x81 启动命令 返回
+                            receive_data.append(dat[6:14])
 
 
                 if len(receive_data):
@@ -201,9 +216,19 @@ class CanopenProtocol:
                                     # receive_data.append(receive_can_data[i].Data[6])
                                     # receive_data.append(receive_can_data[i].Data[7])
                                     receive_data.append(receive_can_data[i].Data[0:8])
-                        if receive_can_data[i].ID == 0x81:
+                        elif receive_can_data[i].ID == 0x81:
                             if receive_can_data[i].Data[0] == node_id:
                                 receive_data.append(receive_can_data[i].Data[0:8])
+
+                        elif receive_can_data[i].ID == rev_type | node_id:  # 目前只有上电启动发送过来的信息符合
+                            print(1)
+                            dat = [0xaa, 0xaa, receive_can_data[i].ID&0xff]
+                            receive_data.append(dat)
+
+                        elif receive_can_data[i].ID >= rev_type | 0x00 and receive_can_data[i].ID <= rev_type | 0x0F:
+                            if node_id == 0:
+                                receive_data.append(receive_can_data[i].Data[0:8])
+
 
         # print(receive_data)
         return receive_data
