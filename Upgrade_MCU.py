@@ -80,11 +80,15 @@ class UpgradeMCU(QThread):
         elif self.Download_state == DOWNLOAD_STATE.ENTER_UPGRADE.value: #---- 复位看门狗---
             print(" ".join(hex(i) for i in node_idx_need_program))
             for node_id in node_idx_need_program:
+                start_time = time.time()
+
+                # while True:
                 print('reset iwdg: node_id=%d' % (node_id))
                 self.send_reset_iwdg_command(node_id)
                 self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
-                receive_data = self.getRevData(0x07, node_id, 20000)
-                if len(receive_data) :
+                receive_data = self.getRevData(0x07, node_id, 15000)
+
+                if len(receive_data) and receive_data[0][2] == node_id:
                     print("重启成功 节点 --> 0x%02X" % (receive_data[0][2]))
                     self.message_singel.emit('重启成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
 
@@ -94,11 +98,13 @@ class UpgradeMCU(QThread):
                     self.send_erase_commane(node_id) #------- 发送擦除扇区命令
                     QThread.msleep(1)
 
+                    self.Download_state = DOWNLOAD_STATE.SEND_FILE.value
+
                 else:
                     print('iwdg reset err!!!!!')
+                    self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
 
             QThread.sleep(2)
-            self.Download_state = DOWNLOAD_STATE.SEND_FILE.value
             self.send_file_ret = 1
             self.send_file_tell = -1
 

@@ -146,14 +146,16 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 self.gridLayout_3.addWidget(self.NodeID_button[i*BOARD_NUM_MAX+j], j+2, i+1, 1, 1)
             self.BoxID_checkBox[i].stateChanged.connect(self.download_select)
             self.BoxID_checkBox[i].id_ = i<<4
+            self.BoxID_checkBox[i].setCheckable(False)
 
-        # for board_id in range(BOARD_NUM_MAX):
-            # self.BoardType_checkBox[board_id].stateChanged.connect(self.download_select)
-            # self.BoardType_checkBox[board_id].id_ = board_id & 0x0f
+        for board_id in range(BOARD_NUM_MAX):
+            self.BoardType_checkBox[board_id].stateChanged.connect(self.download_select)
+            self.BoardType_checkBox[board_id].id_ = board_id & 0x0f
+            self.BoardType_checkBox[board_id].setCheckable(False)
 
-        #allNodeID_checkBox
-        self.allNodeID_checkBox.stateChanged.connect(self.download_select)
-        self.allNodeID_checkBox.id_ = BOX_ID_MAX<<4
+        #downloadSelect_combox
+        self.downloadMode_comboBox.currentIndexChanged.connect(self.download_select)
+        self.downloadMode_comboBox.id_ = BOX_ID_MAX<<4
 
         #dispfileversion_singel
         self.ProgramUpdate_thread.dispFileVersion_singel.connect(self.dispFileVersion)
@@ -169,7 +171,6 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         # openSerial
         self.ser_open_button.clicked.connect(self.openSerial)
-        # self.ser_open_button.setShortcut('F7')
 
         #refreshBoard
         self.BoardRefresh_button.clicked.connect(self.refreshBoard)
@@ -256,17 +257,53 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         source = self.sender()
 
         box_id = source.id_ >> 4
-        board_id = source.id_ & 0x0f
 
         if (box_id == BOX_ID_MAX):
-            for i in range(BOX_ID_MAX):
-                # if self.BoxID_checkBox[i].isEnabled():
-                self.BoxID_checkBox[i].setCheckState(state)
+
+            self.ProgramUpdate_thread.download_mode = source.currentText()
 
             for i in range(BOARD_NUM_MAX):
-                self.BoardType_checkBox[i].setCheckState(source.checkState())
+                for j in range(BOX_ID_MAX):
+                    self.ProgramUpdate_thread.download_select[i][j] = QtCore.Qt.Unchecked
 
-        self.ProgramUpdate_thread.downloadSelect(state, source.id_)
+            if source.currentText() == 'NORMAL':
+                for i in range(BOX_ID_MAX):
+                    self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+                    self.BoxID_checkBox[i].setCheckable(False)
+
+                for i in range(BOARD_NUM_MAX):
+                    self.BoardType_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+                    self.BoardType_checkBox[i].setCheckable(False)
+
+            elif source.currentText() == 'BOARD':
+                for i in range(BOX_ID_MAX):
+                    # self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+                    self.BoxID_checkBox[i].setCheckable(False)
+
+                for i in range(BOARD_NUM_MAX):
+                    self.BoardType_checkBox[i].setCheckable(True)
+                    self.BoardType_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+
+            elif source.currentText() == 'BOX':
+                for i in range(BOX_ID_MAX):
+                    self.BoxID_checkBox[i].setCheckable(True)
+                    self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+
+                for i in range(BOARD_NUM_MAX):
+                    # self.BoardType_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+                    self.BoardType_checkBox[i].setCheckable(False)
+
+            elif source.currentText() == 'ALL':
+                for i in range(BOX_ID_MAX):
+                    self.BoxID_checkBox[i].setCheckable(True)
+                    self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Checked)
+
+                for i in range(BOARD_NUM_MAX):
+                    self.BoardType_checkBox[i].setCheckable(True)
+                    self.BoardType_checkBox[i].setCheckState(QtCore.Qt.Checked)
+        else:
+            self.ProgramUpdate_thread.downloadSelect(state, self.ProgramUpdate_thread.download_mode, source.id_)
+            self.groupBox_3.setEnabled(False)
 
     #selectNodeID 
     def selectNodeID(self, pressed):
@@ -277,7 +314,6 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
     def download_process(self):
         self.ProgramUpdate_thread.time_tick.setHMS(0, 0, 0)#初始时设置时间为  00：00：00
         source = self.sender()
-        # self.setEnabled(False)
         self.groupBox.setEnabled(False)
         self.groupBox_3.setEnabled(False)
         self.Msg_TextEdit.setEnabled(True)
@@ -295,7 +331,8 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 source.setChecked(True)
                 self.groupBox_3.setEnabled(True)
                 self.Lvds_comboBox.setEnabled(True)
-                self.allNodeID_checkBox.setEnabled(True)
+                self.downloadMode_comboBox.setEnabled(True)
+                # self.allNodeID_checkBox.setEnabled(True)
             else:
                 source.setChecked(False)
 
@@ -313,6 +350,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
     def refreshBoard(self):
         source = self.sender()
         self.ProgramUpdate_thread.refreshBoardFlag = 1
+        self.groupBox_3.setEnabled(False)
 
     #message_singel
     def message_singel(self, str):
@@ -345,11 +383,9 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         if cmd == 2:  # clear box_id
             self.BoxID_checkBox[i].setEnabled(False)
-            pass
 
         if cmd == 3: # clear board type
             self.BoardType_checkBox[i].setEnabled(False)
-            pass
 
         if cmd == 4:  # set node_id
             box_id = i>>4
@@ -368,6 +404,9 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             else:
                 self.NodeID_button[(box_id)*BOARD_NUM_MAX+j].id_ = i
 
+        if cmd == 5:  # refresh node_id finish
+            self.groupBox_3.setEnabled(True)
+            self.download_button.setEnabled(is_down)
 
     def timeDisp_singel(self, now_time):
         self.timeDisp.setText(now_time.toString("hh:mm:ss"))
@@ -391,7 +430,6 @@ class ProgramUpdateThread(QThread):
 
     def __init__(self):
         super(ProgramUpdateThread, self).__init__()
-        # self.ser = serial.Serial()  #/dev/ttyUSB0
         self.wait_receive = int(0)
         self.lvdsStartAddr = 0xA10000 # 默认一个起始下载地址，防止没选择地址的时候擦出0地址的数据
 
@@ -426,8 +464,8 @@ class ProgramUpdateThread(QThread):
         #----end---- 
 
         self.download_process_flag = 0
-        self.download_select = list(0 for i in range(BOX_ID_MAX))
         self.refreshBoardFlag = 0
+        self.download_select = [ [0 for i in range(BOX_ID_MAX)] for i in range(BOARD_NUM_MAX) ]
 
         #---- canopenprotocol----
         self.Canopen = CanopenProtocol()
@@ -449,6 +487,7 @@ class ProgramUpdateThread(QThread):
         #---end---
 
 
+        self.download_mode = 'NORMAL'
 
     def run(self):
         while True:
@@ -502,18 +541,25 @@ class ProgramUpdateThread(QThread):
             self.send_can_command(node_idx_exist, send_data)
 
     # download_select
-    def downloadSelect(self, download_select, id_):
+    def downloadSelect(self, download_select, download_mode, id_):
 
-        box_id = id_ >> 4
-        board_id = id_ & 0x0f
-        print(hex(box_id))
-        print(hex(board_id))
+        if download_mode == 'NORMAL':
+            pass
 
-        if box_id == BOX_ID_MAX:
-            for i in range(len(self.download_select)):
-                self.download_select[i] = download_select
-        else:
-            self.download_select[box_id] = download_select
+        elif download_mode == 'BOX':
+            box_id = id_ >> 4
+            for i in range(BOARD_NUM_MAX):
+                self.download_select[i][box_id] = download_select
+
+        elif download_mode == 'BOARD':
+            board_id = id_ & 0x0f
+            for j in range(BOX_ID_MAX):
+                self.download_select[board_id][j] = download_select
+
+        elif download_mode == 'ALL':
+            for i in range(BOARD_NUM_MAX):
+                for j in range(BOX_ID_MAX):
+                    self.download_select[i][j] = download_select
 
         # self.refreshBoard()
         self.refreshBoardFlag = 1
@@ -524,13 +570,10 @@ class ProgramUpdateThread(QThread):
         print(", ".join(hex(i) for i in input_node_id))
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
-            # print(seq)
-            # print(node_idx_exist)
             if pressed:
                 if seq < 8 and input_node_id[0] in node_idx_exist:
                     node_idx_need_program.append(input_node_id[0])
                 elif seq >= 8 and input_node_id[0] >= 0x80:
-                    # print(input_node_id[0])
                     if input_node_id[0]&0x7f in node_idx_exist:
                         input_node_id[0] = input_node_id[0]&0x7f
                         node_idx_need_program.append(input_node_id[0])
@@ -539,12 +582,11 @@ class ProgramUpdateThread(QThread):
                 if seq < 8 and input_node_id[0] in node_idx_need_program:
                     node_idx_need_program.remove(input_node_id[0])
                 elif input_node_id[0] >= 0x80 and seq >= 8 :
-                    # input_node_id[0] = input_node_id[0]&0x7f
                     if input_node_id[0]&0x7f in node_idx_need_program:
                         input_node_id[0] = input_node_id[0]&0x7f
                         node_idx_need_program.remove(input_node_id[0])
 
-        print(' ')
+        print('\r\nnode_id_need_program:')
         print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[0][4]))
         print('  2、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][4]))
         print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[2][4]))
@@ -666,6 +708,7 @@ class ProgramUpdateThread(QThread):
             can_cmd = self.Canopen.getRevData(0x81, node_id, 5)
 
             if len(can_cmd):
+                QThread.msleep(2) # 加了这个更不容易丢失刷新的节点
                 version_mcu, version_fpga = self.MCU.findVersion(can_cmd)
 
                 box_id = can_cmd[0][0]>>4
@@ -673,15 +716,15 @@ class ProgramUpdateThread(QThread):
                 for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
                     if can_cmd[0][1] == board_type:
                         node_idx_exist.append((can_cmd[0][0]))
-                        if self.download_select[box_id] == QtCore.Qt.Checked:
+                        if self.download_select[seq][box_id] == QtCore.Qt.Checked:
                             node_idx_need_program.append((can_cmd[0][0]))
 
                         if seq < 8 :
-                            self.refresh_singel.emit(4, can_cmd[0][0], seq, version_mcu, self.download_select[box_id])
+                            self.refresh_singel.emit(4, can_cmd[0][0], seq, version_mcu, self.download_select[seq][box_id])
                         elif seq >=8:
-                            self.refresh_singel.emit(4, can_cmd[0][0], seq, version_fpga, self.download_select[box_id])
+                            self.refresh_singel.emit(4, can_cmd[0][0], seq, version_fpga, self.download_select[seq][box_id])
 
-        print(' ')
+        print('\r\nnode_id_all_exist:')
         print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[0][3]))
         print('  2、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][3]))
         print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[2][3]))
@@ -694,6 +737,13 @@ class ProgramUpdateThread(QThread):
         print('  10、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[9][3]))
         print('  11、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[10][3]))
         self.message_singel.emit(' --> 完成.\r\n')
+
+        showDownloadButton = False
+        for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
+            if len(node_idx_need_program):
+                showDownloadButton = True
+
+        self.refresh_singel.emit(5, 0, 0, ' ', showDownloadButton) # 刷新节点完成
 
         self.refreshBoardFlag = 0
 
