@@ -28,6 +28,7 @@ from CANalystII_Driver import *
 from Upgrade_MCU import UpgradeMCU
 from Upgrade_FPGA import UpgradeFPGA
 from Upgrade_LVDS import UpgradeLVDS
+from Upgrade_USBPD import UpgradeUSBPD
 from Canopen_Protocol import (CanopenProtocol, USE_UART, USE_CANALYST_II)
 
 
@@ -40,13 +41,16 @@ DEBUG = int(0)
 ANALOG_VIDEO_BOARD  = int(0x07)  # MCU 调用，暂不取消
 DIGITAL_VIDEO_BOARD = int(0x08)
 LVDS_IN_BOARD       = int(0x09)
+TYPEC_SWITCH_BOARD  = int(0x0d)
 # PCIE_BASE_BOARD     = int(0x0a)
 # ANALOG_FPGA_BOARD   = int(0x07)
 # DIGITAL_FPGA_BOARD  = int(0x08)
 # LVDS_FPGA_BOARD     = int(0x09)
+MCU_BOARD_MAX       = int(0x0a)
+FPGA_BOARD_MAX      = int(0x0b)
 
 BOX_ID_MAX = int(8)
-BOARD_NUM_MAX = int(11)
+BOARD_NUM_MAX = int(14)
 
 nowTime = lambda:int(round(time.time()*1000))
 
@@ -93,7 +97,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         #----initialize----QThread 任务
         self.ProgramUpdate_thread = ProgramUpdateThread()
         self.ProgramUpdate_thread.start()
-        #----end---- 
+        #----end----
 
         self.initUI()
 
@@ -109,10 +113,20 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                                 self.Box4_checkBox, self.Box5_checkBox, self.Box6_checkBox, self.Box7_checkBox
                             ]
         self.BoardType_checkBox = [
-                                    self.Audio_checkBox         , self.AnalogIO_checkBox    , self.DigitalIO_checkBox,
-                                    self.PScontrol_checkBox     , self.AnalogVideo_checkBox , self.DigitalVideo_checkBox,
-                                    self.LVDS_checkBox          , self.PcieBase_checkBox    , self.AnalogFpga_checkBox,
-                                    self.DigitalFpga_checkBox   , self.LvdsFpga_checkBox
+                                    self.Audio_checkBox       ,
+                                    self.AnalogIO_checkBox    ,
+                                    self.DigitalIO_checkBox   ,
+                                    self.PScontrol_checkBox   ,
+                                    self.AnalogVideo_checkBox ,
+                                    self.DigitalVideo_checkBox,
+                                    self.LVDS_checkBox        ,
+                                    self.PcieBase_checkBox    ,
+                                    self.TypecSwitch_checkBox ,
+                                    self.UsbMonitor_checkBox  ,
+                                    self.AnalogFpga_checkBox  ,
+                                    self.DigitalFpga_checkBox ,
+                                    self.LvdsFpga_checkBox    ,
+                                    self.Usb_PD_checkBox
                                 ]
 
         palette = QtGui.QPalette()
@@ -165,6 +179,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
         self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
         self.ProgramUpdate_thread.LVDS.message_singel.connect(self.message_singel)
+        self.ProgramUpdate_thread.UsbPD.message_singel.connect(self.message_singel)
         textCursor = self.Msg_TextEdit.textCursor()
         textCursor.movePosition(textCursor.End)
         self.Msg_TextEdit.setTextCursor(textCursor)
@@ -183,6 +198,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
         self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
         self.ProgramUpdate_thread.LVDS.processBar_singel.connect(self.processBar_singel)
+        self.ProgramUpdate_thread.UsbPD.processBar_singel.connect(self.processBar_singel)
 
         #timeDisp_singel
         self.ProgramUpdate_thread.timeDisp_singel.connect(self.timeDisp_singel)
@@ -305,7 +321,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.ProgramUpdate_thread.downloadSelect(state, self.ProgramUpdate_thread.download_mode, source.id_)
             self.groupBox_3.setEnabled(False)
 
-    #selectNodeID 
+    #selectNodeID
     def selectNodeID(self, pressed):
         source = self.sender()
         self.ProgramUpdate_thread.selectNodeID(pressed, str(source.id_))
@@ -319,6 +335,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.Msg_TextEdit.setEnabled(True)
         self.ProgramUpdate_thread.download_process_flag = 1
         self.ProgramUpdate_thread.run_time = nowTime()
+        self.Progress_bar.setValue(0)
 
     # openSerial
     def openSerial(self):
@@ -399,7 +416,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.BoardType_checkBox[j].setEnabled(True)
             self.BoxID_checkBox[(box_id)].setEnabled(True)
 
-            if j >= 8 :
+            if j >= MCU_BOARD_MAX-1 :
                 self.NodeID_button[(box_id)*BOARD_NUM_MAX+j].id_ = i | 0x80   # 最高位置1 表示FPGA板
             else:
                 self.NodeID_button[(box_id)*BOARD_NUM_MAX+j].id_ = i
@@ -443,9 +460,12 @@ class ProgramUpdateThread(QThread):
             ( 5     , 0x08      , str('..//bin//DigitalVideo.bin')  , list()        , list() ),   # 5.digital_video_board
             ( 6     , 0x09      , str('..//bin//LVDSIn.bin')        , list()        , list() ),   # 6.lvds_in_board
             ( 7     , 0x0a      , str('..//bin//PcieBaseBoard.bin') , list()        , list() ),   # 7.pcie_base_board
-            ( 8     , 0x07      , str('..//bin//AnalogFPGA.mcs')    , list()        , list() ),   # 8.analog_fpga_board
-            ( 9     , 0x08      , str('..//bin//DigitalFPGA.mcs')   , list()        , list() ),   # 9.digital_fpga_board
-            [ 10    , 0x09      , str('..//bin//lvds_test.bin')     , list()        , list() ]    # 10.lvds_fpga_board 此处使用列表，需要修改file_name 
+            [ 8     , 0x0d      , str('..//bin//typec_switch.bin')  , list()        , list() ],   # 8.typec_switch
+            [ 9     , 0x0c      , str('..//bin//usb_monitor.bin')   , list()        , list() ],   # 9.usb_monitor
+            ( 10    , 0x07      , str('..//bin//AnalogFPGA.mcs')    , list()        , list() ),   # 10.analog_fpga_board
+            ( 11    , 0x08      , str('..//bin//DigitalFPGA.mcs')   , list()        , list() ),   # 11.digital_fpga_board
+            [ 12    , 0x09      , str('..//bin//lvds_test.bin')     , list()        , list() ],   # 12.lvds_fpga_board 此处使用列表，需要修改file_name
+            [ 13    , 0x0d      , str('..//bin//usb_pd.bin')        , list()        , list() ]    # 13.usb_pd
             ]
 
         #----initialize----QTimer 任务
@@ -454,14 +474,14 @@ class ProgramUpdateThread(QThread):
         self.timer.start(1000)
         self.time_tick=QTime()
         self.time_tick.setHMS(0,0,0)  #初始时设置时间为  00：00：00
-        #----end---- 
+        #----end----
 
         #----initialize----threading 任务
         self.thread_1 = threading.Thread(target=self.receive_data_thread) #建立一个线程，调用receive_data_thread方法，不带参数
         self.thread_1.setDaemon(True) #声明为守护线程，设置的话，子线程将和主线程一起运行，并且直接结束，不会再执行循环里面的子线程
         self.thread_1.start()
         # self.thread_1.join() #作用是执行完所有子线程才去执行主线程
-        #----end---- 
+        #----end----
 
         self.download_process_flag = 0
         self.refreshBoardFlag = 0
@@ -484,8 +504,11 @@ class ProgramUpdateThread(QThread):
         #---- LVDS upgrade_creat----
         self.LVDS = UpgradeLVDS()
         self.LVDS.setInterfaceDev(self.Canopen)
-        #---end---
 
+        #---- usb pd  upgrade_creat----
+        self.UsbPD = UpgradeUSBPD()
+        self.UsbPD.setInterfaceDev(self.Canopen)
+        #---end---
 
         self.download_mode = 'NORMAL'
 
@@ -503,24 +526,28 @@ class ProgramUpdateThread(QThread):
     def download_process3(self):
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
-            if seq <= 7 and len(node_idx_need_program):
+            if seq < MCU_BOARD_MAX and len(node_idx_need_program):
                 self.MCU.downloadProcess(file_name, node_idx_need_program)
                 break
 
-            elif seq <= 9 and len(node_idx_need_program):
-                if seq == 9:
+            elif seq == 10 and seq == 11 and len(node_idx_need_program):
+                if seq == 11:
                     boardType = 'digital'
-                elif seq == 8:
+                elif seq == 10:
                     boardType = 'analog'
 
                 self.FPGA.downloadProcess(boardType, file_name, node_idx_need_program)
                 break
 
-            elif seq <= 10 and len(node_idx_need_program):
+            elif seq == 12 and len(node_idx_need_program):
                 self.LVDS.downloadProcess(self.lvdsStartAddr, file_name, node_idx_need_program)
                 break
 
-            elif seq >= 10:
+            elif seq == 13 and len(node_idx_need_program):
+                self.UsbPD.downloadProcess(self.lvdsStartAddr, file_name, node_idx_need_program)
+                break
+
+            elif seq >= BOARD_NUM_MAX-1:
                 print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
                 self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
                 self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！版本号正确即可。 \r\n')
@@ -564,24 +591,24 @@ class ProgramUpdateThread(QThread):
         # self.refreshBoard()
         self.refreshBoardFlag = 1
 
-    #selectNodeID 
+    #selectNodeID
     def selectNodeID(self, pressed, input_node_str):
         input_node_id = eval('[%s]'% input_node_str)
         print(", ".join(hex(i) for i in input_node_id))
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
             if pressed:
-                if seq < 8 and input_node_id[0] in node_idx_exist:
+                if seq < MCU_BOARD_MAX-1 and input_node_id[0] in node_idx_exist:
                     node_idx_need_program.append(input_node_id[0])
-                elif seq >= 8 and input_node_id[0] >= 0x80:
+                elif seq >= MCU_BOARD_MAX-1 and input_node_id[0] >= 0x80:
                     if input_node_id[0]&0x7f in node_idx_exist:
                         input_node_id[0] = input_node_id[0]&0x7f
                         node_idx_need_program.append(input_node_id[0])
 
             else:
-                if seq < 8 and input_node_id[0] in node_idx_need_program:
+                if seq < MCU_BOARD_MAX-1 and input_node_id[0] in node_idx_need_program:
                     node_idx_need_program.remove(input_node_id[0])
-                elif input_node_id[0] >= 0x80 and seq >= 8 :
+                elif input_node_id[0] >= 0x80 :
                     if input_node_id[0]&0x7f in node_idx_need_program:
                         input_node_id[0] = input_node_id[0]&0x7f
                         node_idx_need_program.remove(input_node_id[0])
@@ -595,9 +622,12 @@ class ProgramUpdateThread(QThread):
         print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][4]))
         print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][4]))
         print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][4]))
-        print('  9、模拟FPGA板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[8][4]))
-        print('  10、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[9][4]))
-        print('  11、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[10][4]))
+        print('  9、typec 板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[8][4]))
+        print('  10、usb监控板  : %s' % " ".join(hex(i) for i in self.AllNodeList[9][4]))
+        print('  11、模拟FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[10][4]))
+        print('  12、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][4]))
+        print('  13、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[12][4]))
+        print('  14、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[13][4]))
 
     # openSerial
     def openSerial(self, COMn):
@@ -719,23 +749,26 @@ class ProgramUpdateThread(QThread):
                         if self.download_select[seq][box_id] == QtCore.Qt.Checked:
                             node_idx_need_program.append((can_cmd[0][0]))
 
-                        if seq < 8 :
+                        if seq < MCU_BOARD_MAX:
                             self.refresh_singel.emit(4, can_cmd[0][0], seq, version_mcu, self.download_select[seq][box_id])
-                        elif seq >=8:
+                        else:
                             self.refresh_singel.emit(4, can_cmd[0][0], seq, version_fpga, self.download_select[seq][box_id])
 
         print('\r\nnode_id_all_exist:')
         print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[0][3]))
         print('  2、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][3]))
-        print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[2][3]))
+        print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[2][4]))
         print('  4、电源控制板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[3][3]))
         print('  5、模拟信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[4][3]))
         print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][3]))
         print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][3]))
         print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][3]))
-        print('  9、模拟FPGA板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[8][3]))
-        print('  10、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[9][3]))
-        print('  11、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[10][3]))
+        print('  9、typec 板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[8][3]))
+        print('  10、usb监控板  : %s' % " ".join(hex(i) for i in self.AllNodeList[9][3]))
+        print('  11、模拟FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[10][3]))
+        print('  12、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][3]))
+        print('  13、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[12][3]))
+        print('  14、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[13][3]))
         self.message_singel.emit(' --> 完成.\r\n')
 
         showDownloadButton = False

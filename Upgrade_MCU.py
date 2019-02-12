@@ -324,7 +324,7 @@ class UpgradeMCU(QThread):
         return send_tell, send_file_state
 
     def findVersion(self, data):
-        from ProgramUpdate import DIGITAL_VIDEO_BOARD, LVDS_IN_BOARD, ANALOG_VIDEO_BOARD
+        from ProgramUpdate import DIGITAL_VIDEO_BOARD, LVDS_IN_BOARD, ANALOG_VIDEO_BOARD, TYPEC_SWITCH_BOARD
         version_mcu = ''
         version_fpga = ''
         if len(data) >= 2:
@@ -333,7 +333,7 @@ class UpgradeMCU(QThread):
             print('version length error!!! len = %d' % len(data))
             return 'Boot', 'Boot'
 
-        if data[1][1] == DIGITAL_VIDEO_BOARD or data[1][1] == LVDS_IN_BOARD or data[1][1] == ANALOG_VIDEO_BOARD:
+        if data[1][1] == DIGITAL_VIDEO_BOARD or data[1][1] == LVDS_IN_BOARD or data[1][1] == ANALOG_VIDEO_BOARD or data[1][1] == TYPEC_SWITCH_BOARD:
             year2 = ((data[1][2] >> 2)&0x3f)
             month2 = (((data[1][2]<<2)&0x0c) | ((data[1][3]>>6)&0x03))&0x0f
             day2 = (data[1][3]>>1)&0x1f
