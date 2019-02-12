@@ -138,13 +138,13 @@ class UpgradeUSBPD(QThread):
             send = [0x01, 0x42, 0x80, 0x00, 0x00, 0x00, 0x03, 0x0d]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
-    def downloadProcess(self, startAddr, file_name, node_idx_need_program):
+    def downloadProcess(self, file_name, node_idx_need_program):
 
         isDownloadFinish = False
 
         if self.Download_state == DOWNLOAD_STATE.INITIALIZE.value: #---- 初始化数据---
             if self.setMcuEnterIspSystem(node_idx_need_program) == 0:
-                print('{}'.format(self.Download_state))
+                # print('{}'.format(self.Download_state))
                 self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
             else:
                 print('mcu did not reset.')
@@ -187,7 +187,7 @@ class UpgradeUSBPD(QThread):
                 self.send_file_ret = 1
                 self.send_file_tell = -1
 
-            print('{}'.format(self.Download_state))
+            # print('{}'.format(self.Download_state))
             self.Download_state = DOWNLOAD_STATE.SEND_FILE.value
 
         elif self.Download_state == DOWNLOAD_STATE.SEND_FILE.value: #send file
@@ -196,13 +196,13 @@ class UpgradeUSBPD(QThread):
             self.Download_state = DOWNLOAD_STATE.REBOOT.value
 
         elif self.Download_state == DOWNLOAD_STATE.REBOOT.value: #----start--- 发送重启命令
-            # self.setMcuExitIspSystem(node_idx_need_program)
-            print('{}'.format(self.Download_state))
+            self.setMcuExitIspSystem(node_idx_need_program)
+            # print('{}'.format(self.Download_state))
             node_idx_need_program.pop()
             self.Download_state = DOWNLOAD_STATE.FINISH_UPGRADE.value
 
         elif self.Download_state == DOWNLOAD_STATE.FINISH_UPGRADE.value:  #  ----完成烧录---
-            print('{}'.format(self.Download_state))
+            # print('{}'.format(self.Download_state))
             self.Download_state = DOWNLOAD_STATE.INITIALIZE.value
             isDownloadFinish = True
 
@@ -348,9 +348,10 @@ class UpgradeUSBPD(QThread):
                         if len(revData) >= 0x01 and revData[0] == 0x79:
                             addr += 0x80
                             break
-                        # elif len(revData) >= 0x01 and revData[0] == 0x1f:
-                            # pass
-                            # return 1
+                        elif len(revData) >= 0x01 and revData[0] == 0x1f:
+                            self.message_singel.emit('升级失败! \r\n')
+                            pass
+                            return 1
                         else:
                             print('current_pos = %d' % current_pos)
                             # return 1

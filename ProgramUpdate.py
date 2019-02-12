@@ -336,6 +336,12 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.ProgramUpdate_thread.download_process_flag = 1
         self.ProgramUpdate_thread.run_time = nowTime()
         self.Progress_bar.setValue(0)
+        self.Msg_TextEdit.insertPlainText('\r\n')
+        self.Msg_TextEdit.insertPlainText('\r\n')
+        self.Msg_TextEdit.insertPlainText('\r\n')
+        self.Msg_TextEdit.insertPlainText('\r\n')
+        self.Msg_TextEdit.insertPlainText('\r\n')
+        self.Msg_TextEdit.insertPlainText('\r\n')
 
     # openSerial
     def openSerial(self):
@@ -544,12 +550,12 @@ class ProgramUpdateThread(QThread):
                 break
 
             elif seq == 13 and len(node_idx_need_program):
-                self.UsbPD.downloadProcess(self.lvdsStartAddr, file_name, node_idx_need_program)
+                self.UsbPD.downloadProcess(file_name, node_idx_need_program)
                 break
 
             elif seq >= BOARD_NUM_MAX-1:
                 print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
-                self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
+                # self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
                 self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！版本号正确即可。 \r\n')
                 self.download_singel.emit(1)
                 self.download_process_flag = 0
@@ -696,7 +702,7 @@ class ProgramUpdateThread(QThread):
     #BoardRefresh_button
     def refreshBoard(self):
         if  self.Canopen.devIsOpen():
-            self.message_singel.emit('刷新节点...')
+            # self.message_singel.emit('刷新节点...')
             pass
         else:
             print('please select uart and open it!')
@@ -769,7 +775,7 @@ class ProgramUpdateThread(QThread):
         print('  12、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][3]))
         print('  13、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[12][3]))
         print('  14、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[13][3]))
-        self.message_singel.emit(' --> 完成.\r\n')
+        # self.message_singel.emit(' --> 完成.\r\n')
 
         showDownloadButton = False
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
