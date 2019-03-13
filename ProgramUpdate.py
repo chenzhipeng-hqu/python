@@ -46,11 +46,11 @@ TYPEC_SWITCH_BOARD  = int(0x0d)
 # ANALOG_FPGA_BOARD   = int(0x07)
 # DIGITAL_FPGA_BOARD  = int(0x08)
 # LVDS_FPGA_BOARD     = int(0x09)
-MCU_BOARD_MAX       = int(0x0a)
+MCU_BOARD_MAX       = int(0x0b)
 FPGA_BOARD_MAX      = int(0x0b)
 
 BOX_ID_MAX = int(8)
-BOARD_NUM_MAX = int(14)
+BOARD_NUM_MAX = int(15)
 
 nowTime = lambda:int(round(time.time()*1000))
 
@@ -123,6 +123,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                                     self.PcieBase_checkBox    ,
                                     self.TypecSwitch_checkBox ,
                                     self.UsbMonitor_checkBox  ,
+                                    self.UsbMonitor2_checkBox  ,
                                     self.AnalogFpga_checkBox  ,
                                     self.DigitalFpga_checkBox ,
                                     self.LvdsFpga_checkBox    ,
@@ -466,12 +467,13 @@ class ProgramUpdateThread(QThread):
             ( 5     , 0x08      , str('..//bin//DigitalVideo.bin')  , list()        , list() ),   # 5.digital_video_board
             ( 6     , 0x09      , str('..//bin//LVDSIn.bin')        , list()        , list() ),   # 6.lvds_in_board
             ( 7     , 0x0a      , str('..//bin//PcieBaseBoard.bin') , list()        , list() ),   # 7.pcie_base_board
-            [ 8     , 0x0d      , str('..//bin//typec_switch.bin')  , list()        , list() ],   # 8.typec_switch
-            [ 9     , 0x0c      , str('..//bin//usb_monitor.bin')   , list()        , list() ],   # 9.usb_monitor
-            ( 10    , 0x07      , str('..//bin//AnalogFPGA.mcs')    , list()        , list() ),   # 10.analog_fpga_board
-            ( 11    , 0x08      , str('..//bin//DigitalFPGA.mcs')   , list()        , list() ),   # 11.digital_fpga_board
-            [ 12    , 0x09      , str('..//bin//lvds_test.bin')     , list()        , list() ],   # 12.lvds_fpga_board 此处使用列表，需要修改file_name
-            [ 13    , 0x0d      , str('..//bin//usb_pd.bin')        , list()        , list() ]    # 13.usb_pd
+            [ 8     , 0x0d      , str('..//bin//TypecSwitch.bin')   , list()        , list() ],   # 8.typec_switch
+            [ 9     , 0x0c      , str('..//bin//UsbMonitor.bin')    , list()        , list() ],   # 9.usb_monitor
+            [ 10    , 0x0E      , str('..//bin//UsbMonitor2.bin')   , list()        , list() ],   # 10.usb_monitor
+            ( 11    , 0x07      , str('..//bin//AnalogFPGA.mcs')    , list()        , list() ),   # 11.analog_fpga_board
+            ( 12    , 0x08      , str('..//bin//DigitalFPGA.mcs')   , list()        , list() ),   # 12.digital_fpga_board
+            [ 13    , 0x09      , str('..//bin//lvds_test.bin')     , list()        , list() ],   # 13.lvds_fpga_board 此处使用列表，需要修改file_name
+            [ 14    , 0x0d      , str('..//bin//UsbPd.bin')         , list()        , list() ]    # 14.usb_pd
             ]
 
         #----initialize----QTimer 任务
@@ -630,10 +632,11 @@ class ProgramUpdateThread(QThread):
         print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][4]))
         print('  9、typec 板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[8][4]))
         print('  10、usb监控板  : %s' % " ".join(hex(i) for i in self.AllNodeList[9][4]))
-        print('  11、模拟FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[10][4]))
-        print('  12、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][4]))
-        print('  13、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[12][4]))
-        print('  14、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[13][4]))
+        print('  11、usb监控板2 : %s' % " ".join(hex(i) for i in self.AllNodeList[10][4]))
+        print('  12、模拟FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][4]))
+        print('  13、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[12][4]))
+        print('  14、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[13][4]))
+        print('  15、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[14][4]))
 
     # openSerial
     def openSerial(self, COMn):
@@ -771,10 +774,11 @@ class ProgramUpdateThread(QThread):
         print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][3]))
         print('  9、typec 板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[8][3]))
         print('  10、usb监控板  : %s' % " ".join(hex(i) for i in self.AllNodeList[9][3]))
-        print('  11、模拟FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[10][3]))
-        print('  12、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][3]))
-        print('  13、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[12][3]))
-        print('  14、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[13][3]))
+        print('  11、usb监控板2 : %s' % " ".join(hex(i) for i in self.AllNodeList[10][3]))
+        print('  12、模拟FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][3]))
+        print('  13、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[12][3]))
+        print('  14、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[13][3]))
+        print('  15、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[14][3]))
         # self.message_singel.emit(' --> 完成.\r\n')
 
         showDownloadButton = False

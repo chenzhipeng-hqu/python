@@ -1,6 +1,8 @@
 #
 # -*- coding: utf-8 -*-
 
+import os
+
 from PyInstaller.__main__ import run
 
 '''

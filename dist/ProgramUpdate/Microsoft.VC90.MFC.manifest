@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
   <noInheritable/>
-  <assemblyIdentity name="Microsoft.VC90.MFC" processorArchitecture="x86" publicKeyToken="1fc8b3b9a1e18e3b" type="win32" version="9.0.30729.4974"/>
-  <file hash="2087b808d741797d1894690e0712bb94da62be08" hashalg="SHA1" name="mfc90.dll"/>
-  <file hash="722710fe17690cd83a51a842e04976f26ca44d55" hashalg="SHA1" name="mfc90u.dll"/>
-  <file hash="dec69dde636699f57922ab5ca7b8a4ff1dcf6eb4" hashalg="SHA1" name="mfcm90.dll"/>
-  <file hash="4ab67ea9a03ec8347f354f73efdcf2b856d81abe" hashalg="SHA1" name="mfcm90u.dll"/>
+  <assemblyIdentity name="Microsoft.VC90.MFC" processorArchitecture="x86" publicKeyToken="1fc8b3b9a1e18e3b" type="win32" version="9.0.30729.7523"/>
+  <file hash="b6d7b33ad2135de70e95323fdceb063a1c820c4c" hashalg="SHA1" name="mfc90.dll"/>
+  <file hash="9fc29a632b57310957f8f615aa2a936eee8e12f3" hashalg="SHA1" name="mfc90u.dll"/>
+  <file hash="21284ede6ecf170b9cce99de5185c5d80c88a078" hashalg="SHA1" name="mfcm90.dll"/>
+  <file hash="3a0e6e604313e25b2c87c73a30bd25afb8c7f57f" hashalg="SHA1" name="mfcm90u.dll"/>
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
       <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/>
