@@ -105,10 +105,10 @@ class CanopenProtocol:
             self.__dev.write(send)
 
         elif CAN_DRIVER == USE_CANALYST_II:
-            VCI_CAN_OBJ_ARRAY_2500 = VCI_CAN_OBJ * 200 # 结构体定义数组传入
+            VCI_CAN_OBJ_ARRAY_2500 = VCI_CAN_OBJ * 15 # 结构体定义数组传入
             receive_can_data = VCI_CAN_OBJ_ARRAY_2500()
 
-            self.__dev.VCI_Receive(ctypes.byref(receive_can_data), 200, 1)
+            self.__dev.VCI_Receive(ctypes.byref(receive_can_data), 15, 1)
 
             ubyte_array_8 = ctypes.c_ubyte * length
             data = ubyte_array_8( data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7])
@@ -152,6 +152,9 @@ class CanopenProtocol:
                     else:
                         if dat[3] == 0x02:  #PDO1（接收）
                             pass
+                        elif can_id == self.PDO1_Tx|node_id: #PDO1（发送）
+                            receive_data.append(dat[6:14])
+
                         elif dat[3] == 0x01 and dat[2] == 0x81: #PDO1（发送）
                             receive_data.append(dat[6:14])
 
@@ -174,16 +177,18 @@ class CanopenProtocol:
                     break
 
         elif CAN_DRIVER == USE_CANALYST_II:
-            VCI_CAN_OBJ_ARRAY_2500 = VCI_CAN_OBJ * 2500 # 结构体定义数组传入
+            VCI_CAN_OBJ_ARRAY_2500 = VCI_CAN_OBJ * 20 # 结构体定义数组传入
             receive_can_data = VCI_CAN_OBJ_ARRAY_2500()
 
-            while  nowTime() - start_time < wait_time:
+            while  (nowTime() - start_time) < wait_time:
                 time.sleep(0.001)
-                length = self.__dev.VCI_Receive(ctypes.byref(receive_can_data), 2500, wait_time*1000)
+                length = self.__dev.VCI_Receive(ctypes.byref(receive_can_data), 20, 1)
 
                 if length > 0:
                     # print('receive length: %d' % length)
                     for i in range(length):
+                        # for j in range(8):
+                            # print('%02x' % receive_can_data[i].Data[j])
                         # print('i=%d ' % i, end='')
                         # print('ID=%02X ' % receive_can_data[i].ID, end='')  # 帧ID
 
@@ -217,20 +222,25 @@ class CanopenProtocol:
                                     # receive_data.append(receive_can_data[i].Data[7])
                                     receive_data.append(receive_can_data[i].Data[0:8])
                         elif receive_can_data[i].ID == 0x81:
-                            if receive_can_data[i].Data[0] == node_id:
+                            if receive_can_data[i].Data[0] != 0:
                                 receive_data.append(receive_can_data[i].Data[0:8])
 
-                        elif receive_can_data[i].ID == rev_type | node_id:  # 目前只有上电启动发送过来的信息符合
+                        elif (receive_can_data[i].ID & rev_type) == rev_type:  # 目前只有上电启动发送过来的信息符合
                             print(1)
                             dat = [0xaa, 0xaa, receive_can_data[i].ID&0xff]
                             receive_data.append(dat)
+                            print(nowTime())
 
                         elif receive_can_data[i].ID >= rev_type | 0x00 and receive_can_data[i].ID <= rev_type | 0x0F:
                             if node_id == 0:
                                 receive_data.append(receive_can_data[i].Data[0:8])
 
+                    break;
 
-        # print(receive_data)
+
+        if len(receive_data) != 0:
+            # print(receive_data)
+            pass
         return receive_data
 
     def receiveData(self):

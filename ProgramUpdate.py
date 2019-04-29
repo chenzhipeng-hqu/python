@@ -49,6 +49,41 @@ TYPEC_SWITCH_BOARD  = int(0x0d)
 MCU_BOARD_MAX       = int(0x0b)
 FPGA_BOARD_MAX      = int(0x0b)
 
+AUDIO_BOARD_SEQ         = int(0)
+IO_ANALOG_BOARD_SEQ     = int(1)
+IO_DIGITAL_BOARD_SEQ    = int(2)
+POWER_BOARD_SEQ         = int(3)
+VIDEO_ANALOG_BOARD_SEQ  = int(4)
+VIDEO_DIGITAL_BOARD_SEQ = int(5)
+LVDS_IN_BOARD_SEQ       = int(6)
+PCIE_BASE_BOARD_SEQ     = int(7)
+TYPEC_BOARD_SEQ         = int(8)
+USB_MONITOR_BOARD_SEQ   = int(9)
+USB_MONITOR2_BOARD_SEQ  = int(10)
+FPGA_ANALOG_BOARD_SEQ   = int(11)
+FPGA_DIGITAL_BOARD_SEQ  = int(12)
+FPGA_LVDS_BOARD_SEQ     = int(13)
+USB_PD_BOARD_SEQ        = int(14)
+
+AUDIO_BOARD_FILE         = str('..//bin//AudioBoard.bin')
+IO_ANALOG_BOARD_FILE     = str('..//bin//IoBoardAnalog.bin')
+IO_DIGITAL_BOARD_FILE    = str('..//bin//IoBoardDigital.bin')
+POWER_BOARD_FILE         = str('..//bin//PowerBoard.bin')
+VIDEO_ANALOG_BOARD_FILE  = str('..//bin//AnalogVideo.bin')
+VIDEO_DIGITAL_BOARD_FILE = str('..//bin//DigitalVideo.bin')
+LVDS_IN_BOARD_FILE       = str('..//bin//LVDSIn.bin')
+PCIE_BASE_BOARD_FILE     = str('..//bin//PcieBase.bin')
+TYPEC_BOARD_FILE         = str('..//bin//TypecSwitch.bin')
+USB_MONITOR_BOARD_FILE   = str('..//bin//UsbMonitor.bin')
+USB_MONITOR2_BOARD_FILE  = str('..//bin//UsbMonitor2.bin')
+FPGA_ANALOG_BOARD_FILE   = str('..//bin//AnalogFPGA.mcs')
+FPGA_DIGITAL_BOARD_FILE  = str('..//bin//DigitalFPGA.mcs')
+FPGA_LVDS_BOARD_FILE     = str('..//bin//lvds_test.bin')
+USB_PD_BOARD_FILE        = str('..//bin//UsbPd.bin')
+
+F103BL_FILE              = str('..//bin//f103BL.bin')
+F407BL_FILE              = str('..//bin//f407BL.bin')
+
 BOX_ID_MAX = int(8)
 BOARD_NUM_MAX = int(15)
 
@@ -223,42 +258,71 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         # print(source.currentText())
         if source.currentText() == 'LVDS':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x000000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//lvds_ddr.bin')
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2] = str('..//bin//lvds_ddr.bin')
 
         elif source.currentText() == 'N10':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x170000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//N10.bin')
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2] = str('..//bin//N10.bin')
 
         elif source.currentText() == 'N86_1':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x2e0000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//N86_1.bin')
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2] = str('..//bin//N86_1.bin')
 
         elif source.currentText() == 'N81':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x450000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//N81.bin')
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2] = str('..//bin//N81.bin')
 
         elif source.currentText() == 'PT320':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x5C0000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//PT320.bin')
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2] = str('..//bin//PT320.bin')
 
         elif source.currentText() == 'N86_2':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x730000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//N86_2.bin')
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2] = str('..//bin//N86_2.bin')
 
         elif source.currentText() == 'PT320_2':
             self.ProgramUpdate_thread.lvdsStartAddr = 0x8A0000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//PT320_2.bin')
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2] = str('..//bin//PT320_2.bin')
 
-        elif source.currentText() == 'EXT_2' or source.currentText() == 'NORMAL':
+        elif source.currentText() == 'EXT_2':
             self.ProgramUpdate_thread.lvdsStartAddr = 0xA10000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//N10_2.bin')
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2] = str('..//bin//N10_2.bin')
 
         elif source.currentText() == 'Bootloader':
             self.ProgramUpdate_thread.lvdsStartAddr = 0xB80000
-            self.ProgramUpdate_thread.AllNodeList[10][2] = str('..//bin//boot_test.bin')
+            self.ProgramUpdate_thread.mcuBoot       = 1
+            self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2]     = str('..//bin//boot_test.bin')
+
+            self.ProgramUpdate_thread.AllNodeList[AUDIO_BOARD_SEQ][2]         = F407BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[IO_ANALOG_BOARD_SEQ][2]     = F407BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[IO_DIGITAL_BOARD_SEQ][2]    = F407BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[POWER_BOARD_SEQ][2]         = F407BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[USB_MONITOR_BOARD_SEQ][2]   = F407BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[USB_MONITOR2_BOARD_SEQ][2]  = F407BL_FILE
+
+            self.ProgramUpdate_thread.AllNodeList[VIDEO_ANALOG_BOARD_SEQ][2]  = F103BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[VIDEO_DIGITAL_BOARD_SEQ][2] = F103BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[LVDS_IN_BOARD_SEQ][2]       = F103BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[PCIE_BASE_BOARD_SEQ][2]     = F103BL_FILE
+            self.ProgramUpdate_thread.AllNodeList[TYPEC_BOARD_SEQ][2]         = F103BL_FILE
+
+        elif source.currentText() == 'NORMAL':
+            self.ProgramUpdate_thread.mcuBoot       = 0
+            self.ProgramUpdate_thread.AllNodeList[AUDIO_BOARD_SEQ][2]         = AUDIO_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[IO_ANALOG_BOARD_SEQ][2]     = IO_ANALOG_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[IO_DIGITAL_BOARD_SEQ][2]    = IO_DIGITAL_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[POWER_BOARD_SEQ][2]         = POWER_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[USB_MONITOR_BOARD_SEQ][2]   = USB_MONITOR_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[USB_MONITOR2_BOARD_SEQ][2]  = USB_MONITOR2_BOARD_FILE
+
+            self.ProgramUpdate_thread.AllNodeList[VIDEO_ANALOG_BOARD_SEQ][2]  = VIDEO_ANALOG_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[VIDEO_DIGITAL_BOARD_SEQ][2] = VIDEO_DIGITAL_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[LVDS_IN_BOARD_SEQ][2]       = LVDS_IN_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[PCIE_BASE_BOARD_SEQ][2]     = PCIE_BASE_BOARD_FILE
+            self.ProgramUpdate_thread.AllNodeList[TYPEC_BOARD_SEQ][2]         = TYPEC_BOARD_FILE
 
         print(hex(self.ProgramUpdate_thread.lvdsStartAddr))
-        self.dispFileVersion(10, self.ProgramUpdate_thread.AllNodeList[10][2])
+        self.dispFileVersion(FPGA_LVDS_BOARD_SEQ, self.ProgramUpdate_thread.AllNodeList[FPGA_LVDS_BOARD_SEQ][2])
 
     #dispfileversion
     def dispFileVersion(self, seq, file_name):
@@ -375,6 +439,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         source = self.sender()
         self.ProgramUpdate_thread.refreshBoardFlag = 1
         self.groupBox_3.setEnabled(False)
+        self.Progress_bar.setValue(0)
 
     #message_singel
     def message_singel(self, str):
@@ -393,7 +458,8 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.ProgramUpdate_thread.refreshBoardFlag = 1
             # self.setEnabled(True)
             self.groupBox.setEnabled(True)
-            self.groupBox_3.setEnabled(True)
+            # self.groupBox_3.setEnabled(True)
+            self.groupBox_3.setEnabled(False)
             self.download_button.setEnabled(False)
 
     #refresh_singel
@@ -456,24 +522,25 @@ class ProgramUpdateThread(QThread):
         super(ProgramUpdateThread, self).__init__()
         self.wait_receive = int(0)
         self.lvdsStartAddr = 0xA10000 # 默认一个起始下载地址，防止没选择地址的时候擦出0地址的数据
+        self.mcuBoot = 0;
 
         self.AllNodeList = [
             #0.seq  , 1.board_type  , 2.file_name                , 3.node_idx_exist, 4.node_idx_need_program
-            ( 0     , 0x05      , str('..//bin//AudioBoard.bin')    , list()        , list() ),   # 0.audio_board
-            ( 1     , 0x04      , str('..//bin//IoBoardAnalog.bin') , list()        , list() ),   # 1.io_analog_board
-            ( 2     , 0x06      , str('..//bin//IoBoardDigital.bin'), list()        , list() ),   # 2.io_digital_board
-            ( 3     , 0x02      , str('..//bin//PowerBoard.bin')    , list()        , list() ),   # 3.power_board
-            ( 4     , 0x07      , str('..//bin//AnalogVideo.bin')   , list()        , list() ),   # 4.analog_video_board
-            ( 5     , 0x08      , str('..//bin//DigitalVideo.bin')  , list()        , list() ),   # 5.digital_video_board
-            ( 6     , 0x09      , str('..//bin//LVDSIn.bin')        , list()        , list() ),   # 6.lvds_in_board
-            ( 7     , 0x0a      , str('..//bin//PcieBaseBoard.bin') , list()        , list() ),   # 7.pcie_base_board
-            [ 8     , 0x0d      , str('..//bin//TypecSwitch.bin')   , list()        , list() ],   # 8.typec_switch
-            [ 9     , 0x0c      , str('..//bin//UsbMonitor.bin')    , list()        , list() ],   # 9.usb_monitor
-            [ 10    , 0x0E      , str('..//bin//UsbMonitor2.bin')   , list()        , list() ],   # 10.usb_monitor
-            ( 11    , 0x07      , str('..//bin//AnalogFPGA.mcs')    , list()        , list() ),   # 11.analog_fpga_board
-            ( 12    , 0x08      , str('..//bin//DigitalFPGA.mcs')   , list()        , list() ),   # 12.digital_fpga_board
-            [ 13    , 0x09      , str('..//bin//lvds_test.bin')     , list()        , list() ],   # 13.lvds_fpga_board 此处使用列表，需要修改file_name
-            [ 14    , 0x0d      , str('..//bin//UsbPd.bin')         , list()        , list() ]    # 14.usb_pd
+            [ AUDIO_BOARD_SEQ            , 0x05      , AUDIO_BOARD_FILE         , list()        , list() ],   # 0.audio_board
+            [ IO_ANALOG_BOARD_SEQ        , 0x04      , IO_ANALOG_BOARD_FILE     , list()        , list() ],   # 1.io_analog_board
+            [ IO_DIGITAL_BOARD_SEQ       , 0x06      , IO_DIGITAL_BOARD_FILE    , list()        , list() ],   # 2.io_digital_board
+            [ POWER_BOARD_SEQ            , 0x02      , POWER_BOARD_FILE         , list()        , list() ],   # 3.power_board
+            [ VIDEO_ANALOG_BOARD_SEQ     , 0x07      , VIDEO_ANALOG_BOARD_FILE  , list()        , list() ],   # 4.analog_video_board
+            [ VIDEO_DIGITAL_BOARD_SEQ    , 0x08      , VIDEO_DIGITAL_BOARD_FILE , list()        , list() ],   # 5.digital_video_board
+            [ LVDS_IN_BOARD_SEQ          , 0x09      , LVDS_IN_BOARD_FILE       , list()        , list() ],   # 6.lvds_in_board
+            [ PCIE_BASE_BOARD_SEQ        , 0x0a      , PCIE_BASE_BOARD_FILE     , list()        , list() ],   # 7.pcie_base_board
+            [ TYPEC_BOARD_SEQ            , 0x0d      , TYPEC_BOARD_FILE         , list()        , list() ],   # 8.typec_switch
+            [ USB_MONITOR_BOARD_SEQ      , 0x0c      , USB_MONITOR_BOARD_FILE   , list()        , list() ],   # 9.usb_monitor
+            [ USB_MONITOR2_BOARD_SEQ     , 0x0E      , USB_MONITOR2_BOARD_FILE  , list()        , list() ],   # 10.usb_monitor
+            [ FPGA_ANALOG_BOARD_SEQ      , 0x07      , FPGA_ANALOG_BOARD_FILE   , list()        , list() ],   # 11.analog_fpga_board
+            [ FPGA_DIGITAL_BOARD_SEQ     , 0x08      , FPGA_DIGITAL_BOARD_FILE  , list()        , list() ],   # 12.digital_fpga_board
+            [ FPGA_LVDS_BOARD_SEQ        , 0x09      , FPGA_LVDS_BOARD_FILE     , list()        , list() ],   # 13.lvds_fpga_board 此处使用列表，需要修改file_name
+            [ USB_PD_BOARD_SEQ           , 0x0d      , USB_PD_BOARD_FILE        , list()        , list() ]    # 14.usb_pd
             ]
 
         #----initialize----QTimer 任务
@@ -535,23 +602,23 @@ class ProgramUpdateThread(QThread):
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
             if seq < MCU_BOARD_MAX and len(node_idx_need_program):
-                self.MCU.downloadProcess(file_name, node_idx_need_program)
+                self.MCU.downloadProcess(file_name, node_idx_need_program, self.mcuBoot)
                 break
 
-            elif seq == 10 and seq == 11 and len(node_idx_need_program):
-                if seq == 11:
+            elif (seq == FPGA_ANALOG_BOARD_SEQ or seq == FPGA_DIGITAL_BOARD_SEQ) and len(node_idx_need_program):
+                if seq == FPGA_DIGITAL_BOARD_SEQ:
                     boardType = 'digital'
-                elif seq == 10:
+                elif seq == FPGA_ANALOG_BOARD_SEQ:
                     boardType = 'analog'
 
                 self.FPGA.downloadProcess(boardType, file_name, node_idx_need_program)
                 break
 
-            elif seq == 12 and len(node_idx_need_program):
+            elif seq == FPGA_LVDS_BOARD_SEQ and len(node_idx_need_program):
                 self.LVDS.downloadProcess(self.lvdsStartAddr, file_name, node_idx_need_program)
                 break
 
-            elif seq == 13 and len(node_idx_need_program):
+            elif seq == USB_PD_BOARD_SEQ and len(node_idx_need_program):
                 self.UsbPD.downloadProcess(file_name, node_idx_need_program)
                 break
 
@@ -572,7 +639,7 @@ class ProgramUpdateThread(QThread):
             self.message_singel.emit('请检查串口并选择节点！\r\n')
 
         send_data = [0x00, pressed, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
-        for node_idx_exist in self.AllNodeList[3][3]:
+        for node_idx_exist in self.AllNodeList[POWER_BOARD_SEQ][3]:
             self.send_can_command(node_idx_exist, send_data)
 
     # download_select
@@ -595,6 +662,9 @@ class ProgramUpdateThread(QThread):
             for i in range(BOARD_NUM_MAX):
                 for j in range(BOX_ID_MAX):
                     self.download_select[i][j] = download_select
+
+        elif download_mode == 'BOOT':
+            pass
 
         # self.refreshBoard()
         self.refreshBoardFlag = 1
@@ -685,10 +755,10 @@ class ProgramUpdateThread(QThread):
         try:
             if  self.Canopen.devIsOpen():
                 self.Canopen.devClose()
-                print("关闭成功 -> %s" % (self.ser.port))
-                self.message_singel.emit('关闭成功 -> '+ str(self.ser.port) + '\r\n')
                 self.wait_receive = 0
                 ret = 0
+                # print("关闭成功 -> %s" % (self.ser.port))
+                self.message_singel.emit('关闭成功\r\n')
             else:
                 print("关闭失败,请检查串口后重启程序!")
                 self.message_singel.emit("关闭失败,请检查串口后重启程序!\r\n")

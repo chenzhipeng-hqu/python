@@ -29,8 +29,9 @@ if __name__ == '__main__':
         opts = ['ProgramUpdate.py',
                 '-D',
                 '--clean',
-                '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\bin',
-                '-p C:\\Users\\chenzhipeng3472\\AppData\Local\\Programs\\Python\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\plugins',
+                '-p C:\\Users\\chenz\\AppData\\Local\\Programs\\Python\\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\bin',
+                '-p C:\\Users\\chenz\\AppData\\Local\\Programs\\Python\\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\plugins',
+                '-p C:\\Users\\chenz\\AppData\\Local\\Programs\\Python\\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\plugins\\imageformats',
                 ]
         run(opts)
 

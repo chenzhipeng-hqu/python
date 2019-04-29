@@ -87,17 +87,17 @@ class UpgradeUSBPD(QThread):
     def setMcuEnterIspSystem(self, node_idx_need_program):
         for node_id in node_idx_need_program:
             # set boot0 = 1
-            send = [0x01, 0x42, 0x40, 0x00, 0x00, 0x00, 0x01, 0x0d]
+            send = [0x01, 0x42, 0x01, 0x00, 0x00, 0x00, 0x01, 0x0d]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
             # set reset = 0
-            send = [0x01, 0x42, 0x80, 0x01, 0x00, 0x00, 0x02, 0x0d]
+            send = [0x01, 0x42, 0x02, 0x01, 0x00, 0x00, 0x02, 0x0d]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
             time.sleep(1)
 
             # set reset = 1
-            send = [0x01, 0x42, 0x80, 0x00, 0x00, 0x00, 0x03, 0x0d]
+            send = [0x01, 0x42, 0x02, 0x00, 0x00, 0x00, 0x03, 0x0d]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
             time.sleep(1)
@@ -106,36 +106,36 @@ class UpgradeUSBPD(QThread):
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
             receiveCanData = self.getRevData(0x01, node_id, 1000)
 
-            send = [0x05, 0xF1, 0x01, 0x0F, 0x00, 0x00, 0x05, 0x0d]
+            send = [0x05, 0xF1, 0x01, 0xF0, 0x00, 0x00, 0x05, 0x0d]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
             receiveCanData = self.getRevData(0x01, node_id, 3000)
 
             if len(receiveCanData) <= 0:  # time_out
-                print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
-                print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                print('sendG0UpgradePack time_out node_id=0x%02X' % node_id)
+                print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
                 return 1
             elif receiveCanData[0] == 0x79:
-                print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
                 return 0
             else:
-                print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
                 return 1
 
     def setMcuExitIspSystem(self, node_idx_need_program):
         for node_id in node_idx_need_program:
             # set boot0 = 0
-            send = [0x01, 0x42, 0x40, 0x01, 0x00, 0x00, 0x01, 0x0d]
+            send = [0x01, 0x42, 0x01, 0x01, 0x00, 0x00, 0x01, 0x0d]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
             # set reset = 0
-            send = [0x01, 0x42, 0x80, 0x01, 0x00, 0x00, 0x02, 0x0d]
+            send = [0x01, 0x42, 0x02, 0x01, 0x00, 0x00, 0x02, 0x0d]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
             time.sleep(1)
 
             # set reset = 1
-            send = [0x01, 0x42, 0x80, 0x00, 0x00, 0x00, 0x03, 0x0d]
+            send = [0x01, 0x42, 0x02, 0x00, 0x00, 0x00, 0x03, 0x0d]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
     def downloadProcess(self, file_name, node_idx_need_program):
@@ -146,6 +146,7 @@ class UpgradeUSBPD(QThread):
             if self.setMcuEnterIspSystem(node_idx_need_program) == 0:
                 # print('{}'.format(self.Download_state))
                 self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
+                time.sleep(1)
             else:
                 print('mcu did not reset.')
 
@@ -157,10 +158,15 @@ class UpgradeUSBPD(QThread):
                 receiveCanData = self.sendUsbPdData(node_id, data)
 
                 if len(receiveCanData) <= 0:  # time_out
-                    print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
-                    print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                    print('sendG0UpgradePack time_out node_id=0x%02X' % node_id)
+                    print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                    self.Download_state = DOWNLOAD_STATE.INITIALIZE.value
+                    return isDownloadFinish
+                elif receiveCanData[0] == 0x1F:
+                    self.Download_state = DOWNLOAD_STATE.INITIALIZE.value
+                    return isDownloadFinish
                 else:
-                    print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                    print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
 
                 Is_File_exist = int(0)
 
@@ -171,7 +177,7 @@ class UpgradeUSBPD(QThread):
                         creat_time = os.path.getmtime(file_name)
                         print('')
                         print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
-                        print('正在升级...  ',  end=' ')
+                        print('正在升级...  ',  end = ' ')
                         self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                     else:
                         print("找不到该文件  %s , 请放置该文件到该目录下,放置后自动开始下载" % (file_name))
@@ -182,7 +188,21 @@ class UpgradeUSBPD(QThread):
                     print('file size: %d' % self.size)
                     self.f_bin_data = f_bin.read(self.size)
 
-                self.cmdEraseMemory(node_id)
+                # self.cmdEraseMemory(node_id)
+
+                data = [0x44, 0xbb, 0xff, 0xff, 0x00]
+                receiveCanData = self.sendUsbPdData(node_id, data)
+
+                if len(receiveCanData) <= 0:  # time_out
+                    print('sendG0UpgradePack time_out node_id=0x%02X' % node_id)
+                    print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                    self.Download_state = DOWNLOAD_STATE.INITIALIZE.value
+                    return isDownloadFinish
+                elif receiveCanData[0] == 0x1F:
+                    self.Download_state = DOWNLOAD_STATE.INITIALIZE.value
+                    return isDownloadFinish
+                else:
+                    print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
 
                 self.send_file_ret = 1
                 self.send_file_tell = -1
@@ -217,7 +237,7 @@ class UpgradeUSBPD(QThread):
         # print(send_times_high)
         # print(send_times_low)
 
-        # print('sendFpgaUpgradePack: %s' % " ".join(hex(k) for k in send_data))
+        # print('sendG0UpgradePack: %s' % " ".join(hex(k) for k in send_data))
 
         send_times_cnt = 0
         send = [0x05, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x05, 0x0d]
@@ -240,16 +260,16 @@ class UpgradeUSBPD(QThread):
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
             # print('     %s' % " ".join(hex(k) for k in send))
 
-        send = [0x05, 0xF1, len(send_data), 0x02, 0x00, 0x00, 0x09, 0x0d]
+        send = [0x05, 0xF1, len(send_data), 0xF0, 0x00, 0x00, 0x09, 0x0d]
         self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
         receiveCanData = self.getRevData(0x01, node_id, 1000)
 
         if len(receiveCanData) <= 0:  # time_out
-            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
-            print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            print('sendG0UpgradePack time_out node_id=0x%02X' % node_id)
+            print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
         else:
-            # print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            # print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
             pass
 
         return receiveCanData
@@ -259,10 +279,10 @@ class UpgradeUSBPD(QThread):
         receiveCanData = self.sendUsbPdData(node_id, data)
 
         if len(receiveCanData) <= 0:  # time_out
-            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
-            print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            print('sendG0UpgradePack time_out node_id=0x%02X' % node_id)
+            print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
         else:
-            print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
 
         return receiveCanData
 
@@ -273,10 +293,10 @@ class UpgradeUSBPD(QThread):
         receiveCanData = self.sendUsbPdData(node_id, send_data)
 
         if len(receiveCanData) <= 0:  # time_out
-            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
-            print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            print('sendG0UpgradePack time_out node_id=0x%02X' % node_id)
+            print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
         else:
-            # print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            # print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
             pass
 
         byte3 = (addr >> 0) & 0xFF
@@ -289,10 +309,10 @@ class UpgradeUSBPD(QThread):
         receiveCanData = self.sendUsbPdData(node_id, send_data)
 
         if len(receiveCanData) <= 0:  # time_out
-            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
-            print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            print('sendG0UpgradePack time_out node_id=0x%02X' % node_id)
+            print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
         else:
-            # print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            # print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
             pass
 
         send_data = [len(data)-1] + data
@@ -304,10 +324,10 @@ class UpgradeUSBPD(QThread):
         receiveCanData = self.sendUsbPdData(node_id, send_data)
 
         if len(receiveCanData) <= 0:  # time_out
-            print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
-            print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            print('sendG0UpgradePack time_out node_id=0x%02X' % node_id)
+            print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
         else:
-            # print('     receive from 0x%02X FPGA: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            # print('     receive from 0x%02X G0: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
             pass
 
         return receiveCanData

@@ -36,13 +36,14 @@ CAN_TAIL = int(0x55)
 PACK_SIZE = int(1024)
 READ_SIZE = int(8)
 
+E_UPG_CMD_RESET     = int(0x99)
 E_UPG_CMD_ERASE     = int(0x01)
 E_UPG_CMD_DATA      = int(0x02)
 E_UPG_CMD_PROGRAM   = int(0x03)
 E_UPG_CMD_REBOOT    = int(0x04)
 
 E_CMD_RESER         = int(0x01)
-E_CMD_UPDATE        = int(0x02)
+E_CMD_UPDATE        = int(0x01)
 
 class UpgradeMCU(QThread):
     '''
@@ -65,16 +66,47 @@ class UpgradeMCU(QThread):
         pass
 
     def getRevData(self, rev_type, node_id, wait_time):
-        return self.__dev.getRevData(rev_type, node_id, wait_time)
+        if rev_type == self.__dev.NODE_GUARD:
+            return self.__dev.getRevData(rev_type, node_id, wait_time)
+        else:
+            receive_data = list()
+            can_cmd = self.__dev.getRevData(rev_type, node_id, wait_time)
+            # print(len(can_cmd))
 
-    def downloadProcess(self, file_name, node_idx_need_program):
+            while 0 < len(can_cmd):
+                dat = can_cmd.pop(0)
+                # print('     dat: %s' % (" ".join(hex(k) for k in dat)))
+                if dat[0] == node_id and dat[2] >= dat[3]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
+                    receive_data.append(dat[4])
+                    receive_data.append(dat[5])
+                    receive_data.append(dat[6])
+                    receive_data.append(dat[7])
+
+            # print(receive_data)
+            return receive_data
+
+
+    def downloadProcess(self, file_name, node_idx_need_program, bootMode):
 
         isDownloadFinish = False
 
         if self.Download_state == DOWNLOAD_STATE.INITIALIZE.value: #---- 初始化数据---
             print('下载程序...')
             self.processBar_singel.emit(0)
-            self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
+
+            print("bootMode=%d" % bootMode)
+            if(bootMode == 1):
+                for node_id in node_idx_need_program:
+                    self.send_erase_commane(node_id, 0x0000) #------- 发送擦除扇区命令
+                    QThread.sleep(1)
+                    self.Download_state = DOWNLOAD_STATE.SEND_FILE.value
+
+                self.send_file_ret = 1
+                self.send_file_tell = -1
+                pass
+            else:
+                self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
+
             pass
 
         elif self.Download_state == DOWNLOAD_STATE.ENTER_UPGRADE.value: #---- 复位看门狗---
@@ -103,7 +135,7 @@ class UpgradeMCU(QThread):
                         self.__dev.sendStartCmd(node_id) #------- 发送启动命令
                         QThread.msleep(1)
 
-                        self.send_erase_commane(node_id) #------- 发送擦除扇区命令
+                        self.send_erase_commane(node_id, 0x10000) #------- 发送擦除扇区命令
                         QThread.msleep(1)
 
                         break
@@ -116,7 +148,7 @@ class UpgradeMCU(QThread):
 
             self.Download_state = DOWNLOAD_STATE.SEND_FILE.value
 
-            QThread.sleep(2)
+            QThread.sleep(3)
             self.send_file_ret = 1
             self.send_file_tell = -1
 
@@ -130,6 +162,7 @@ class UpgradeMCU(QThread):
             pass
 
         elif self.Download_state == DOWNLOAD_STATE.REBOOT.value: #----start--- 发送重启命令
+            QThread.sleep(1)
             self.send_command_reboot(node_idx_need_program)
             self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
             reboot_time = time.time()
@@ -162,19 +195,20 @@ class UpgradeMCU(QThread):
 
         elif self.Download_state == DOWNLOAD_STATE.FINISH_UPGRADE.value: #----完成烧录---
             isDownloadFinish = True
-            self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
+            self.Download_state = DOWNLOAD_STATE.INITIALIZE.value
             print(self.Download_state)
             pass
 
         return isDownloadFinish
 
     def send_reset_iwdg_command(self, node_id):
-        send = [ 0x99, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, E_CMD_RESER ]
+        send = [ E_UPG_CMD_RESET, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, E_CMD_RESER ]
         self.sendData(self.__dev.PDO1_Rx, node_id, send)
         print("发送重启指令：节点： 0x%02X " % (node_id))
 
-    def send_erase_commane(self, node_id):
-        send = [ E_UPG_CMD_ERASE, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, E_CMD_UPDATE ]
+    def send_erase_commane(self, node_id, addr):
+        print("addr = 0x%x" % addr)
+        send = [ E_UPG_CMD_ERASE, addr&0xff, (addr>>8)&0xff, (addr>>16)&0xff, (addr>>24)&0xff, 0x00, 0x00, E_CMD_UPDATE ]
         self.sendData(self.__dev.PDO1_Rx, node_id, send)
         print("send_erase_commane...  node_id = 0x%02X " % (node_id))
 
@@ -191,6 +225,10 @@ class UpgradeMCU(QThread):
             # print( hex(byte))
             f_bin_data = list(f_bin_data)
 
+            # if ((i+1)*READ_SIZE) > 335 and ((i+1)*READ_SIZE) < 369:
+                # print('f_bin_data: %s' % (" ".join(hex(k) for k in f_bin_data)))
+                # print('byteCnt=%d' % ((i+1)*READ_SIZE))
+
             for node_id in node_ids:
                 self.sendData(self.__dev.PDO2_Rx, node_id, f_bin_data)
 
@@ -206,10 +244,24 @@ class UpgradeMCU(QThread):
                     (check_sum>>24)&0xff,
                     0x00,
                     0x00,
-                    0x02
+                    E_CMD_UPDATE
                 ]
         for node_id in node_ids:
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
+
+        # print('send: %s' % (" ".join(str(k) for k in send)))
+
+        receiveCanData = self.getRevData(0x01, node_id, 3000)
+
+        if len(receiveCanData) <= 0:  # time_out
+            print('sendMCUUpgradePack time_out node_id=0x%02X' % node_id)
+            print('     receive from 0x%02X MCU: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            return 1
+        elif (receiveCanData[0] == (check_sum>>0)&0xff) & (receiveCanData[1] == (check_sum>>8)&0xff) & (receiveCanData[2] == (check_sum>>16)&0xff) & (receiveCanData[3] == (check_sum>>24)&0xff):
+            # print('     receive from 0x%02X MCU: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+            return 0
+            pass
+        print(receiveCanData)
 
     def send_command_reboot(self, node_ids):
         send = [ E_UPG_CMD_REBOOT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, E_CMD_UPDATE ]
@@ -218,7 +270,7 @@ class UpgradeMCU(QThread):
             print("send_command_reboot...  node_id = 0x%02X " % (node_id))
 
     def send_file_data(self, file_name, send_file_state, send_tell, node_id_need_program):
-        print('%s, tell=%d' % (file_name, send_tell))
+        # print('%s, tell=%d' % (file_name, send_tell))
 
         if send_tell == -1 and send_file_state == 0:
             send_file_state = 1
@@ -232,7 +284,7 @@ class UpgradeMCU(QThread):
                     creat_time = os.path.getmtime(file_name)
                     print('')
                     print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
-                    print('正在升级...  ',  end='')
+                    print('正在升级...  ',  end = '')
                     print(" ".join(hex(i) for i in node_id_need_program))
                     self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:
@@ -311,9 +363,12 @@ class UpgradeMCU(QThread):
                     send_tell = f_bin.tell()
 
                 #----start--- 发送烧录命令
-                    self.send_program_command(check_sum_1K, node_id_need_program)
+                    if 0 == self.send_program_command(check_sum_1K, node_id_need_program):
+                        pass
+                    else:
+                        send_tell = send_tell - 1024
                 #----end-----
-                    QThread.msleep(80)
+                    QThread.msleep(1)
 
 
         elif send_file_state == 3:

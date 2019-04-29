@@ -17,6 +17,8 @@ from PyQt5.QtCore import (pyqtSignal, QThread)
 
 from Canopen_Protocol import CanopenProtocol
 
+nowTime = lambda:int(round(time.time()*1000))
+
 @unique       #如果要限制定义枚举时，不能定义相同值的成员。可以使用装饰器@unique【要导入unique模块】
 class DOWNLOAD_STATE(Enum):
     INITIALIZE      = 0x00
@@ -83,7 +85,7 @@ class UpgradeFPGA(QThread):
                     creat_time = os.path.getmtime(file_name)
                     print('')
                     print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
-                    print('正在升级...  ',  end='')
+                    print('正在升级...  ',  end = '')
                     self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:
                     print("找不到该文件  %s , 请放置该文件到该目录下,放置后自动开始下载" % (file_name))
@@ -297,6 +299,7 @@ class UpgradeFPGA(QThread):
         send_times_cnt = 0
         send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
 
+        print(nowTime())
         if send_times_high >= 1:
             # print('send_times_high')
             for i in range(0,send_times_high):
@@ -311,6 +314,7 @@ class UpgradeFPGA(QThread):
             # print('send_times_low')
             send[:send_times_low] = send_data[(send_times_cnt)*7:(send_times_cnt)*7+send_times_low]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
+        print(nowTime())
 
     def str2hex(self, line):
         lineData = list()
