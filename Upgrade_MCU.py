@@ -76,7 +76,7 @@ class UpgradeMCU(QThread):
             while 0 < len(can_cmd):
                 dat = can_cmd.pop(0)
                 # print('     dat: %s' % (" ".join(hex(k) for k in dat)))
-                if dat[0] == node_id and dat[2] >= dat[3]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
+                if len(dat) > 7 and dat[0] == node_id and dat[2] >= dat[3]: # 这里取值逻辑与MCU储存逻辑相反，可能由于大小端模式影响，待确认
                     receive_data.append(dat[4])
                     receive_data.append(dat[5])
                     receive_data.append(dat[6])
@@ -114,26 +114,30 @@ class UpgradeMCU(QThread):
             for node_id in node_idx_need_program:
                 start_time = time.time()
 
-                print('reset iwdg: node_id=%d' % (node_id))
+                print('reset iwdg: node_id=0x%02X' % (node_id))
                 self.send_reset_iwdg_command(node_id)
+                send = [ E_UPG_CMD_RESET, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, E_CMD_RESER]
+                self.__dev.sendData(self.__dev.PDO1_Rx, node_id, 8, send)
+
                 self.message_singel.emit('发送重启指令：节点：' + str(hex(node_id)) + ' \r\n')
 
                 try_times = 0
 
                 while True:
-                    while (time.time()-start_time) > 15:
+                    while (time.time()-start_time) > 2:
                         self.send_reset_iwdg_command(node_id)
                         start_time = time.time()
                         try_times = try_times + 1
 
-                    receive_data = self.getRevData(self.__dev.NODE_GUARD, node_id, 15000)
+                    receive_data = self.__dev.getRevData(self.__dev.NODE_GUARD, node_id, 1000)
 
                     if len(receive_data):
-                        print("重启成功 节点 --> 0x%02X" % (receive_data[0][2]))
-                        self.message_singel.emit('重启成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
+                        # print("0x%02X 0x%02X 0x%02X 0x%02X" % (receive_data[0][0], receive_data[0][1], receive_data[0][2], receive_data[0][3]))
+                        print("重启成功 节点 --> 0x%02X" % (receive_data[0][3]))
+                        self.message_singel.emit('重启成功 --> ' + str(hex(node_id)) + ' \r\n')
 
-                        self.__dev.sendStartCmd(node_id) #------- 发送启动命令
-                        QThread.msleep(1)
+                        # self.__dev.sendStartCmd(node_id) #------- 发送启动命令
+                        # QThread.msleep(1)
 
                         self.send_erase_commane(node_id, 0x10000) #------- 发送擦除扇区命令
                         QThread.msleep(1)
@@ -284,7 +288,8 @@ class UpgradeMCU(QThread):
                     creat_time = os.path.getmtime(file_name)
                     print('')
                     print("%s  %s  %d bytes" % (file_name, self.TimeStampToTime(creat_time), self.size))
-                    print('正在升级...  ',  end = '')
+                    # print('正在升级...  ',  end = '')
+                    print('正在升级...  ')
                     print(" ".join(hex(i) for i in node_id_need_program))
                     self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:

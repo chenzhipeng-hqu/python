@@ -19,6 +19,7 @@ USE_UART = 0
 USE_CANALYST_II = 1
 global CAN_DRIVER
 CAN_DRIVER = USE_CANALYST_II
+USE_USB_UART = 1
 # __all__ = ["CAN_DRIVER"]
 
 nowTime = lambda:int(round(time.time()*1000))
@@ -62,10 +63,14 @@ class CanopenProtocol:
         CAN_DRIVER = can_dev
         print('CAN_DRIVER = %d' % CAN_DRIVER)
         self.can_cmd = list()
+        self.__dev = dev
+
         if CAN_DRIVER == USE_UART:
-            self.__dev = dev
+            if USE_USB_UART == 0:
+                self.__dev.baudrate = 115200
+            elif USE_USB_UART == 1 :
+                self.__dev.baudrate = 460800
         elif CAN_DRIVER == USE_CANALYST_II:
-            self.__dev = dev
             pass
         pass
 
@@ -92,16 +97,32 @@ class CanopenProtocol:
     def sendData(self, send_type, node_id, length, data):
         global CAN_DRIVER
         if CAN_DRIVER == USE_UART:
-            send = [0xAA, 0xAA,
-                    node_id|(send_type&0xff), (send_type>>8)&0xff, 0x00, 0x00,
-                    # data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
-                    length, 0x00, 0x00, 0x00,
-                    0x00,
-                    0x55 , 0x55
-                    ]
-            send = send[0:6]+data[:length]+send[6:]
-            send[18] = (send[2]+send[3]+send[14]+sum(data[:length]))&0xff # 校验位
-            send = self.__dataCtrlDeal(send)
+            if USE_USB_UART == 0:
+                send = [0xAA, 0xAA,
+                        node_id|(send_type&0xff), (send_type>>8)&0xff, 0x00, 0x00,
+                        # data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+                        length, 0x00, 0x00, 0x00,
+                        0x00,
+                        0x55 , 0x55
+                        ]
+                send = send[0:6]+data[:length]+send[6:]
+                send[18] = (send[2]+send[3]+send[14]+sum(data[:length]))&0xff # 校验位
+                send = self.__dataCtrlDeal(send)
+
+            elif USE_USB_UART == 1 :
+                send = [0x66, 0xCC,
+                        0x00, 0x00, 0x30, 0x03,
+                        0x00, 0x00, (send_type>>8)&0xff, node_id|(send_type&0xff),
+                        length,
+                        # data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+                        0x00,
+                        ]
+                send = send[0:11]+data[:length]+send[11:]
+                send[2] = ((len(send) - 4) >> 8) & 0xff # 0x66 0xcc length length 共4个字节
+                send[3] = ((len(send) - 4)) & 0xff
+                send[11+length] = (sum(send[2:(11+length)]))&0xff # 校验位
+
+            # print(" ".join(hex(k) for k in send))
             self.__dev.write(send)
 
         elif CAN_DRIVER == USE_CANALYST_II:
@@ -122,7 +143,7 @@ class CanopenProtocol:
 
     def sendStartCmd(self, node_id):
        data = [0x01, node_id, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-       self.sendData(0, 0, 8 , data)
+       self.sendData(self.NMT, 0, 8 , data)
 
     def __dataCtrlDeal(self, send_data):
         send_data2 = list(send_data)        # another list, 创建了的内存
@@ -144,32 +165,61 @@ class CanopenProtocol:
                 while 0 < len(self.can_cmd):
                     dat = self.can_cmd.pop(0)
                     # print(" ".join(hex(k) for k in dat))
-                    can_id = (dat[3]<<8 | dat[2])
-                    if node_id == 0:
-                        if can_id >= rev_type|node_id: #上电返回
-                            receive_data.append(dat)
-                        pass
-                    else:
-                        if dat[3] == 0x02:  #PDO1（接收）
+                    if USE_USB_UART == 0:
+                        can_id = (dat[3]<<8 | dat[2])
+                        if node_id == 0:
+                            if can_id >= rev_type|node_id: #上电返回
+                                receive_data.append(dat)
                             pass
-                        elif can_id == self.PDO1_Tx|node_id: #PDO1（发送）
-                            receive_data.append(dat[6:14])
+                        else:
+                            if dat[3] == 0x02:  #PDO1（接收）
+                                pass
+                            elif can_id == self.PDO1_Tx|node_id: #PDO1（发送）
+                                receive_data.append(dat[6:14])
 
-                        elif dat[3] == 0x01 and dat[2] == 0x81: #PDO1（发送）
-                            receive_data.append(dat[6:14])
+                            elif dat[3] == 0x01 and dat[2] == 0x81: #PDO1（发送）
+                                receive_data.append(dat[6:14])
 
-                        elif can_id == rev_type|node_id: #上电返回
-                            receive_data.append(dat)
+                            elif can_id == rev_type|node_id: #上电返回
+                                receive_data.append(dat)
 
-                        elif dat[3] == 0x07:
-                            # if dat[2] == node_id:
+                            elif dat[3] == 0x07:
+                                # if dat[2] == node_id:
+                                    # receive_data.append(dat)
+                                # elif 0 == node_id:  # 获取所有nodeid的启动命令
+                                    # receive_data.append(dat)
+
+                                print(' 0x%02X Boot up' % (dat[2]))
+                            elif dat[2] == rev_type and dat[3] == 0x00:  # 0x81 启动命令 返回
+                                receive_data.append(dat[6:14])
+                    elif USE_USB_UART == 1 :
+                        can_id = (dat[3]<< 0 | dat[2]<< 8 | dat[1]<< 16 | dat[0] << 24)
+                        if node_id == 0:
+                            if can_id >= rev_type|node_id: #上电返回
                                 # receive_data.append(dat)
-                            # elif 0 == node_id:  # 获取所有nodeid的启动命令
-                                # receive_data.append(dat)
+                                # print(" ".join(hex(k) for k in dat))
+                                dat_temp = [0xaa, 0xaa, dat[3], dat[2], dat[1], dat[0]]
+                                # print(" ".join(hex(k) for k in dat_temp))
+                                receive_data.append(dat_temp)
+                                print(' 0x%02X Boot up1' % (dat[3]))
+                            pass
+                        else:
+                            if can_id == self.PDO1_Tx|node_id: #PDO1（发送）
+                                receive_data.append(dat[4:12])
 
-                            print(' 0x%02X Boot up' % (dat[2]))
-                        elif dat[2] == rev_type and dat[3] == 0x00:  # 0x81 启动命令 返回
-                            receive_data.append(dat[6:14])
+                            elif (can_id & self.NODE_GUARD) == self.NODE_GUARD: #上电返回
+                                receive_data.append(dat)
+                                # print(1)
+                                # dat = [0xaa, 0xaa, receive_can_data[i].ID&0xff]
+                                # receive_data.append(dat)
+                                # print(nowTime())
+                                print(' 0x%02X Boot up2' % (dat[3]))
+
+                            elif (can_id & self.SYNC) == self.SYNC : # 0x80 启动命令 返回
+                                receive_data.append(dat[4:12])
+
+                            else:
+                                print(" ".join(hex(k) for k in dat))
 
 
                 if len(receive_data):
@@ -261,34 +311,54 @@ class CanopenProtocol:
         # print(type(data))
         data = list(data)
         can_cmd = list()
-        # print(type(data))
-        for i,dat in enumerate(data[2:-2]):
-            if (data[i-1] == CanopenProtocol.__CAN_CTRL) and (data[i]== CanopenProtocol.__CAN_HEAD or data[i]== CanopenProtocol.__CAN_CTRL or data[i]== CanopenProtocol.__CAN_TAIL): #去除重复的A5
-                data.remove(data[i-1])
 
-        # print('before:')
-        # print(" ".join(hex(i) for i in data))
+        if USE_USB_UART == 0:
+            # print(type(data))
+            for i,dat in enumerate(data[2:-2]):
+                if (data[i-1] == CanopenProtocol.__CAN_CTRL) and (data[i]== CanopenProtocol.__CAN_HEAD or data[i]== CanopenProtocol.__CAN_CTRL or data[i]== CanopenProtocol.__CAN_TAIL): #去除重复的A5
+                    data.remove(data[i-1])
 
-        # for i,dat1 in enumerate(data):
-        i = 1
-        # print(len(data))
-        while i<len(data):
-            if data[i] == CanopenProtocol.__CAN_HEAD and data[i-1] == CanopenProtocol.__CAN_HEAD:
-                for j,dat2 in enumerate(data[i+9:]):
-                    if data[i+9+j] == CanopenProtocol.__CAN_TAIL and data[i+9+j-1] == CanopenProtocol.__CAN_TAIL:
-                        can_cmd.append(data[i-1:i+9+j+1])
-                        # print('i=%d, j=%d ' % (i, j))
-                        # print(" ".join(hex(k) for k in data[i-1:i+9+j+1]))
-                        i = i + 9
-                        break
-            else:
-                i = i + 1
-        # print(", ".join(hex(k) for k in self.can_cmd[0]))
-        # print('after:')
-        # for i, dat in enumerate(can_cmd):
-            # print(" ".join(hex(i) for i in dat))
-            # print(' ')
-        # print('find_can_command_format... end')
+            # print('before:')
+            # print(" ".join(hex(i) for i in data))
+
+            # for i,dat1 in enumerate(data):
+            i = 1
+            # print(len(data))
+            while i<len(data):
+                if data[i] == CanopenProtocol.__CAN_HEAD and data[i-1] == CanopenProtocol.__CAN_HEAD:
+                    for j,dat2 in enumerate(data[i+9:]):
+                        if data[i+9+j] == CanopenProtocol.__CAN_TAIL and data[i+9+j-1] == CanopenProtocol.__CAN_TAIL:
+                            can_cmd.append(data[i-1:i+9+j+1])
+                            # print('i=%d, j=%d ' % (i, j))
+                            # print(" ".join(hex(k) for k in data[i-1:i+9+j+1]))
+                            i = i + 9
+                            break
+                else:
+                    i = i + 1
+            # print(", ".join(hex(k) for k in self.can_cmd[0]))
+            # print('after:')
+            # for i, dat in enumerate(can_cmd):
+                # print(" ".join(hex(i) for i in dat))
+                # print(' ')
+            # print('find_can_command_format... end')
+
+        elif USE_USB_UART == 1 :
+            data = list(data)
+            can_cmd = list()
+            # print(" ".join(hex(i) for i in data))
+            i = 1
+            while i<len(data):
+                if data[i] == 0xCC and data[i-1] == 0x66 and data[i+3] == 0xb1 and data[i+4] == 0x03:
+                    # print(data[i+5])
+                    # print(data[i+9])
+                    # print(data[i+9+data[i+9]])
+                    dat = data[i+5:i+9] + data[i+10:i+10+data[i+9]]
+                    # can_cmd.append(data[i+5:i+10+data[i+9]])
+                    can_cmd.append(dat)
+                    i = i + 10
+                else:
+                    i = i + 1
+
         return can_cmd
 
 if __name__ == "__main__":

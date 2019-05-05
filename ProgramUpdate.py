@@ -640,7 +640,8 @@ class ProgramUpdateThread(QThread):
 
         send_data = [0x00, pressed, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
         for node_idx_exist in self.AllNodeList[POWER_BOARD_SEQ][3]:
-            self.send_can_command(node_idx_exist, send_data)
+            # self.send_can_command(node_idx_exist, send_data)
+            self.Canopen.sendData(self.Canopen.PDO1_Rx, node_idx_exist, 8, send_data)
 
     # download_select
     def downloadSelect(self, download_select, download_mode, id_):
