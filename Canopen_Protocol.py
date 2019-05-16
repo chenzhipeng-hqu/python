@@ -299,6 +299,7 @@ class CanopenProtocol:
             if self.devIsOpen():
                 while self.__dev.inWaiting() > 0:
                     self.can_cmd = self.find_can_command_format(self.__dev.read_all())
+            time.sleep(0.01)
         elif CAN_DRIVER == USE_CANALYST_II:
             pass
         # print(data)
@@ -311,6 +312,7 @@ class CanopenProtocol:
         # print(type(data))
         data = list(data)
         can_cmd = list()
+        # print(" ".join(hex(i) for i in data))
 
         if USE_USB_UART == 0:
             # print(type(data))
@@ -343,9 +345,6 @@ class CanopenProtocol:
             # print('find_can_command_format... end')
 
         elif USE_USB_UART == 1 :
-            data = list(data)
-            can_cmd = list()
-            # print(" ".join(hex(i) for i in data))
             i = 1
             while i<len(data):
                 if data[i] == 0xCC and data[i-1] == 0x66 and data[i+3] == 0xb1 and data[i+4] == 0x03:
@@ -355,6 +354,7 @@ class CanopenProtocol:
                     dat = data[i+5:i+9] + data[i+10:i+10+data[i+9]]
                     # can_cmd.append(data[i+5:i+10+data[i+9]])
                     can_cmd.append(dat)
+                    # print(can_cmd)
                     i = i + 10
                 else:
                     i = i + 1
