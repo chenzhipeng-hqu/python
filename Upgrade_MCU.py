@@ -55,6 +55,7 @@ class UpgradeMCU(QThread):
     def __init__(self):
         super(UpgradeMCU, self).__init__()
         self.Download_state = DOWNLOAD_STATE.INITIALIZE.value
+        self.times = 0
         pass
 
     def setInterfaceDev(self, dev):
@@ -132,6 +133,7 @@ class UpgradeMCU(QThread):
                     receive_data = self.__dev.getRevData(self.__dev.NODE_GUARD, node_id, 1000)
 
                     if len(receive_data):
+                    # if len(receive_data[0]) > 2:
                         # print("0x%02X 0x%02X 0x%02X 0x%02X" % (receive_data[0][0], receive_data[0][1], receive_data[0][2], receive_data[0][3]))
                         print("重启成功 节点 --> 0x%02X" % (receive_data[0][3]))
                         self.message_singel.emit('重启成功 --> ' + str(hex(node_id)) + ' \r\n')
@@ -140,7 +142,16 @@ class UpgradeMCU(QThread):
                         # QThread.msleep(1)
 
                         self.send_erase_commane(node_id, 0x10000) #------- 发送擦除扇区命令
-                        QThread.msleep(1)
+
+                        receiveCanData = self.getRevData(self.__dev.PDO1_Tx, node_id, 5000)
+                        QThread.sleep(1)
+
+                        if len(receiveCanData) <= 0:  # time_out
+                            print('erase commane time_out node_id=0x%02X' % node_id)
+                            print('     receive from 0x%02X MCU: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                        else:
+                            print('     receive from 0x%02X MCU: %s' % (node_id , " ".join(hex(k) for k in receiveCanData)))
+                            pass
 
                         break
                     else:
@@ -150,9 +161,8 @@ class UpgradeMCU(QThread):
                             break
                         print('iwdg reset err times %d !!!!!' % (try_times))
 
+            # QThread.sleep(3)
             self.Download_state = DOWNLOAD_STATE.SEND_FILE.value
-
-            QThread.sleep(3)
             self.send_file_ret = 1
             self.send_file_tell = -1
 
@@ -166,15 +176,15 @@ class UpgradeMCU(QThread):
             pass
 
         elif self.Download_state == DOWNLOAD_STATE.REBOOT.value: #----start--- 发送重启命令
-            QThread.sleep(1)
+            # QThread.sleep(1)
             self.send_command_reboot(node_idx_need_program)
             self.message_singel.emit('检查是否升级成功，请稍后...  \r\n')
             reboot_time = time.time()
-            while (time.time() - reboot_time) < 20:
+            while (time.time() - reboot_time) < 15:
 
-                receive_data = self.getRevData(self.__dev.NODE_GUARD, 0, 20000)
+                receive_data = self.getRevData(self.__dev.NODE_GUARD, 0, 15000)
                 try:
-                    if len(receive_data) and receive_data[0][2] in node_idx_need_program:
+                    if len(receive_data[0])>2 and receive_data[0][2] in node_idx_need_program:
                         self.message_singel.emit('升级成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
                         self.__dev.sendStartCmd(receive_data[0][2]) #------- 发送启动命令
                         node_idx_need_program.remove(receive_data[0][2])
@@ -185,7 +195,7 @@ class UpgradeMCU(QThread):
                 except Exception as err:
                     print(err)
 
-            QThread.sleep(5)
+            QThread.sleep(1)
 
             if len(node_idx_need_program):
                 self.message_singel.emit('---升级失败节点 --> ' )
@@ -255,7 +265,8 @@ class UpgradeMCU(QThread):
 
         # print('send: %s' % (" ".join(str(k) for k in send)))
 
-        receiveCanData = self.getRevData(0x01, node_id, 3000)
+        QThread.msleep(2)
+        receiveCanData = self.getRevData(self.__dev.PDO1_Tx, node_id, 3000)
 
         if len(receiveCanData) <= 0:  # time_out
             print('sendMCUUpgradePack time_out node_id=0x%02X' % node_id)
@@ -369,11 +380,16 @@ class UpgradeMCU(QThread):
 
                 #----start--- 发送烧录命令
                     if 0 == self.send_program_command(check_sum_1K, node_id_need_program):
+                        self.times = 0
                         pass
                     else:
+                        self.times = self.times + 1
+                        if self.times > 5:
+                            send_file_state = 3
+
                         send_tell = send_tell - 1024
                 #----end-----
-                    QThread.msleep(1)
+                    QThread.msleep(2)
 
 
         elif send_file_state == 3:
@@ -387,7 +403,13 @@ class UpgradeMCU(QThread):
         from ProgramUpdate import DIGITAL_VIDEO_BOARD, LVDS_IN_BOARD, ANALOG_VIDEO_BOARD, TYPEC_SWITCH_BOARD
         version_mcu = ''
         version_fpga = ''
-        if len(data) >= 2:
+
+        if len(data) != 2:
+            print("len(data):%d " % len(data))
+            for j in range(len(data)):
+                print(" ".join(hex(i) for i in data[j]))
+
+        if len(data) >= 2 :
             pass
         else:
             print('version length error!!! len = %d' % len(data))

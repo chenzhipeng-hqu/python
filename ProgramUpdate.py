@@ -138,7 +138,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
     def __del__(self):
         print('UI_MainWindow delete.')
-        self.ProgramUpdate_thread.stop()
+        # self.ProgramUpdate_thread.stop()
 
     def initUI(self):
 
@@ -212,10 +212,6 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         # message_singel
         self.ProgramUpdate_thread.message_singel.connect(self.message_singel)
-        self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
-        self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
-        self.ProgramUpdate_thread.LVDS.message_singel.connect(self.message_singel)
-        self.ProgramUpdate_thread.UsbPD.message_singel.connect(self.message_singel)
         textCursor = self.Msg_TextEdit.textCursor()
         textCursor.movePosition(textCursor.End)
         self.Msg_TextEdit.setTextCursor(textCursor)
@@ -231,10 +227,6 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         #processbar_singel
         self.ProgramUpdate_thread.processBar_singel.connect(self.processBar_singel)
-        self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
-        self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
-        self.ProgramUpdate_thread.LVDS.processBar_singel.connect(self.processBar_singel)
-        self.ProgramUpdate_thread.UsbPD.processBar_singel.connect(self.processBar_singel)
 
         #timeDisp_singel
         self.ProgramUpdate_thread.timeDisp_singel.connect(self.timeDisp_singel)
@@ -408,12 +400,28 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.Msg_TextEdit.insertPlainText('\r\n')
         self.Msg_TextEdit.insertPlainText('\r\n')
 
+        for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.ProgramUpdate_thread.AllNodeList:
+            # print(seq)
+            # print(self.ProgramUpdate_thread.need_program_nodes_bak)
+            if len(node_idx_need_program) > 0:
+                self.ProgramUpdate_thread.need_program_nodes_bak[seq].extend(node_idx_need_program)
+
     # openSerial
     def openSerial(self):
         source = self.sender()
         if source.text() == '打开':
             ret = self.ProgramUpdate_thread.openSerial(str(self.ser_com_combo.currentText()))
             if ret == 0:
+                self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.LVDS.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.UsbPD.message_singel.connect(self.message_singel)
+
+                self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.LVDS.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.UsbPD.processBar_singel.connect(self.processBar_singel)
+
                 self.ser_com_combo.setEnabled(False)
                 source.setText('关闭')
                 source.setChecked(True)
@@ -523,9 +531,10 @@ class ProgramUpdateThread(QThread):
         self.wait_receive = int(0)
         self.lvdsStartAddr = 0xA10000 # 默认一个起始下载地址，防止没选择地址的时候擦出0地址的数据
         self.mcuBoot = 0;
+        self.need_program_nodes_bak = [[] for i in range(USB_PD_BOARD_SEQ+1)]
 
         self.AllNodeList = [
-            #0.seq  , 1.board_type  , 2.file_name                , 3.node_idx_exist, 4.node_idx_need_program
+            #0.seq  ,                   1.board_type  , 2.file_name          , 3.node_idx_exist, 4.node_idx_need_program
             [ AUDIO_BOARD_SEQ            , 0x05      , AUDIO_BOARD_FILE         , list()        , list() ],   # 0.audio_board
             [ IO_ANALOG_BOARD_SEQ        , 0x04      , IO_ANALOG_BOARD_FILE     , list()        , list() ],   # 1.io_analog_board
             [ IO_DIGITAL_BOARD_SEQ       , 0x06      , IO_DIGITAL_BOARD_FILE    , list()        , list() ],   # 2.io_digital_board
@@ -562,29 +571,6 @@ class ProgramUpdateThread(QThread):
         self.refreshBoardFlag = 0
         self.download_select = [ [0 for i in range(BOX_ID_MAX)] for i in range(BOARD_NUM_MAX) ]
 
-        #---- canopenprotocol----
-        self.Canopen = CanopenProtocol()
-        #---end---
-
-        #---- MCU upgrade_creat----
-        self.MCU = UpgradeMCU()
-        self.MCU.setInterfaceDev(self.Canopen)
-        #---end---
-
-        #---- FPGA upgrade_creat----
-        self.FPGA = UpgradeFPGA()
-        self.FPGA.setInterfaceDev(self.Canopen)
-        #---end---
-
-        #---- LVDS upgrade_creat----
-        self.LVDS = UpgradeLVDS()
-        self.LVDS.setInterfaceDev(self.Canopen)
-
-        #---- usb pd  upgrade_creat----
-        self.UsbPD = UpgradeUSBPD()
-        self.UsbPD.setInterfaceDev(self.Canopen)
-        #---end---
-
         self.download_mode = 'NORMAL'
 
     def run(self):
@@ -602,7 +588,12 @@ class ProgramUpdateThread(QThread):
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
             if seq < MCU_BOARD_MAX and len(node_idx_need_program):
-                self.MCU.downloadProcess(file_name, node_idx_need_program, self.mcuBoot)
+                # node_idx_list_one = list()
+                # node_idx_list_one.append(node_idx_need_program[0])
+                ret = self.MCU.downloadProcess(file_name, node_idx_need_program, self.mcuBoot)
+                # if ret == True:
+                    # node_idx_need_program.pop(0)
+
                 break
 
             elif (seq == FPGA_ANALOG_BOARD_SEQ or seq == FPGA_DIGITAL_BOARD_SEQ) and len(node_idx_need_program):
@@ -629,9 +620,19 @@ class ProgramUpdateThread(QThread):
                 self.download_singel.emit(1)
                 self.download_process_flag = 0
 
+                # self.message_singel.emit('正在循环测试。。。5s 后开始 \r\n')
+                # for seq2, board_type2, file_name2, node_idx_exist2, node_idx_need_program2 in self.AllNodeList:
+                    # node_idx_need_program2.extend(self.need_program_nodes_bak[seq2])
+                    # print(seq2)
+                    # print(self.need_program_nodes_bak[seq2])
+                    # print(self.AllNodeList[seq2])
+                    # print(node_idx_need_program2)
+                # QThread.sleep(5)
+                
+
     #send_ctrl_220V_command
     def send_ctrl_220V_command(self, pressed):
-        if  self.ser.isOpen():
+        if  self.Canopen.devIsOpen():
             self.message_singel.emit('220V状态：%s...\r\n' % pressed)
             print('220V状态：%s...' % pressed)
             pass
@@ -711,6 +712,30 @@ class ProgramUpdateThread(QThread):
 
     # openSerial
     def openSerial(self, COMn):
+
+        #---- canopenprotocol----
+        self.Canopen = CanopenProtocol(COMn)
+        #---end---
+
+        #---- MCU upgrade_creat----
+        self.MCU = UpgradeMCU()
+        self.MCU.setInterfaceDev(self.Canopen)
+        #---end---
+
+        #---- FPGA upgrade_creat----
+        self.FPGA = UpgradeFPGA()
+        self.FPGA.setInterfaceDev(self.Canopen)
+        #---end---
+
+        #---- LVDS upgrade_creat----
+        self.LVDS = UpgradeLVDS()
+        self.LVDS.setInterfaceDev(self.Canopen)
+
+        #---- usb pd  upgrade_creat----
+        self.UsbPD = UpgradeUSBPD()
+        self.UsbPD.setInterfaceDev(self.Canopen)
+        #---end---
+
         try:
             if COMn == 'CANalystII':
                 index = 0
@@ -731,7 +756,8 @@ class ProgramUpdateThread(QThread):
 
                 self.Canopen.setInterfaceDev(self.canDll, USE_CANALYST_II)
             else:
-                self.ser = serial.Serial(COMn, 115200, timeout=0.001)  #/dev/ttyUSB0
+                self.ser = serial.Serial(COMn, 115200*8, timeout=0.001)  #/dev/ttyUSB0
+                # self.ser = serial.Serial()  #/dev/ttyUSB0
                 self.Canopen.setInterfaceDev(self.ser, USE_UART)
 
             if  self.Canopen.devIsOpen():
@@ -796,9 +822,9 @@ class ProgramUpdateThread(QThread):
             if os.path.exists(file_name):
                 self.dispFileVersion_singel.emit(seq, file_name)
 
-        node_id_all = list(range(0x02, 0x10))
-        for node_id_temp in range(0x12, 0x20):
-            node_id_all.append(node_id_temp)
+        node_id_all = list(range(0x12, 0x20))
+        # for node_id_temp in range(0x12, 0x20):
+            # node_id_all.append(node_id_temp)
         for node_id_temp in range(0x22, 0x30):
             node_id_all.append(node_id_temp)
         for node_id_temp in range(0x32, 0x40):
@@ -809,16 +835,18 @@ class ProgramUpdateThread(QThread):
             node_id_all.append(node_id_temp)
         for node_id_temp in range(0x62, 0x70):
             node_id_all.append(node_id_temp)
-        for node_id_temp in range(0x72, 0x80):
-            node_id_all.append(node_id_temp)
+        # for node_id_temp in range(0x72, 0x80):
+            # node_id_all.append(node_id_temp)
 
+        # node_id_all = self.Canopen.network.scanner.nodes
+        # node_id_all = self.Canopen.scanner()
 
         for node_id in node_id_all:
             self.Canopen.sendStartCmd(node_id) #------- 发送启动命令
+            QThread.msleep(10) # 加了这个更不容易丢失刷新的节点
             can_cmd = self.Canopen.getRevData(0x81, node_id, 5)
 
             if len(can_cmd):
-                QThread.msleep(2) # 加了这个更不容易丢失刷新的节点
                 version_mcu, version_fpga = self.MCU.findVersion(can_cmd)
 
                 box_id = can_cmd[0][0]>>4
@@ -868,6 +896,7 @@ class ProgramUpdateThread(QThread):
             try:
                 if self.wait_receive == 1:
                     self.Canopen.receiveData()
+                    pass
             except Exception as err:
                 print(err)
 

@@ -10,16 +10,34 @@ last edited: 04-July-2018
 """
 __author__ = 'chenzhipeng3472'
 
+import canopen
+import sys
+import os
+import traceback
 
 import time
+
+from myserial.serial_can import SerialBus
+import can
+
+import logging
+
+# logging.basicConfig(level=logging.DEBUG,
+        # filename='out.log')
+logging.basicConfig(level=logging.DEBUG,
+        filename='out.log',
+        datefmt='%Y/%m/%d %H:%M:%S',
+        format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
+
+logger = logging.getLogger(__name__)
 
 from CANalystII_Driver import *
 
 USE_UART = 0
 USE_CANALYST_II = 1
 global CAN_DRIVER
-CAN_DRIVER = USE_CANALYST_II
-USE_USB_UART = 1
+CAN_DRIVER = USE_UART
+USE_USB_UART = 0
 # __all__ = ["CAN_DRIVER"]
 
 nowTime = lambda:int(round(time.time()*1000))
@@ -52,11 +70,87 @@ class CanopenProtocol:
     TO_MASTER = 0x0081
 
 
-    def __init__(self):
+    # def __init__(self, channel=None, ):
+    def __init__(self, channel=None, *args, **kwargs):
+        self.comx = channel
+        # try:
+            # bus = SerialBus(channel=self.comx, baudrate=460800)
+            # self.network = canopen.Network(bus=bus)
+            # listeners = [can.Printer()] + self.network.listeners
+            # self.network.notifier = can.Notifier(bus, listeners, 1)
+            # self.network.check()
+            # self.network.scanner.search()
+
+            # # print(type(self.network.scanner.nodes))
+            # for node_id in self.network.scanner.nodes:
+                # print("Found node 0x%02X!" % node_id)
+                # # node = self.network.add_node(node_id, 'objDict.eds')
+
+                # # node.nmt.state = 'RESET COMMUNICATION'
+                # # node.nmt.state = 'OPERATIONAL'
+                # # value = node.sdo[0x1000].raw = 1
+                # # print(value)
+                # # value = node.sdo[0x1018][1].raw
+                # # print(value)
+
+                # # node.nmt.wait_for_bootup(10)
+
+            # # self.network = network
+
+        # except KeyboardInterrupt:
+            # pass
+        # except Exception as e:
+            # exc_type, exc_obj, exc_tb = sys.exc_info()
+            # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            # print(exc_type, fname, exc_tb.tb_lineno)
+            # traceback.print_exc()
+        # finally:
+            # # Disconnect from CAN bus
+            # print('going to exit... stoping...')
+            # if self.network:
+                # print('network disconnect')
+                # # # for node_id in network:
+                    # # # node = network[node_id]
+                    # # # node.nmt.state = 'PRE-OPERATIONAL'
+                    # # # node.nmt.stop_node_guarding()
+                # # # network.sync.stop()
+            # self.network.disconnect()
         pass
 
     def __del__(self):
+        # print('going to exit... stoping...')
+        # if self.network:
+            # self.network.disconnect()
         pass
+
+    def scanner(self):
+        node_id_all = list()
+        for node_id in self.network.scanner.nodes:
+            if node_id & 0xf0 == 0x10:
+                for node_id_temp in range(0x12, 0x20):
+                    node_id_all.append(node_id_temp)
+            if node_id & 0xf0 == 0x20:
+                for node_id_temp in range(0x22, 0x30):
+                    node_id_all.append(node_id_temp)
+            if node_id & 0xf0 == 0x30:
+                for node_id_temp in range(0x32, 0x40):
+                    node_id_all.append(node_id_temp)
+            if node_id & 0xf0 == 0x40:
+                for node_id_temp in range(0x42, 0x50):
+                    node_id_all.append(node_id_temp)
+            if node_id & 0xf0 == 0x50:
+                for node_id_temp in range(0x52, 0x60):
+                    node_id_all.append(node_id_temp)
+            if node_id & 0xf0 == 0x60:
+                for node_id_temp in range(0x62, 0x70):
+                    node_id_all.append(node_id_temp)
+            if node_id & 0xf0 == 0x70:
+                for node_id_temp in range(0x72, 0x80):
+                    node_id_all.append(node_id_temp)
+
+        node_id_all = list(set(node_id_all))
+
+        return node_id_all
 
     def setInterfaceDev(self, dev, can_dev):
         global CAN_DRIVER
@@ -64,10 +158,14 @@ class CanopenProtocol:
         print('CAN_DRIVER = %d' % CAN_DRIVER)
         self.can_cmd = list()
         self.__dev = dev
+        # self.__dev = self.network.bus.ser
+
+        # node = self.network[0x1D]
+        # print(node)
 
         if CAN_DRIVER == USE_UART:
             if USE_USB_UART == 0:
-                self.__dev.baudrate = 115200
+                self.__dev.baudrate = 115200 * 8
             elif USE_USB_UART == 1 :
                 self.__dev.baudrate = 460800
         elif CAN_DRIVER == USE_CANALYST_II:
@@ -89,6 +187,7 @@ class CanopenProtocol:
         global CAN_DRIVER
         if CAN_DRIVER == USE_UART:
             self.__dev.close()
+            # self.network.disconnect()
 
         elif CAN_DRIVER == USE_CANALYST_II:
             self.__dev.VCI_CloseDevice()
@@ -160,6 +259,7 @@ class CanopenProtocol:
         start_time = nowTime()
 
         if CAN_DRIVER == USE_UART:
+            # self.can_cmd = self.find_can_command_format(self.__dev.read_all())
             while  nowTime() - start_time < wait_time:
                 time.sleep(0.001)
                 while 0 < len(self.can_cmd):
@@ -219,7 +319,8 @@ class CanopenProtocol:
                                 receive_data.append(dat[4:12])
 
                             else:
-                                print(" ".join(hex(k) for k in dat))
+                                # print(" ".join(hex(k) for k in dat))
+                                print('Rx: %s' % (" ".join(hex(k) for k in dat)))
 
 
                 if len(receive_data):
@@ -298,7 +399,48 @@ class CanopenProtocol:
         if CAN_DRIVER == USE_UART:
             if self.devIsOpen():
                 while self.__dev.inWaiting() > 0:
-                    self.can_cmd = self.find_can_command_format(self.__dev.read_all())
+                    can_cmd = self.find_can_command_format(self.__dev.read_all())
+                    self.can_cmd = self.can_cmd + can_cmd
+                    # try:
+                        # # ser.read can return an empty string
+                        # # or raise a SerialException
+                        # rx_byte = self.__dev.read(1)
+                    # except serial.SerialException:
+                        # # return None, False
+                        # pass
+
+                    # if len(rx_byte) and ord(rx_byte) == 0x66:
+                        # # print(ord(rx_byte))
+                        # self.__dev.read(1)
+                        # length = self.__dev.read(2)
+                        # cmd = self.__dev.read(1)
+                        # if len(cmd) and ord(cmd) == 0xB1:
+                            # self.__dev.read(1)
+                            # # id
+                            # s = bytearray(self.__dev.read(4))
+                            # # s = s[::-1]
+                            # # arb_id = (struct.unpack('<I', s))[0]
+
+                            # # dlc
+                            # dlc = ord(self.__dev.read(1))
+
+                            # # data
+                            # data = self.__dev.read(dlc)
+
+                            # checksum = self.__dev.read(1)
+                            # # if rxd_byte == 0xBB:
+                                # # received message data okay
+                            # # msg = Message(timestamp=0,
+                                          # # arbitration_id=arb_id,
+                                          # # dlc=dlc,
+                                          # # data=data)
+                            # s = list(s)
+                            # data = list(data)
+                            # msg = s[:] + data[:]
+                            # # print('rx: {}'.format(msg))
+                            # self.can_cmd.append(msg)
+                            # # return msg, False
+                pass
             time.sleep(0.01)
         elif CAN_DRIVER == USE_CANALYST_II:
             pass

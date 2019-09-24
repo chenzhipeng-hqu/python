@@ -142,6 +142,7 @@ class UpgradeFPGA(QThread):
                                     # print('1. start upgradeSection')
                                     isSendFail = self.upgradeSection(node_id, addr, length, binSum, boardType, binData)
                                     # print('1. end upgradeSection')
+                                    # print('1.curBlock:%d' % curBlock)
                                     self.processBar_singel.emit((curBlock/self.blockNum)*100)
                                     totalLength = totalLength + length
                                     length = 0
@@ -150,6 +151,7 @@ class UpgradeFPGA(QThread):
                                 else:
                                     #file head, update UI
                                     self.processBar_singel.emit((curBlock/self.blockNum)*100)
+                                    print('2.curBlock:%d' % curBlock)
                                     pass
 
                                 if lineData[0] == 0x02:
@@ -172,6 +174,7 @@ class UpgradeFPGA(QThread):
                                     totalLength = totalLength + length
                                     length = 0
                                     binSum = 0
+                                    print('3.curBlock:%d' % curBlock)
 
                                 # print(lineData)
                                 isFileEnd = True
@@ -193,7 +196,7 @@ class UpgradeFPGA(QThread):
                 self.sendFpgaUpgradeCmd_AD(node_id, send)
                 print(send)
 
-                receive_data = bytes(self.getRevData(self.__dev.PDO1_Tx, node_id, 3000)).decode()
+                receive_data = bytes(self.getRevData(self.__dev.PDO1_Tx, node_id, 20000)).decode()
 
                 if len(receive_data) <= 0:  # time_out
                     print('sendFpgaUpgradePack time_out node_id=0x%02X' % node_id)
@@ -227,50 +230,72 @@ class UpgradeFPGA(QThread):
         return isDownloadFinish
 
     def upgradeSection(self, node_id, addr, length, binSum, boardType, binData):
-        isSendFail = False
+        isSendFail = True
+        errCnt = 0;
+
         send = 'loadBin %s %x %x %x ' % (boardType, addr, length, binSum&0x7fffffff)
         byteSum = 0;
         for dat_ in send:
             byteSum = byteSum + ord(dat_)
         send = send + ('%x\n' % (byteSum))
-        self.sendFpgaUpgradeCmd_AD(node_id, send)
-        time.sleep(0.05)
 
-        receive_data = bytes(self.getRevData(self.__dev.PDO1_Tx, node_id, 3000)).decode()
+        while isSendFail == True and errCnt < 3:
+            isSendFail = False
+            # errCnt = 0
+            # self.getRevData(self.__dev.PDO1_Tx, node_id, 1)
+            self.sendFpgaUpgradeCmd_AD(node_id, send)
+            time.sleep(0.01)
 
-        if len(receive_data) <= 0:  # time_out
-            print('sendFpgaUpgradeCmd_AD time_out node_id=0x%02X' % node_id)
-            self.errCnt = self.errCnt + 1
-        else:
-            print(receive_data)
+            receive_data = bytes(self.getRevData(self.__dev.PDO1_Tx, node_id, 3000)).decode()
 
-        self.sendFpgaUpgradeData_AD(node_id, binData, length)
-        # time.sleep(0.05)
-
-        receive_data = bytes(self.getRevData(self.__dev.PDO1_Tx, node_id, 3000)).decode()
-
-        if len(receive_data) <= 0:  # time_out
-            print(receive_data)
-            print(send)
-            print('sendFpgaUpgradeData_AD time_out node_id=0x%02X' % node_id)
-            self.errCnt = self.errCnt + 1
-            isSendFail = True
-        else:
-            # print(len(receive_data))
-            # print(receive_data)
-            if 'OK' in receive_data:
-            # if 'OK %X' % (binSum) in receive_data:
-                isSendFail = False
-            else:
-                print(len(receive_data))
+            if len(receive_data) <= 0:  # time_out
                 print(receive_data)
                 print(send)
-                print('     receive err!!!!!!!!!!!!!!!!!!!!!!!\r\n')
+                print('sendFpgaUpgradeCmd_AD time_out node_id=0x%02X' % node_id)
+                self.errCnt = self.errCnt + 1
+                errCnt = errCnt + 1
+            else:
+                # print(receive_data)
+                pass
+
+            # self.getRevData(self.__dev.PDO1_Tx, node_id, 1)
+            self.sendFpgaUpgradeData_AD(node_id, binData, length)
+            # time.sleep(0.05)
+
+            receive_data = bytes(self.getRevData(self.__dev.PDO1_Tx, node_id, 3000)).decode()
+
+            if len(receive_data) <= 0:  # time_out
+                print(receive_data)
+                print(send)
+                print('sendFpgaUpgradeData_AD time_out node_id=0x%02X' % node_id)
+                self.errCnt = self.errCnt + 1
+                errCnt = errCnt + 1
                 isSendFail = True
+            else:
+                # print(len(receive_data))
+                # print(receive_data)
+                if 'OK' in receive_data:
+                # if 'OK %X' % (binSum) in receive_data:
+                    isSendFail = False
+                    self.errCnt = 0
+                    errCnt = 0
+                else:
+                    print(len(receive_data))
+                    print(receive_data)
+                    print(send)
+                    print('     receive err!!!!!!!!!!!!!!!!!!!!!!!\r\n')
+                    self.getRevData(self.__dev.PDO1_Tx, node_id, 1)
+                    isSendFail = True
+                    self.errCnt = self.errCnt + 1
+                    errCnt = errCnt + 1
+                    # isSendFail = False
+        # print('isSendFail = {}'.format(isSendFail))
+        # print('errCnt=%d' % errCnt)
 
         return isSendFail
 
     def sendFpgaUpgradeCmd_AD(self, node_id, dat):
+        self.getRevData(self.__dev.PDO1_Tx, node_id, 1)
         send_data = list(dat)
         for i, dat_ in enumerate(send_data):
             # print(type(dat_))
@@ -301,6 +326,7 @@ class UpgradeFPGA(QThread):
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
 
     def sendFpgaUpgradeData_AD(self, node_id, dat, length):
+        self.getRevData(self.__dev.PDO1_Tx, node_id, 1)
         send_data = list(dat)
 
         # length = length
@@ -312,7 +338,8 @@ class UpgradeFPGA(QThread):
         send_times_cnt = 0
         send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
 
-        print(nowTime()%1000000)
+        # print(nowTime()%1000000)
+        start_time = nowTime()
         if send_times_high >= 1:
             # print('send_times_high')
             for i in range(0,send_times_high):
@@ -323,12 +350,13 @@ class UpgradeFPGA(QThread):
                     time.sleep(0.001)
 
         # print(send_times_cnt)
-        send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
-        if (send_times_low >= 1):
+        # send = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+        send = [0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x02]
+        if (send_times_low >= 0):
             # print('send_times_low')
             send[:send_times_low] = send_data[(send_times_cnt)*7:(send_times_cnt)*7+send_times_low]
             self.sendData(self.__dev.PDO1_Rx, node_id, send)
-        print(nowTime()%1000000)
+        # print(nowTime()-start_time, )
 
     def str2hex(self, line):
         lineData = list()
