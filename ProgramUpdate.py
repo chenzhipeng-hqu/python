@@ -777,12 +777,12 @@ class ProgramUpdateThread(QThread):
                         node_idx_need_program.append(input_node_id[0])
 
             else:
-                if seq < MCU_BOARD_MAX-1 and input_node_id[0] in node_idx_need_program:
-                    node_idx_need_program.remove(input_node_id[0])
-                elif input_node_id[0] >= 0x80 :
+                if seq >= MCU_BOARD_MAX and input_node_id[0] >= 0x80 :
                     if input_node_id[0]&0x7f in node_idx_need_program:
                         input_node_id[0] = input_node_id[0]&0x7f
                         node_idx_need_program.remove(input_node_id[0])
+                elif seq < MCU_BOARD_MAX-1 and input_node_id[0] in node_idx_need_program:
+                    node_idx_need_program.remove(input_node_id[0])
 
         print('\r\nnode_id_need_program:')
         print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[0][4]))
