@@ -19,9 +19,12 @@ import binascii
 import threading
 import serial.tools.list_ports
 from enum import Enum, unique
-from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox, QComboBox)
-from PyQt5.QtCore import (pyqtSignal, QTimer, QThread, QTime)
-from PyQt5 import QtCore, QtGui
+# from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox, QComboBox)
+# from PyQt5.QtCore import (pyqtSignal, QTimer, QThread, QTime)
+# from PyQt5 import QtCore, QtGui
+from PySide2.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox, QComboBox)
+from PySide2.QtCore import (Signal, QTimer, QThread, QTime)
+from PySide2 import QtCore, QtGui
 
 import UI_ProgramUpdate
 from CANalystII_Driver import *
@@ -93,7 +96,7 @@ class SerialComboBox(QComboBox):
     '''
     串口选择框
     '''
-    message_singel = pyqtSignal(str)
+    message_singel = Signal(str)
 
     def __init__(self, parent = None):
         super(SerialComboBox,self).__init__(parent)
@@ -216,8 +219,14 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         textCursor.movePosition(textCursor.End)
         self.Msg_TextEdit.setTextCursor(textCursor)
 
+        #port baud
+        self.baud_comboBox.currentIndexChanged.connect(self.ser_baud_select)
+
+        #port combobox
+        self.ser_com_combo.currentIndexChanged.connect(self.ser_com_select)
+
         # openSerial
-        self.ser_open_button.clicked.connect(self.openSerial)
+        # self.ser_open_button.clicked.connect(self.openSerial)
 
         #refreshBoard
         self.BoardRefresh_button.clicked.connect(self.refreshBoard)
@@ -242,6 +251,64 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
         #Lvds_combobox
         self.Lvds_comboBox.currentIndexChanged.connect(self.lvds_select_addr)
+
+    #port combobox
+    def ser_baud_select(self):
+        # # if source.text() == '打开':
+        source = self.sender()
+
+        if self.ProgramUpdate_thread.is_open_com == 1:
+            ret = self.ProgramUpdate_thread.closeSerial()
+            if ret == 0:
+                self.ser_com_combo.setEnabled(True)
+                # source.setText('打开')
+                # source.setChecked(False)
+                self.groupBox_3.setEnabled(True)
+            else:
+                # source.setChecked(True)
+                pass
+
+    #port combobox
+    def ser_com_select(self):
+        # # if source.text() == '打开':
+        source = self.sender()
+        # print('this is in ser_com_select')
+        # print(source)
+
+        if self.ProgramUpdate_thread.is_open_com == 1:
+            ret = self.ProgramUpdate_thread.closeSerial()
+            if ret == 0:
+                self.ser_com_combo.setEnabled(True)
+                # source.setText('打开')
+                # source.setChecked(False)
+                self.groupBox_3.setEnabled(False)
+            else:
+                # source.setChecked(True)
+                pass
+
+        if self.ProgramUpdate_thread.is_open_com == 0:
+            ret = self.ProgramUpdate_thread.openSerial(str(self.ser_com_combo.currentText()), int(self.baud_comboBox.currentText()))
+            if ret == 0:
+                self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.LVDS.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.UsbPD.message_singel.connect(self.message_singel)
+
+                self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.LVDS.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.UsbPD.processBar_singel.connect(self.processBar_singel)
+
+                # self.ser_com_combo.setEnabled(False)
+                # source.setText('关闭')
+                # source.setChecked(True)
+                self.groupBox_3.setEnabled(True)
+                self.Lvds_comboBox.setEnabled(True)
+                self.downloadMode_comboBox.setEnabled(True)
+                # self.allNodeID_checkBox.setEnabled(True)
+            else:
+                # source.setChecked(False)
+                pass
 
     #Lvds_combobox
     def lvds_select_addr(self):
@@ -410,7 +477,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
     def openSerial(self):
         source = self.sender()
         if source.text() == '打开':
-            ret = self.ProgramUpdate_thread.openSerial(str(self.ser_com_combo.currentText()))
+            ret = self.ProgramUpdate_thread.openSerial(str(self.ser_com_combo.currentText()), int(self.baud_comboBox.currentText()))
             if ret == 0:
                 self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
                 self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
@@ -444,6 +511,29 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
     #BoardRefresh_button
     def refreshBoard(self):
+        if self.ProgramUpdate_thread.is_open_com == 0:
+            ret = self.ProgramUpdate_thread.openSerial(str(self.ser_com_combo.currentText()), int(self.baud_comboBox.currentText()))
+            if ret == 0:
+                self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.LVDS.message_singel.connect(self.message_singel)
+                self.ProgramUpdate_thread.UsbPD.message_singel.connect(self.message_singel)
+
+                self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.LVDS.processBar_singel.connect(self.processBar_singel)
+                self.ProgramUpdate_thread.UsbPD.processBar_singel.connect(self.processBar_singel)
+
+                # self.ser_com_combo.setEnabled(False)
+                # source.setText('关闭')
+                # source.setChecked(True)
+                self.groupBox_3.setEnabled(True)
+                self.Lvds_comboBox.setEnabled(True)
+                self.downloadMode_comboBox.setEnabled(True)
+                # self.allNodeID_checkBox.setEnabled(True)
+            else:
+                # source.setChecked(False)
+                pass
         source = self.sender()
         self.ProgramUpdate_thread.refreshBoardFlag = 1
         self.groupBox_3.setEnabled(False)
@@ -519,18 +609,19 @@ class ProgramUpdateThread(QThread):
     ProgramUpdateThread
     '''
     #定义一个信号
-    refresh_singel = pyqtSignal(int, int, int, str, int)
-    processBar_singel = pyqtSignal(int)
-    message_singel = pyqtSignal(str)
-    timeDisp_singel = pyqtSignal(QTime)
-    download_singel = pyqtSignal(int)
-    dispFileVersion_singel =pyqtSignal(int, str)
+    refresh_singel = Signal(int, int, int, str, int)
+    processBar_singel = Signal(int)
+    message_singel = Signal(str)
+    timeDisp_singel = Signal(QTime)
+    download_singel = Signal(int)
+    dispFileVersion_singel =Signal(int, str)
 
     def __init__(self):
         super(ProgramUpdateThread, self).__init__()
         self.wait_receive = int(0)
         self.lvdsStartAddr = 0xA10000 # 默认一个起始下载地址，防止没选择地址的时候擦出0地址的数据
         self.mcuBoot = 0;
+        self.is_open_com = 0
         self.need_program_nodes_bak = [[] for i in range(USB_PD_BOARD_SEQ+1)]
 
         self.AllNodeList = [
@@ -711,7 +802,7 @@ class ProgramUpdateThread(QThread):
         print('  15、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[14][4]))
 
     # openSerial
-    def openSerial(self, COMn):
+    def openSerial(self, COMn, baud = 115200):
 
         #---- canopenprotocol----
         self.Canopen = CanopenProtocol(COMn)
@@ -756,7 +847,7 @@ class ProgramUpdateThread(QThread):
 
                 self.Canopen.setInterfaceDev(self.canDll, USE_CANALYST_II)
             else:
-                self.ser = serial.Serial(COMn, 115200*8, timeout=0.001)  #/dev/ttyUSB0
+                self.ser = serial.Serial(COMn, baud, timeout=0.001)  #/dev/ttyUSB0
                 # self.ser = serial.Serial()  #/dev/ttyUSB0
                 self.Canopen.setInterfaceDev(self.ser, USE_UART)
 
@@ -764,6 +855,7 @@ class ProgramUpdateThread(QThread):
                 print("打开成功 -> %s" % (COMn))
                 self.message_singel.emit('打开成功 -> '+ COMn + '\r\n')
                 self.wait_receive = 1
+                self.is_open_com = 1
                 ret = 0
             else:
                 self.download_process_flag = 0
@@ -784,6 +876,7 @@ class ProgramUpdateThread(QThread):
                 self.Canopen.devClose()
                 self.wait_receive = 0
                 ret = 0
+                self.is_open_com = 0
                 # print("关闭成功 -> %s" % (self.ser.port))
                 self.message_singel.emit('关闭成功\r\n')
             else:

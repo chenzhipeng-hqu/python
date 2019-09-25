@@ -13,7 +13,8 @@ __author__ = 'chenzhipeng3472'
 import os
 import time
 from enum import Enum, unique
-from PyQt5.QtCore import (pyqtSignal, QThread)
+# from PyQt5.QtCore import (pyqtSignal, QThread)
+from PySide2.QtCore import (Signal, QThread)
 
 from Canopen_Protocol import CanopenProtocol
 
@@ -48,8 +49,8 @@ class UpgradeUSBPD(QThread):
     UpgradeUSBPD
     '''
     #定义一个信号
-    processBar_singel = pyqtSignal(int)
-    message_singel = pyqtSignal(str)
+    processBar_singel = Signal(int)
+    message_singel = Signal(str)
 
     def __init__(self):
         super(UpgradeUSBPD, self).__init__()

@@ -165,7 +165,8 @@ class CanopenProtocol:
 
         if CAN_DRIVER == USE_UART:
             if USE_USB_UART == 0:
-                self.__dev.baudrate = 115200 * 8
+                # self.__dev.baudrate = 115200 * 8
+                pass
             elif USE_USB_UART == 1 :
                 self.__dev.baudrate = 460800
         elif CAN_DRIVER == USE_CANALYST_II:

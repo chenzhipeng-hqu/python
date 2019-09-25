@@ -13,7 +13,7 @@
     <x>0</x>
     <y>0</y>
     <width>991</width>
-    <height>749</height>
+    <height>752</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -54,6 +54,13 @@
           <property name="verticalSpacing">
            <number>9</number>
           </property>
+          <item row="1" column="0" colspan="2">
+           <widget class="QLineEdit" name="lineEdit">
+            <property name="text">
+             <string>00 00 00 00 00 00 00 00</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="1">
            <widget class="QPushButton" name="ctrl_220V_button">
             <property name="palette">
@@ -104,98 +111,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="ser_open_button">
-            <property name="palette">
-             <palette>
-              <active>
-               <colorrole role="Light">
-                <brush brushstyle="SolidPattern">
-                 <color alpha="255">
-                  <red>85</red>
-                  <green>85</green>
-                  <blue>255</blue>
-                 </color>
-                </brush>
-               </colorrole>
-              </active>
-              <inactive>
-               <colorrole role="Light">
-                <brush brushstyle="SolidPattern">
-                 <color alpha="255">
-                  <red>255</red>
-                  <green>255</green>
-                  <blue>255</blue>
-                 </color>
-                </brush>
-               </colorrole>
-              </inactive>
-              <disabled>
-               <colorrole role="Light">
-                <brush brushstyle="SolidPattern">
-                 <color alpha="255">
-                  <red>255</red>
-                  <green>255</green>
-                  <blue>255</blue>
-                 </color>
-                </brush>
-               </colorrole>
-              </disabled>
-             </palette>
-            </property>
-            <property name="font">
-             <font>
-              <stylestrategy>PreferDefault</stylestrategy>
-             </font>
-            </property>
-            <property name="cursor">
-             <cursorShape>ArrowCursor</cursorShape>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::ClickFocus</enum>
-            </property>
-            <property name="acceptDrops">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>打开串口</string>
-            </property>
-            <property name="toolTipDuration">
-             <number>0</number>
-            </property>
-            <property name="autoFillBackground">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>打开</string>
-            </property>
-            <property name="shortcut">
-             <string>F6</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-            <property name="default">
-             <bool>false</bool>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="QLineEdit" name="lineEdit">
-            <property name="text">
-             <string>00 00 00 00 00 00 00 00</string>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="0">
            <widget class="QLabel" name="timeDisp">
             <property name="font">
@@ -215,6 +130,34 @@
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="baud_comboBox">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <stylestrategy>PreferDefault</stylestrategy>
+             </font>
+            </property>
+            <item>
+             <property name="text">
+              <string>115200</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>921600</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -268,7 +211,7 @@ p, li { white-space: pre-wrap; }
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="title">
       <string>板卡节点</string>
