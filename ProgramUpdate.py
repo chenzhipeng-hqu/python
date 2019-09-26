@@ -197,14 +197,16 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 self.NodeID_button[i*BOARD_NUM_MAX+j].setPalette(palette)
                 self.NodeID_button[i*BOARD_NUM_MAX+j].clicked[bool].connect(self.selectNodeID)
                 self.gridLayout_3.addWidget(self.NodeID_button[i*BOARD_NUM_MAX+j], j+2, i+1, 1, 1)
-            self.BoxID_checkBox[i].stateChanged.connect(self.download_select)
+            # self.BoxID_checkBox[i].stateChanged.connect(self.download_select)
+            self.BoxID_checkBox[i].stateChanged.connect(self.box_select)
             self.BoxID_checkBox[i].id_ = i<<4
-            self.BoxID_checkBox[i].setCheckable(False)
+            # self.BoxID_checkBox[i].setCheckable(False)
 
         for board_id in range(BOARD_NUM_MAX):
-            self.BoardType_checkBox[board_id].stateChanged.connect(self.download_select)
+            # self.BoardType_checkBox[board_id].stateChanged.connect(self.download_select)
+            self.BoardType_checkBox[board_id].stateChanged.connect(self.board_select)
             self.BoardType_checkBox[board_id].id_ = board_id & 0x0f
-            self.BoardType_checkBox[board_id].setCheckable(False)
+            # self.BoardType_checkBox[board_id].setCheckable(False)
 
         #downloadSelect_combox
         self.downloadMode_comboBox.currentIndexChanged.connect(self.download_select)
@@ -392,6 +394,53 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         source = self.sender()
         self.ProgramUpdate_thread.send_ctrl_220V_command(pressed)
 
+    def empty(self):
+        pass
+
+    #box_select
+    def box_select(self, state):
+        source = self.sender()
+        box_id = source.id_ >> 4
+
+        # print('%d, box_id = %#x, %d' % (time.time(), box_id, state))
+
+        if state == QtCore.Qt.Checked:
+            for i in range(BOARD_NUM_MAX):
+                # self.BoardType_checkBox[i].stateChanged.connect(self.empty)
+                self.BoardType_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+                # self.ProgramUpdate_thread.download_select[i][box_id] = QtCore.Qt.Unchecked
+                # self.BoardType_checkBox[i].stateChanged.connect(self.board_select)
+                # self.BoardType_checkBox[i].setCheckable(False)
+
+        if self.ProgramUpdate_thread.download_mode == 'BOARD':
+            time.sleep(2)
+        self.ProgramUpdate_thread.download_mode = 'BOX'
+        self.ProgramUpdate_thread.downloadSelect(state, self.ProgramUpdate_thread.download_mode, source.id_)
+        self.groupBox_3.setEnabled(False)
+        # print('%d, box_select finish, ' % (time.time()))
+
+    #board_select
+    def board_select(self, state):
+        source = self.sender()
+        board_id = source.id_ & 0xFF
+
+        # print('%d, board_id = %#x, %d' % (time.time(), board_id, state))
+
+        if state == QtCore.Qt.Checked:
+            for i in range(BOX_ID_MAX):
+                # self.BoxID_checkBox[i].stateChanged.connect(self.empty)
+                self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+                # self.ProgramUpdate_thread.download_select[board_id][i] = QtCore.Qt.Unchecked
+                # self.BoxID_checkBox[i].stateChanged.connect(self.box_select)
+                # self.BoxID_checkBox[i].setCheckable(False)
+
+        # if self.ProgramUpdate_thread.download_mode == 'BOX':
+            # time.sleep(2)
+        self.ProgramUpdate_thread.download_mode = 'BOARD'
+        self.ProgramUpdate_thread.downloadSelect(state, self.ProgramUpdate_thread.download_mode, source.id_)
+        self.groupBox_3.setEnabled(False)
+        # print('%d, board_select finish, ' % (time.time()))
+
     #allNodeID_checkBox
     def download_select(self, state):
         source = self.sender()
@@ -409,15 +458,15 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             if source.currentText() == 'NODE':
                 for i in range(BOX_ID_MAX):
                     self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
-                    self.BoxID_checkBox[i].setCheckable(False)
+                    # self.BoxID_checkBox[i].setCheckable(False)
 
                 for i in range(BOARD_NUM_MAX):
                     self.BoardType_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
-                    self.BoardType_checkBox[i].setCheckable(False)
+                    # self.BoardType_checkBox[i].setCheckable(False)
 
             elif source.currentText() == 'BOARD':
                 for i in range(BOX_ID_MAX):
-                    # self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+                    self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
                     self.BoxID_checkBox[i].setCheckable(False)
 
                 for i in range(BOARD_NUM_MAX):
@@ -430,7 +479,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                     self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
 
                 for i in range(BOARD_NUM_MAX):
-                    # self.BoardType_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
+                    self.BoardType_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
                     self.BoardType_checkBox[i].setCheckable(False)
 
             elif source.currentText() == 'ALL':
@@ -494,7 +543,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 source.setChecked(True)
                 self.groupBox_3.setEnabled(True)
                 self.Lvds_comboBox.setEnabled(True)
-                self.downloadMode_comboBox.setEnabled(True)
+                # self.downloadMode_comboBox.setEnabled(True)
                 # self.allNodeID_checkBox.setEnabled(True)
             else:
                 source.setChecked(False)
@@ -529,7 +578,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 # source.setChecked(True)
                 self.groupBox_3.setEnabled(True)
                 self.Lvds_comboBox.setEnabled(True)
-                self.downloadMode_comboBox.setEnabled(True)
+                # self.downloadMode_comboBox.setEnabled(True)
                 # self.allNodeID_checkBox.setEnabled(True)
                 self.groupBox.setEnabled(False)
             else:
@@ -538,7 +587,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 pass
         source = self.sender()
         self.ProgramUpdate_thread.refreshBoardFlag = 1
-        self.groupBox_3.setEnabled(True)
+        self.groupBox_3.setEnabled(False)
         self.Progress_bar.setValue(0)
 
     #message_singel

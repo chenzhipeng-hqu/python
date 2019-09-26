@@ -3,7 +3,7 @@
 # Form implementation generated from reading ui file 'ProgramUpdate.ui',
 # licensing of 'ProgramUpdate.ui' applies.
 #
-# Created: Thu Sep 26 12:19:43 2019
+# Created: Thu Sep 26 15:51:17 2019
 #      by: pyside2-uic  running on PySide2 5.13.1
 #
 # WARNING! All changes made in this file will be lost!
