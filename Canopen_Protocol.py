@@ -458,29 +458,45 @@ class CanopenProtocol:
         # print(" ".join(hex(i) for i in data))
 
         if USE_USB_UART == 0:
+            # print(len(data))
             # print(type(data))
-            for i,dat in enumerate(data[2:-2]):
-                if (data[i-1] == CanopenProtocol.__CAN_CTRL) and (data[i]== CanopenProtocol.__CAN_HEAD or data[i]== CanopenProtocol.__CAN_CTRL or data[i]== CanopenProtocol.__CAN_TAIL): #去除重复的A5
-                    data.remove(data[i-1])
+            try:
+                # for i,dat in enumerate(data[2:-3]):
+                i = 2
+                while i<len(data[:-2]):
+                    # print('i=%d data=%#x, %#x, %#x' % (i, data[i-2], data[i-1], data[i]))
+                    if (data[i-1] == CanopenProtocol.__CAN_CTRL) and (data[i]== CanopenProtocol.__CAN_HEAD or data[i]== CanopenProtocol.__CAN_CTRL or data[i]== CanopenProtocol.__CAN_TAIL): #去除重复的A5
+                        data.pop(i-1)
+                        # print(len(data))
+                        # print(" ".join(hex(i) for i in data))
+                    i = i+1
+            except Exception as e:
+                print(e)
+                print('i=%d data=%#x, %#x' % (i, data[i-2], data[i-1]))
 
             # print('before:')
             # print(" ".join(hex(i) for i in data))
 
             # for i,dat1 in enumerate(data):
-            i = 1
             # print(len(data))
-            while i<len(data):
-                if data[i] == CanopenProtocol.__CAN_HEAD and data[i-1] == CanopenProtocol.__CAN_HEAD:
-                    for j,dat2 in enumerate(data[i+9:]):
-                        if data[i+9+j] == CanopenProtocol.__CAN_TAIL and data[i+9+j-1] == CanopenProtocol.__CAN_TAIL:
-                            can_cmd.append(data[i-1:i+9+j+1])
-                            # print('i=%d, j=%d ' % (i, j))
-                            # print(" ".join(hex(k) for k in data[i-1:i+9+j+1]))
-                            i = i + 9
-                            break
-                else:
-                    i = i + 1
-            # print(", ".join(hex(k) for k in self.can_cmd[0]))
+            try:
+                i = 1
+                while i<len(data):
+                    if data[i] == CanopenProtocol.__CAN_HEAD and data[i-1] == CanopenProtocol.__CAN_HEAD:
+                        for j,dat2 in enumerate(data[i+9:]):
+                            if data[i+9+j] == CanopenProtocol.__CAN_TAIL and data[i+9+j-1] == CanopenProtocol.__CAN_TAIL:
+                                can_cmd.append(data[i-1:i+9+j+1])
+                                # print('i=%d, j=%d ' % (i, j))
+                                # print(" ".join(hex(k) for k in data[i-1:i+9+j+1]))
+                                i = i + 9
+                                break
+                    else:
+                        i = i + 1
+            except Exception as e:
+                print(e)
+                print('i=%d, j=%d ' % (i, j))
+                print(", ".join(hex(k) for k in self.can_cmd[0]))
+
             # print('after:')
             # for i, dat in enumerate(can_cmd):
                 # print(" ".join(hex(i) for i in dat))

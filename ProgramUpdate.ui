@@ -590,14 +590,14 @@ p, li { white-space: pre-wrap; }
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentText">
-           <string>NORMAL</string>
+           <string>NODE</string>
           </property>
           <property name="frame">
            <bool>true</bool>
           </property>
           <item>
            <property name="text">
-            <string>NORMAL</string>
+            <string>NODE</string>
            </property>
           </item>
           <item>

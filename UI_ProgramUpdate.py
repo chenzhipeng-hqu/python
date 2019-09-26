@@ -3,7 +3,7 @@
 # Form implementation generated from reading ui file 'ProgramUpdate.ui',
 # licensing of 'ProgramUpdate.ui' applies.
 #
-# Created: Wed Sep 25 15:04:05 2019
+# Created: Thu Sep 26 12:19:43 2019
 #      by: pyside2-uic  running on PySide2 5.13.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -542,8 +542,8 @@ class Ui_Form(object):
         self.Box7_checkBox.setText(QtWidgets.QApplication.translate("Form", "机箱 7", None, -1))
         self.Audio_checkBox.setText(QtWidgets.QApplication.translate("Form", "音频板", None, -1))
         self.AnalogIO_checkBox.setText(QtWidgets.QApplication.translate("Form", "模拟IO板", None, -1))
-        self.downloadMode_comboBox.setCurrentText(QtWidgets.QApplication.translate("Form", "NORMAL", None, -1))
-        self.downloadMode_comboBox.setItemText(0, QtWidgets.QApplication.translate("Form", "NORMAL", None, -1))
+        self.downloadMode_comboBox.setCurrentText(QtWidgets.QApplication.translate("Form", "NODE", None, -1))
+        self.downloadMode_comboBox.setItemText(0, QtWidgets.QApplication.translate("Form", "NODE", None, -1))
         self.downloadMode_comboBox.setItemText(1, QtWidgets.QApplication.translate("Form", "BOARD", None, -1))
         self.downloadMode_comboBox.setItemText(2, QtWidgets.QApplication.translate("Form", "BOX", None, -1))
         self.downloadMode_comboBox.setItemText(3, QtWidgets.QApplication.translate("Form", "ALL", None, -1))

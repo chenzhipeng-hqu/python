@@ -88,9 +88,11 @@ class UpgradeMCU(QThread):
             return receive_data
 
 
-    def downloadProcess(self, file_name, node_idx_need_program, bootMode):
+    def downloadProcess(self, file_name, nodes_idx_need_program, bootMode):
 
         isDownloadFinish = False
+
+        node_idx_need_program = [nodes_idx_need_program[0]]
 
         if self.Download_state == DOWNLOAD_STATE.INITIALIZE.value: #---- 初始化数据---
             print('下载程序...')
@@ -189,10 +191,12 @@ class UpgradeMCU(QThread):
                         self.message_singel.emit('升级成功 --> ' + str(hex(receive_data[0][2])) + ' \r\n')
                         self.__dev.sendStartCmd(receive_data[0][2]) #------- 发送启动命令
                         node_idx_need_program.remove(receive_data[0][2])
+                        nodes_idx_need_program.remove(receive_data[0][2])
                         reboot_time = time.time()
-                        if len(node_idx_need_program) <= 0:
-                            break
-                            print('烧录 OK....')
+                        # if len(node_idx_need_program) <= 0:
+                            # break
+                            # print('烧录 OK....')
+                        break
                 except Exception as err:
                     print(err)
 
@@ -209,9 +213,10 @@ class UpgradeMCU(QThread):
             pass
 
         elif self.Download_state == DOWNLOAD_STATE.FINISH_UPGRADE.value: #----完成烧录---
-            isDownloadFinish = True
+            if len(nodes_idx_need_program) == 0:
+                isDownloadFinish = True
+
             self.Download_state = DOWNLOAD_STATE.INITIALIZE.value
-            print(self.Download_state)
             pass
 
         return isDownloadFinish

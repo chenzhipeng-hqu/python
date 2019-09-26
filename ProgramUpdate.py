@@ -141,7 +141,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
 
     def __del__(self):
         print('UI_MainWindow delete.')
-        # self.ProgramUpdate_thread.stop()
+        self.ProgramUpdate_thread.is_running = False
 
     def initUI(self):
 
@@ -281,34 +281,34 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 self.ser_com_combo.setEnabled(True)
                 # source.setText('打开')
                 # source.setChecked(False)
-                self.groupBox_3.setEnabled(False)
-            else:
-                # source.setChecked(True)
-                pass
-
-        if self.ProgramUpdate_thread.is_open_com == 0:
-            ret = self.ProgramUpdate_thread.openSerial(str(self.ser_com_combo.currentText()), int(self.baud_comboBox.currentText()))
-            if ret == 0:
-                self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
-                self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
-                self.ProgramUpdate_thread.LVDS.message_singel.connect(self.message_singel)
-                self.ProgramUpdate_thread.UsbPD.message_singel.connect(self.message_singel)
-
-                self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
-                self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
-                self.ProgramUpdate_thread.LVDS.processBar_singel.connect(self.processBar_singel)
-                self.ProgramUpdate_thread.UsbPD.processBar_singel.connect(self.processBar_singel)
-
-                # self.ser_com_combo.setEnabled(False)
-                # source.setText('关闭')
-                # source.setChecked(True)
                 self.groupBox_3.setEnabled(True)
-                self.Lvds_comboBox.setEnabled(True)
-                self.downloadMode_comboBox.setEnabled(True)
-                # self.allNodeID_checkBox.setEnabled(True)
             else:
-                # source.setChecked(False)
+                # source.setChecked(True)
                 pass
+
+        # if self.ProgramUpdate_thread.is_open_com == 0:
+            # ret = self.ProgramUpdate_thread.openSerial(str(self.ser_com_combo.currentText()), int(self.baud_comboBox.currentText()))
+            # if ret == 0:
+                # self.ProgramUpdate_thread.MCU.message_singel.connect(self.message_singel)
+                # self.ProgramUpdate_thread.FPGA.message_singel.connect(self.message_singel)
+                # self.ProgramUpdate_thread.LVDS.message_singel.connect(self.message_singel)
+                # self.ProgramUpdate_thread.UsbPD.message_singel.connect(self.message_singel)
+
+                # self.ProgramUpdate_thread.MCU.processBar_singel.connect(self.processBar_singel)
+                # self.ProgramUpdate_thread.FPGA.processBar_singel.connect(self.processBar_singel)
+                # self.ProgramUpdate_thread.LVDS.processBar_singel.connect(self.processBar_singel)
+                # self.ProgramUpdate_thread.UsbPD.processBar_singel.connect(self.processBar_singel)
+
+                # # self.ser_com_combo.setEnabled(False)
+                # # source.setText('关闭')
+                # # source.setChecked(True)
+                # self.groupBox_3.setEnabled(True)
+                # self.Lvds_comboBox.setEnabled(True)
+                # self.downloadMode_comboBox.setEnabled(True)
+                # # self.allNodeID_checkBox.setEnabled(True)
+            # else:
+                # # source.setChecked(False)
+                # pass
 
     #Lvds_combobox
     def lvds_select_addr(self):
@@ -406,7 +406,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 for j in range(BOX_ID_MAX):
                     self.ProgramUpdate_thread.download_select[i][j] = QtCore.Qt.Unchecked
 
-            if source.currentText() == 'NORMAL':
+            if source.currentText() == 'NODE':
                 for i in range(BOX_ID_MAX):
                     self.BoxID_checkBox[i].setCheckState(QtCore.Qt.Unchecked)
                     self.BoxID_checkBox[i].setCheckable(False)
@@ -531,12 +531,14 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 self.Lvds_comboBox.setEnabled(True)
                 self.downloadMode_comboBox.setEnabled(True)
                 # self.allNodeID_checkBox.setEnabled(True)
+                self.groupBox.setEnabled(False)
             else:
                 # source.setChecked(False)
+                self.groupBox.setEnabled(True)
                 pass
         source = self.sender()
         self.ProgramUpdate_thread.refreshBoardFlag = 1
-        self.groupBox_3.setEnabled(False)
+        self.groupBox_3.setEnabled(True)
         self.Progress_bar.setValue(0)
 
     #message_singel
@@ -593,6 +595,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                 self.NodeID_button[(box_id)*BOARD_NUM_MAX+j].id_ = i
 
         if cmd == 5:  # refresh node_id finish
+            self.groupBox.setEnabled(True)
             self.groupBox_3.setEnabled(True)
             self.download_button.setEnabled(is_down)
 
@@ -622,6 +625,7 @@ class ProgramUpdateThread(QThread):
         self.lvdsStartAddr = 0xA10000 # 默认一个起始下载地址，防止没选择地址的时候擦出0地址的数据
         self.mcuBoot = 0;
         self.is_open_com = 0
+        self.is_running = True
         self.need_program_nodes_bak = [[] for i in range(USB_PD_BOARD_SEQ+1)]
 
         self.AllNodeList = [
@@ -662,11 +666,15 @@ class ProgramUpdateThread(QThread):
         self.refreshBoardFlag = 0
         self.download_select = [ [0 for i in range(BOX_ID_MAX)] for i in range(BOARD_NUM_MAX) ]
 
-        self.download_mode = 'NORMAL'
+        self.download_mode = 'NODE'
+
+    def __del__(self):
+        print('this is ProgramUpdateThread __del__')
 
     def run(self):
-        while True:
+        while self.is_running:
             if self.refreshBoardFlag == 1:
+                # print('refreshBoardFlag == 1')
                 self.refreshBoard()
 
             if self.download_process_flag == 1:
@@ -738,7 +746,7 @@ class ProgramUpdateThread(QThread):
     # download_select
     def downloadSelect(self, download_select, download_mode, id_):
 
-        if download_mode == 'NORMAL':
+        if download_mode == 'NODE':
             pass
 
         elif download_mode == 'BOX':
@@ -901,7 +909,10 @@ class ProgramUpdateThread(QThread):
             print('please select uart and open it!')
             self.message_singel.emit('请检查串口是否打开！\r\n')
             self.refreshBoardFlag = 0
+            # print('refreshBoardFlag == 0')
             return
+
+        # print('refreshBoard %d' % (sys._getframe().f_lineno))
 
         for box_id in range(BOX_ID_MAX):
             for board_num in range(BOARD_NUM_MAX):
@@ -933,9 +944,12 @@ class ProgramUpdateThread(QThread):
 
         # node_id_all = self.Canopen.network.scanner.nodes
         # node_id_all = self.Canopen.scanner()
+        # print('refreshBoard %d' % (sys._getframe().f_lineno))
 
         for node_id in node_id_all:
+            # print('refreshBoard %d' % (sys._getframe().f_lineno))
             self.Canopen.sendStartCmd(node_id) #------- 发送启动命令
+            # print('refreshBoard %d' % (sys._getframe().f_lineno))
             QThread.msleep(10) # 加了这个更不容易丢失刷新的节点
             can_cmd = self.Canopen.getRevData(0x81, node_id, 5)
 
@@ -978,6 +992,7 @@ class ProgramUpdateThread(QThread):
             if len(node_idx_need_program):
                 showDownloadButton = True
 
+        # print('refreshBoard finish')
         self.refresh_singel.emit(5, 0, 0, ' ', showDownloadButton) # 刷新节点完成
 
         self.refreshBoardFlag = 0

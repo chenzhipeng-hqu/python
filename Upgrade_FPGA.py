@@ -67,9 +67,13 @@ class UpgradeFPGA(QThread):
 
         return receive_data
 
-    def downloadProcess(self, boardType, file_name, node_idx_need_program):
+    def downloadProcess(self, boardType, file_name, nodes_idx_need_program):
 
         isDownloadFinish = False
+        node_idx_need_program = [nodes_idx_need_program[0]]
+        # print('fpga downloadProcess ')
+        # print(" ".join(hex(i) for i in nodes_idx_need_program))
+        # print(" ".join(hex(i) for i in node_idx_need_program))
 
         if self.Download_state == DOWNLOAD_STATE.INITIALIZE.value: #---- 初始化数据---
             print('下载程序...')
@@ -143,7 +147,7 @@ class UpgradeFPGA(QThread):
                                     # print('1. start upgradeSection')
                                     isSendFail = self.upgradeSection(node_id, addr, length, binSum, boardType, binData)
                                     # print('1. end upgradeSection')
-                                    # print('1.curBlock:%d' % curBlock)
+                                    print('1.curBlock:%d' % curBlock)
                                     self.processBar_singel.emit((curBlock/self.blockNum)*100)
                                     totalLength = totalLength + length
                                     length = 0
@@ -221,11 +225,13 @@ class UpgradeFPGA(QThread):
             self.Download_state = DOWNLOAD_STATE.REBOOT.value
 
         elif self.Download_state == DOWNLOAD_STATE.REBOOT.value: #----start--- 发送重启命令
-            node_idx_need_program.pop()
+            node_idx_need_program.pop(0)
+            nodes_idx_need_program.pop(0)
             self.Download_state = DOWNLOAD_STATE.FINISH_UPGRADE.value
 
         elif self.Download_state == DOWNLOAD_STATE.FINISH_UPGRADE.value: #----完成烧录---
-            isDownloadFinish = True
+            if len(nodes_idx_need_program) == 0:
+                isDownloadFinish = True
             self.Download_state = DOWNLOAD_STATE.ENTER_UPGRADE.value
 
         return isDownloadFinish
@@ -233,6 +239,7 @@ class UpgradeFPGA(QThread):
     def upgradeSection(self, node_id, addr, length, binSum, boardType, binData):
         isSendFail = True
         errCnt = 0;
+        self.errCnt = 0
 
         send = 'loadBin %s %x %x %x ' % (boardType, addr, length, binSum&0x7fffffff)
         byteSum = 0;
