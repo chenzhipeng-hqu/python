@@ -131,7 +131,7 @@ class UpgradeFPGA(QThread):
                     offset = 0
                     self.errCnt = 0
                     for i, line in enumerate(f_mcs):
-                        if not isFileEnd and self.errCnt < 5:
+                        if not isFileEnd and isSendFail == False:
                             lineData = self.str2hex(line)
                             if lineData[0]+5 != len(lineData):
                                 continue
@@ -249,7 +249,6 @@ class UpgradeFPGA(QThread):
 
         while isSendFail == True and errCnt < 3:
             isSendFail = False
-            # errCnt = 0
             # self.getRevData(self.__dev.PDO1_Tx, node_id, 1)
             self.sendFpgaUpgradeCmd_AD(node_id, send)
             time.sleep(0.01)
@@ -262,13 +261,14 @@ class UpgradeFPGA(QThread):
                 print('sendFpgaUpgradeCmd_AD time_out node_id=0x%02X' % node_id)
                 self.errCnt = self.errCnt + 1
                 errCnt = errCnt + 1
+                print('errCnt=%d' % (errCnt))
             else:
                 # print(receive_data)
                 pass
 
             # self.getRevData(self.__dev.PDO1_Tx, node_id, 1)
             self.sendFpgaUpgradeData_AD(node_id, binData, length)
-            # time.sleep(0.05)
+            time.sleep(0.03)
 
             receive_data = bytes(self.getRevData(self.__dev.PDO1_Tx, node_id, 3000)).decode()
 
@@ -278,6 +278,7 @@ class UpgradeFPGA(QThread):
                 print('sendFpgaUpgradeData_AD time_out node_id=0x%02X' % node_id)
                 self.errCnt = self.errCnt + 1
                 errCnt = errCnt + 1
+                print('errCnt=%d' % (errCnt))
                 isSendFail = True
             else:
                 # print(len(receive_data))
@@ -296,6 +297,7 @@ class UpgradeFPGA(QThread):
                     isSendFail = True
                     self.errCnt = self.errCnt + 1
                     errCnt = errCnt + 1
+                    print('errCnt=%d' % (errCnt))
                     # isSendFail = False
         # print('isSendFail = {}'.format(isSendFail))
         # print('errCnt=%d' % errCnt)

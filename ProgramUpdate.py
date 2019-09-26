@@ -765,9 +765,12 @@ class ProgramUpdateThread(QThread):
                 print('升级结束，请重启机箱，并确认各板卡绿灯全亮！iwdg reset')
                 # self.message_singel.emit('升级用时 {}s \r\n'.format((nowTime()-self.run_time)/1000))
                 self.message_singel.emit('升级结束，请重启机箱，并刷新节点确认版本号！版本号正确即可。 \r\n')
+
+            # if normal test
                 self.download_singel.emit(1)
                 self.download_process_flag = 0
 
+            # else cycllic test
                 # self.message_singel.emit('正在循环测试。。。5s 后开始 \r\n')
                 # for seq2, board_type2, file_name2, node_idx_exist2, node_idx_need_program2 in self.AllNodeList:
                     # node_idx_need_program2.extend(self.need_program_nodes_bak[seq2])
