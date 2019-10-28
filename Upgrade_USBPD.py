@@ -13,8 +13,9 @@ __author__ = 'chenzhipeng3472'
 import os
 import time
 from enum import Enum, unique
-# from PyQt5.QtCore import (pyqtSignal, QThread)
-from PySide2.QtCore import (Signal, QThread)
+from PyQt5.QtCore import (pyqtSignal, QThread)
+Signal = pyqtSignal
+# from PySide2.QtCore import (Signal, QThread)
 
 from Canopen_Protocol import CanopenProtocol
 

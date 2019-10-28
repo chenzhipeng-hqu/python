@@ -34,9 +34,16 @@ if __name__ == '__main__':
                 '-p=C:\\Users\\chenz\\AppData\\Local\\Programs\\Python\\Python36-32\\Lib\\site-packages\\PyQt5\\Qt\\plugins\\imageformats',
                 '-p=C:\Windows\System32\downlevel',
                 ]
+        # opts = ['ProgramUpdate.py',
+                # '-D',
+                # '--clean',
+                # '-p=C:\\Users\\chenz\\AppData\\Local\\Programs\\Python\\Python36-32\\Lib\\site-packages\\PySide2',
+                # '-p=C:\Windows\System32\downlevel',
+                # ]
         run(opts)
 
-    except :
+    except Exception as err:
+        print(err)
         print('\r\n     build error!!!\r\n')
         while True:
             pass

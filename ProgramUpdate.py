@@ -7,10 +7,26 @@ In this example, we create a simple window in PyQt5.
 author: chenzhipeng3472
 last edited: 04-July-2018
 """
-__author__ = 'chenzhipeng3472'
+
+"""
+Usage:
+    python ProgramUpdate.py [-c] <configpath>
+Options:
+    -h,--help   显示帮助菜单
+    -c          指定config.ini绝对路径
+Example:
+    python ProgramUpdate.py -c ../config.ini
+    或者
+    python ProgramUpdate.py
+"""
+
+__author__ = 'chenz'
 
 import os
+
 import sys
+if hasattr(sys, 'frozen'):
+    os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 sys.path.append(os.getcwd())
 
 import time
@@ -19,12 +35,13 @@ import binascii
 import threading
 import serial.tools.list_ports
 from enum import Enum, unique
-# from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox, QComboBox)
-# from PyQt5.QtCore import (pyqtSignal, QTimer, QThread, QTime)
-# from PyQt5 import QtCore, QtGui
-from PySide2.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox, QComboBox)
-from PySide2.QtCore import (Signal, QTimer, QThread, QTime)
-from PySide2 import QtCore, QtGui
+from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox, QComboBox)
+from PyQt5.QtCore import (pyqtSignal, QTimer, QThread, QTime)
+from PyQt5 import QtCore, QtGui
+Signal = pyqtSignal
+# from PySide2.QtWidgets import (QWidget, QApplication, QPushButton, QCheckBox, QComboBox)
+# from PySide2.QtCore import (Signal, QTimer, QThread, QTime)
+# from PySide2 import QtCore, QtGui
 
 import UI_ProgramUpdate
 from CANalystII_Driver import *
@@ -33,6 +50,36 @@ from Upgrade_FPGA import UpgradeFPGA
 from Upgrade_LVDS import UpgradeLVDS
 from Upgrade_USBPD import UpgradeUSBPD
 from Canopen_Protocol import (CanopenProtocol, USE_UART, USE_CANALYST_II)
+import configparser
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--config', help='Specify config file, use absolute path')
+args = parser.parse_args()
+
+if args.config:
+    # 加载现有配置文件
+    conf = configparser.ConfigParser()
+    path = os.path.join(os.getcwd(), args.config)
+    print(path)
+    conf.read(path, encoding="utf-8-sig")
+    # 登陆信息
+    comx = conf.get('com', 'comx')
+    baudrate = conf.get('com', 'baudrate')
+    print(comx)
+    print(baudrate)
+
+    PowerBoard = conf.get('board', 'PowerBoard')
+    if PowerBoard :
+        PowerBoard_list = [eval('[%s]'% i)[0] for i in PowerBoard.split(',')]
+
+    AnalogVideo = conf.get('board', 'AnalogVideo')
+    if AnalogVideo :
+        AnalogVideo_list = [eval('[%s]'% i)[0] for i in AnalogVideo.split(',')]
+
+    DigitalFPGA = conf.get('board', 'DigitalFPGA')
+    if DigitalFPGA :
+        DigitalFPGA_list = [eval('[%s]'% i)[0] for i in DigitalFPGA.split(',')]
 
 
 DEBUG = int(0)
@@ -138,6 +185,18 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         #----end----
 
         self.initUI()
+
+        self.AutoDownload = False
+
+        if args.config:
+            self.ser_com_combo.addItem(comx)
+            self.ser_com_combo.setCurrentText(comx)
+            time.sleep(2)
+            self.baud_comboBox.setCurrentText(baudrate)
+            time.sleep(1)
+            self.BoardRefresh_button.click()
+
+            self.AutoDownload = True
 
     def __del__(self):
         print('UI_MainWindow delete.')
@@ -648,6 +707,26 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.groupBox_3.setEnabled(True)
             self.download_button.setEnabled(is_down)
 
+            if args.config and (self.AutoDownload == True):
+                # for i in range(BOX_ID_MAX):
+                    # for j in range(BOARD_NUM_MAX):
+                        # if len(AnalogVideo_list) > 0:
+                            # self.NodeID_button[5*BOARD_NUM_MAX+5].click()
+                for node_id in AnalogVideo_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + VIDEO_ANALOG_BOARD_SEQ].click()
+
+                for node_id in DigitalFPGA_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + FPGA_DIGITAL_BOARD_SEQ].click()
+
+                time.sleep(1)
+
+                self.download_button.click()
+
+                self.AutoDownload = False
+
+
     def timeDisp_singel(self, now_time):
         self.timeDisp.setText(now_time.toString("hh:mm:ss"))
         pass
@@ -803,7 +882,7 @@ class ProgramUpdateThread(QThread):
 
         elif download_mode == 'BOX':
             box_id = id_ >> 4
-            for i in range(BOARD_NUM_MAX):
+            for i in range(MCU_BOARD_MAX):
                 self.download_select[i][box_id] = download_select
 
         elif download_mode == 'BOARD':
@@ -954,7 +1033,7 @@ class ProgramUpdateThread(QThread):
 
     #BoardRefresh_button
     def refreshBoard(self):
-        if  self.Canopen.devIsOpen():
+        if  self.is_open_com == 1:
             # self.message_singel.emit('刷新节点...')
             pass
         else:
@@ -962,6 +1041,7 @@ class ProgramUpdateThread(QThread):
             self.message_singel.emit('请检查串口是否打开！\r\n')
             self.refreshBoardFlag = 0
             # print('refreshBoardFlag == 0')
+            self.refresh_singel.emit(5, 0, 0, ' ', False) # 刷新节点完成
             return
 
         # print('refreshBoard %d' % (sys._getframe().f_lineno))
