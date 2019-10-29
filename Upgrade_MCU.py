@@ -47,6 +47,8 @@ E_UPG_CMD_REBOOT    = int(0x04)
 E_CMD_RESER         = int(0x01)
 E_CMD_UPDATE        = int(0x01)
 
+nowTime = lambda:int(round(time.time()*1000))
+
 class UpgradeMCU(QThread):
     '''
     '''
@@ -161,6 +163,7 @@ class UpgradeMCU(QThread):
                     else:
                         if try_times > 2:
                             node_idx_need_program.remove(node_id)
+                            nodes_idx_need_program.remove(node_id)
                             self.message_singel.emit('重启失败 --> ' + str(hex(node_id)) + ', 请稍后重启机箱再升级. \r\n')
                             break
                         print('iwdg reset err times %d !!!!!' % (try_times))
@@ -412,7 +415,7 @@ class UpgradeMCU(QThread):
         version_fpga = ''
 
         if len(data) != 2:
-            print("len(data):%d " % len(data))
+            print("(%d)len(data):%d " % (nowTime(), len(data)))
             for j in range(len(data)):
                 print(" ".join(hex(i) for i in data[j]))
 
@@ -420,10 +423,14 @@ class UpgradeMCU(QThread):
             pass
         else:
             print('version length error!!! len = %d' % len(data))
+            data.pop(0)
             return 'Boot', 'Boot'
 
         if len(data[1])>5 :
-            if len(data[1])>5 and data[1][1] == DIGITAL_VIDEO_BOARD or data[1][1] == LVDS_IN_BOARD or data[1][1] == ANALOG_VIDEO_BOARD or data[1][1] == TYPEC_SWITCH_BOARD:
+            if len(data[1])>5 and data[1][1] == DIGITAL_VIDEO_BOARD     \
+                or data[1][1] == LVDS_IN_BOARD                          \
+                or data[1][1] == ANALOG_VIDEO_BOARD                     \
+                or data[1][1] == TYPEC_SWITCH_BOARD:
                 year2 = ((data[1][2] >> 2)&0x3f)
                 month2 = (((data[1][2]<<2)&0x0c) | ((data[1][3]>>6)&0x03))&0x0f
                 day2 = (data[1][3]>>1)&0x1f
@@ -442,6 +449,8 @@ class UpgradeMCU(QThread):
                 minute = ((data[1][4]&0x0f)<<2) | ((data[1][5]>>6)&0x0f)
 
             version_mcu = str(year)+'_'+str(month)+'_'+str(day)
+            data.pop(0)
+            data.pop(0)
 
         return version_mcu, version_fpga
 

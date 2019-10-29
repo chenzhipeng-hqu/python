@@ -68,6 +68,30 @@ if args.config:
     baudrate = conf.get('com', 'baudrate')
     print(comx)
     print(baudrate)
+    AudioBoard_list     = []
+    IoBoardAnalog_list  = []
+    IoBoardDigital_list = []
+    PowerBoard_list     = []
+    AnalogVideo_list    = []
+    DigitalVideo_list   = []
+    PcieBase_list       = []
+    TypecSwitch_list    = []
+    UsbMonitor_list     = []
+    AnalogFPGA_list     = []
+    DigitalFPGA_list    = []
+    UsbPd_list          = []
+
+    AudioBoard = conf.get('board', 'AudioBoard')
+    if AudioBoard :
+        AudioBoard_list = [eval('[%s]'% i)[0] for i in AudioBoard.split(',')]
+
+    IoBoardAnalog = conf.get('board', 'IoBoardAnalog')
+    if IoBoardAnalog :
+        IoBoardAnalog_list = [eval('[%s]'% i)[0] for i in IoBoardAnalog.split(',')]
+
+    IoBoardDigital = conf.get('board', 'IoBoardDigital')
+    if IoBoardDigital :
+        IoBoardDigital_list = [eval('[%s]'% i)[0] for i in IoBoardDigital.split(',')]
 
     PowerBoard = conf.get('board', 'PowerBoard')
     if PowerBoard :
@@ -77,9 +101,33 @@ if args.config:
     if AnalogVideo :
         AnalogVideo_list = [eval('[%s]'% i)[0] for i in AnalogVideo.split(',')]
 
+    DigitalVideo = conf.get('board', 'DigitalVideo')
+    if DigitalVideo :
+        DigitalVideo_list = [eval('[%s]'% i)[0] for i in DigitalVideo.split(',')]
+
+    PcieBase = conf.get('board', 'PcieBase')
+    if PcieBase :
+        PcieBase_list = [eval('[%s]'% i)[0] for i in PcieBase.split(',')]
+
+    TypecSwitch = conf.get('board', 'TypecSwitch')
+    if TypecSwitch :
+        TypecSwitch_list = [eval('[%s]'% i)[0] for i in TypecSwitch.split(',')]
+
+    UsbMonitor = conf.get('board', 'UsbMonitor')
+    if UsbMonitor :
+        UsbMonitor_list = [eval('[%s]'% i)[0] for i in UsbMonitor.split(',')]
+
+    AnalogFPGA = conf.get('board', 'AnalogFPGA')
+    if AnalogFPGA :
+        AnalogFPGA_list = [eval('[%s]'% i)[0] for i in AnalogFPGA.split(',')]
+
     DigitalFPGA = conf.get('board', 'DigitalFPGA')
     if DigitalFPGA :
         DigitalFPGA_list = [eval('[%s]'% i)[0] for i in DigitalFPGA.split(',')]
+
+    UsbPd = conf.get('board', 'UsbPd')
+    if UsbPd :
+        UsbPd_list = [eval('[%s]'% i)[0] for i in UsbPd.split(',')]
 
 
 DEBUG = int(0)
@@ -96,24 +144,29 @@ TYPEC_SWITCH_BOARD  = int(0x0d)
 # ANALOG_FPGA_BOARD   = int(0x07)
 # DIGITAL_FPGA_BOARD  = int(0x08)
 # LVDS_FPGA_BOARD     = int(0x09)
-MCU_BOARD_MAX       = int(0x0b)
-FPGA_BOARD_MAX      = int(0x0b)
+MCU_BOARD_MAX       = int(0x0a)
+FPGA_BOARD_MAX      = int(0x0a)
 
-AUDIO_BOARD_SEQ         = int(0)
-IO_ANALOG_BOARD_SEQ     = int(1)
-IO_DIGITAL_BOARD_SEQ    = int(2)
-POWER_BOARD_SEQ         = int(3)
+BOARD_START             = int(0)
+FPGA_BOARD_START        = int(0)
+FPGA_ANALOG_BOARD_SEQ   = int(0)
+FPGA_DIGITAL_BOARD_SEQ  = int(1)
+FPGA_LVDS_BOARD_SEQ     = int(2)
+USB_PD_BOARD_SEQ        = int(3)
+FPGA_BOARD_END          = int(3)
+MCU_BOARD_START         = int(4)
 VIDEO_ANALOG_BOARD_SEQ  = int(4)
 VIDEO_DIGITAL_BOARD_SEQ = int(5)
 LVDS_IN_BOARD_SEQ       = int(6)
-PCIE_BASE_BOARD_SEQ     = int(7)
+POWER_BOARD_SEQ         = int(7)
 TYPEC_BOARD_SEQ         = int(8)
 USB_MONITOR_BOARD_SEQ   = int(9)
-USB_MONITOR2_BOARD_SEQ  = int(10)
-FPGA_ANALOG_BOARD_SEQ   = int(11)
-FPGA_DIGITAL_BOARD_SEQ  = int(12)
-FPGA_LVDS_BOARD_SEQ     = int(13)
-USB_PD_BOARD_SEQ        = int(14)
+AUDIO_BOARD_SEQ         = int(10)
+IO_ANALOG_BOARD_SEQ     = int(11)
+IO_DIGITAL_BOARD_SEQ    = int(12)
+PCIE_BASE_BOARD_SEQ     = int(13)
+MCU_BOARD_END           = int(13)
+BOARD_END               = int(13)
 
 AUDIO_BOARD_FILE         = str('..//bin//AudioBoard.bin')
 IO_ANALOG_BOARD_FILE     = str('..//bin//IoBoardAnalog.bin')
@@ -135,7 +188,7 @@ F103BL_FILE              = str('..//bin//f103BL.bin')
 F407BL_FILE              = str('..//bin//f407BL.bin')
 
 BOX_ID_MAX = int(8)
-BOARD_NUM_MAX = int(15)
+BOARD_NUM_MAX = BOARD_END - BOARD_START + 1
 
 nowTime = lambda:int(round(time.time()*1000))
 
@@ -210,21 +263,20 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
                                 self.Box4_checkBox, self.Box5_checkBox, self.Box6_checkBox, self.Box7_checkBox
                             ]
         self.BoardType_checkBox = [
-                                    self.Audio_checkBox       ,
-                                    self.AnalogIO_checkBox    ,
-                                    self.DigitalIO_checkBox   ,
-                                    self.PScontrol_checkBox   ,
-                                    self.AnalogVideo_checkBox ,
-                                    self.DigitalVideo_checkBox,
-                                    self.LVDS_checkBox        ,
-                                    self.PcieBase_checkBox    ,
-                                    self.TypecSwitch_checkBox ,
-                                    self.UsbMonitor_checkBox  ,
-                                    self.UsbMonitor2_checkBox  ,
                                     self.AnalogFpga_checkBox  ,
                                     self.DigitalFpga_checkBox ,
                                     self.LvdsFpga_checkBox    ,
-                                    self.Usb_PD_checkBox
+                                    self.Usb_PD_checkBox      ,
+                                    self.AnalogVideo_checkBox ,
+                                    self.DigitalVideo_checkBox,
+                                    self.LVDS_checkBox        ,
+                                    self.PScontrol_checkBox   ,
+                                    self.TypecSwitch_checkBox ,
+                                    self.UsbMonitor_checkBox  ,
+                                    self.Audio_checkBox       ,
+                                    self.AnalogIO_checkBox    ,
+                                    self.DigitalIO_checkBox   ,
+                                    self.PcieBase_checkBox
                                 ]
 
         palette = QtGui.QPalette()
@@ -576,10 +628,11 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
         self.Msg_TextEdit.insertPlainText('\r\n')
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.ProgramUpdate_thread.AllNodeList:
-            # print(seq)
-            # print(self.ProgramUpdate_thread.need_program_nodes_bak)
             if len(node_idx_need_program) > 0:
                 self.ProgramUpdate_thread.need_program_nodes_bak[seq].extend(node_idx_need_program)
+                # print(seq)
+                # print(node_idx_need_program)
+                # print(self.ProgramUpdate_thread.need_program_nodes_bak)
 
     # openSerial
     def openSerial(self):
@@ -697,7 +750,7 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.BoardType_checkBox[j].setEnabled(True)
             self.BoxID_checkBox[(box_id)].setEnabled(True)
 
-            if j >= MCU_BOARD_MAX-1 :
+            if j >= FPGA_BOARD_START and j <= FPGA_BOARD_END:
                 self.NodeID_button[(box_id)*BOARD_NUM_MAX+j].id_ = i | 0x80   # 最高位置1 表示FPGA板
             else:
                 self.NodeID_button[(box_id)*BOARD_NUM_MAX+j].id_ = i
@@ -708,17 +761,53 @@ class UI_MainWindow(UI_ProgramUpdate.Ui_Form, QWidget):
             self.download_button.setEnabled(is_down)
 
             if args.config and (self.AutoDownload == True):
-                # for i in range(BOX_ID_MAX):
-                    # for j in range(BOARD_NUM_MAX):
-                        # if len(AnalogVideo_list) > 0:
-                            # self.NodeID_button[5*BOARD_NUM_MAX+5].click()
+                for node_id in AudioBoard_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + AUDIO_BOARD_SEQ].click()
+
+                for node_id in IoBoardAnalog_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + IO_ANALOG_BOARD_SEQ].click()
+
+                for node_id in IoBoardDigital_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + IO_DIGITAL_BOARD_SEQ].click()
+
+                for node_id in PowerBoard_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + POWER_BOARD_SEQ].click()
+
                 for node_id in AnalogVideo_list:
                     box_id = (node_id & 0xf0) >> 4
                     self.NodeID_button[box_id*BOARD_NUM_MAX + VIDEO_ANALOG_BOARD_SEQ].click()
 
+                for node_id in DigitalVideo_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + VIDEO_DIGITAL_BOARD_SEQ].click()
+
+                for node_id in PcieBase_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + PCIE_BASE_BOARD_SEQ].click()
+
+                for node_id in TypecSwitch_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + TYPEC_BOARD_SEQ].click()
+
+                for node_id in UsbMonitor_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + USB_MONITOR_BOARD_SEQ].click()
+
+                for node_id in AnalogFPGA_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + FPGA_ANALOG_BOARD_SEQ].click()
+
                 for node_id in DigitalFPGA_list:
                     box_id = (node_id & 0xf0) >> 4
                     self.NodeID_button[box_id*BOARD_NUM_MAX + FPGA_DIGITAL_BOARD_SEQ].click()
+
+                for node_id in UsbPd_list:
+                    box_id = (node_id & 0xf0) >> 4
+                    self.NodeID_button[box_id*BOARD_NUM_MAX + USB_PD_BOARD_SEQ].click()
 
                 time.sleep(1)
 
@@ -754,25 +843,24 @@ class ProgramUpdateThread(QThread):
         self.mcuBoot = 0;
         self.is_open_com = 0
         self.is_running = True
-        self.need_program_nodes_bak = [[] for i in range(USB_PD_BOARD_SEQ+1)]
+        self.need_program_nodes_bak = [[] for i in range(BOARD_NUM_MAX)]
 
         self.AllNodeList = [
             #0.seq  ,                   1.board_type  , 2.file_name          , 3.node_idx_exist, 4.node_idx_need_program
-            [ AUDIO_BOARD_SEQ            , 0x05      , AUDIO_BOARD_FILE         , list()        , list() ],   # 0.audio_board
-            [ IO_ANALOG_BOARD_SEQ        , 0x04      , IO_ANALOG_BOARD_FILE     , list()        , list() ],   # 1.io_analog_board
-            [ IO_DIGITAL_BOARD_SEQ       , 0x06      , IO_DIGITAL_BOARD_FILE    , list()        , list() ],   # 2.io_digital_board
-            [ POWER_BOARD_SEQ            , 0x02      , POWER_BOARD_FILE         , list()        , list() ],   # 3.power_board
-            [ VIDEO_ANALOG_BOARD_SEQ     , 0x07      , VIDEO_ANALOG_BOARD_FILE  , list()        , list() ],   # 4.analog_video_board
-            [ VIDEO_DIGITAL_BOARD_SEQ    , 0x08      , VIDEO_DIGITAL_BOARD_FILE , list()        , list() ],   # 5.digital_video_board
-            [ LVDS_IN_BOARD_SEQ          , 0x09      , LVDS_IN_BOARD_FILE       , list()        , list() ],   # 6.lvds_in_board
-            [ PCIE_BASE_BOARD_SEQ        , 0x0a      , PCIE_BASE_BOARD_FILE     , list()        , list() ],   # 7.pcie_base_board
-            [ TYPEC_BOARD_SEQ            , 0x0d      , TYPEC_BOARD_FILE         , list()        , list() ],   # 8.typec_switch
-            [ USB_MONITOR_BOARD_SEQ      , 0x0c      , USB_MONITOR_BOARD_FILE   , list()        , list() ],   # 9.usb_monitor
-            [ USB_MONITOR2_BOARD_SEQ     , 0x0E      , USB_MONITOR2_BOARD_FILE  , list()        , list() ],   # 10.usb_monitor
             [ FPGA_ANALOG_BOARD_SEQ      , 0x07      , FPGA_ANALOG_BOARD_FILE   , list()        , list() ],   # 11.analog_fpga_board
             [ FPGA_DIGITAL_BOARD_SEQ     , 0x08      , FPGA_DIGITAL_BOARD_FILE  , list()        , list() ],   # 12.digital_fpga_board
             [ FPGA_LVDS_BOARD_SEQ        , 0x09      , FPGA_LVDS_BOARD_FILE     , list()        , list() ],   # 13.lvds_fpga_board 此处使用列表，需要修改file_name
-            [ USB_PD_BOARD_SEQ           , 0x0d      , USB_PD_BOARD_FILE        , list()        , list() ]    # 14.usb_pd
+            [ USB_PD_BOARD_SEQ           , 0x0d      , USB_PD_BOARD_FILE        , list()        , list() ],   # 14.usb_pd
+            [ VIDEO_ANALOG_BOARD_SEQ     , 0x07      , VIDEO_ANALOG_BOARD_FILE  , list()        , list() ],   # 4.analog_video_board
+            [ VIDEO_DIGITAL_BOARD_SEQ    , 0x08      , VIDEO_DIGITAL_BOARD_FILE , list()        , list() ],   # 5.digital_video_board
+            [ LVDS_IN_BOARD_SEQ          , 0x09      , LVDS_IN_BOARD_FILE       , list()        , list() ],   # 6.lvds_in_board
+            [ POWER_BOARD_SEQ            , 0x02      , POWER_BOARD_FILE         , list()        , list() ],   # 3.power_board
+            [ TYPEC_BOARD_SEQ            , 0x0d      , TYPEC_BOARD_FILE         , list()        , list() ],   # 8.typec_switch
+            [ USB_MONITOR_BOARD_SEQ      , 0x0c      , USB_MONITOR_BOARD_FILE   , list()        , list() ],   # 9.usb_monitor
+            [ AUDIO_BOARD_SEQ            , 0x05      , AUDIO_BOARD_FILE         , list()        , list() ],   # 0.audio_board
+            [ IO_ANALOG_BOARD_SEQ        , 0x04      , IO_ANALOG_BOARD_FILE     , list()        , list() ],   # 1.io_analog_board
+            [ IO_DIGITAL_BOARD_SEQ       , 0x06      , IO_DIGITAL_BOARD_FILE    , list()        , list() ],   # 2.io_digital_board
+            [ PCIE_BASE_BOARD_SEQ        , 0x0a      , PCIE_BASE_BOARD_FILE     , list()        , list() ]    # 7.pcie_base_board
             ]
 
         #----initialize----QTimer 任务
@@ -814,7 +902,7 @@ class ProgramUpdateThread(QThread):
     def download_process3(self):
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
-            if seq < MCU_BOARD_MAX and len(node_idx_need_program):
+            if seq >= MCU_BOARD_START and seq <= MCU_BOARD_END and len(node_idx_need_program):
                 # node_idx_list_one = list()
                 # node_idx_list_one.append(node_idx_need_program[0])
                 ret = self.MCU.downloadProcess(file_name, node_idx_need_program, self.mcuBoot)
@@ -882,11 +970,12 @@ class ProgramUpdateThread(QThread):
 
         elif download_mode == 'BOX':
             box_id = id_ >> 4
-            for i in range(MCU_BOARD_MAX):
-                self.download_select[i][box_id] = download_select
+            for i in range(MCU_BOARD_END-MCU_BOARD_START+1):
+                self.download_select[i+MCU_BOARD_START][box_id] = download_select
 
         elif download_mode == 'BOARD':
             board_id = id_ & 0x0f
+            print('board_id=%#x' % (board_id))
             for j in range(BOX_ID_MAX):
                 self.download_select[board_id][j] = download_select
 
@@ -908,37 +997,38 @@ class ProgramUpdateThread(QThread):
 
         for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
             if pressed:
-                if seq < MCU_BOARD_MAX-1 and input_node_id[0] in node_idx_exist:
+                if seq >= MCU_BOARD_START and seq <= MCU_BOARD_END and input_node_id[0] in node_idx_exist:
                     node_idx_need_program.append(input_node_id[0])
-                elif seq >= MCU_BOARD_MAX-1 and input_node_id[0] >= 0x80:
+                    # print('1')
+                    # print(", ".join(hex(i) for i in node_idx_exist))
+                elif seq >= FPGA_BOARD_START and seq <= FPGA_BOARD_END and input_node_id[0] >= 0x80:
                     if input_node_id[0]&0x7f in node_idx_exist:
-                        input_node_id[0] = input_node_id[0]&0x7f
-                        node_idx_need_program.append(input_node_id[0])
+                        node_idx_need_program.append(input_node_id[0]&0x7f)
+                        # print('2')
+                        # print(", ".join(hex(i) for i in node_idx_exist))
 
             else:
-                if seq >= MCU_BOARD_MAX and input_node_id[0] >= 0x80 :
+                if seq >= FPGA_BOARD_START and seq <= FPGA_BOARD_END and input_node_id[0] >= 0x80 :
                     if input_node_id[0]&0x7f in node_idx_need_program:
-                        input_node_id[0] = input_node_id[0]&0x7f
-                        node_idx_need_program.remove(input_node_id[0])
-                elif seq < MCU_BOARD_MAX-1 and input_node_id[0] in node_idx_need_program:
+                        node_idx_need_program.remove(input_node_id[0]&0x7f)
+                elif seq >= MCU_BOARD_START and seq <= MCU_BOARD_END and input_node_id[0] in node_idx_need_program:
                     node_idx_need_program.remove(input_node_id[0])
 
         print('\r\nnode_id_need_program:')
-        print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[0][4]))
-        print('  2、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][4]))
-        print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[2][4]))
-        print('  4、电源控制板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[3][4]))
-        print('  5、模拟信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[4][4]))
-        print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][4]))
-        print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][4]))
-        print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][4]))
-        print('  9、typec 板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[8][4]))
-        print('  10、usb监控板  : %s' % " ".join(hex(i) for i in self.AllNodeList[9][4]))
-        print('  11、usb监控板2 : %s' % " ".join(hex(i) for i in self.AllNodeList[10][4]))
-        print('  12、模拟FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][4]))
-        print('  13、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[12][4]))
-        print('  14、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[13][4]))
-        print('  15、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[14][4]))
+        print('  1、 模拟FPGA板  : %s' % " ".join(hex(i) for i in self.AllNodeList[0][4]))
+        print('  2、 数字FPGA板  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][4]))
+        print('  3、 LVDS FPGA   : %s' % " ".join(hex(i) for i in self.AllNodeList[2][4]))
+        print('  4、 usb pd      : %s' % " ".join(hex(i) for i in self.AllNodeList[3][4]))
+        print('  5、 模拟信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[4][4]))
+        print('  6、 数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][4]))
+        print('  7、 LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][4]))
+        print('  8、 电源控制板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[7][4]))
+        print('  9、 typec 板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[8][4]))
+        print('  10、usb监控板   : %s' % " ".join(hex(i) for i in self.AllNodeList[9][4]))
+        print('  11、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[10][4]))
+        print('  12、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[11][4]))
+        print('  13、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[12][4]))
+        print('  14、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[13][4]))
 
     # openSerial
     def openSerial(self, COMn, baud = 115200):
@@ -1082,41 +1172,42 @@ class ProgramUpdateThread(QThread):
             # print('refreshBoard %d' % (sys._getframe().f_lineno))
             self.Canopen.sendStartCmd(node_id) #------- 发送启动命令
             # print('refreshBoard %d' % (sys._getframe().f_lineno))
-            QThread.msleep(10) # 加了这个更不容易丢失刷新的节点
+            QThread.msleep(5) # 加了这个更不容易丢失刷新的节点
             can_cmd = self.Canopen.getRevData(0x81, node_id, 5)
 
-            if len(can_cmd):
+            while len(can_cmd):
+                get_board_type = can_cmd[0][1]
+                get_node_id = can_cmd[0][0]
+                box_id = get_node_id>>4
+
                 version_mcu, version_fpga = self.MCU.findVersion(can_cmd)
 
-                box_id = can_cmd[0][0]>>4
-
                 for seq, board_type, file_name, node_idx_exist, node_idx_need_program in self.AllNodeList:
-                    if can_cmd[0][1] == board_type:
-                        node_idx_exist.append((can_cmd[0][0]))
+                    if get_board_type == board_type:
+                        node_idx_exist.append((get_node_id))
                         if self.download_select[seq][box_id] == QtCore.Qt.Checked:
-                            node_idx_need_program.append((can_cmd[0][0]))
+                            node_idx_need_program.append((get_node_id))
 
-                        if seq < MCU_BOARD_MAX:
-                            self.refresh_singel.emit(4, can_cmd[0][0], seq, version_mcu, self.download_select[seq][box_id])
+                        if seq >= MCU_BOARD_START and seq <= MCU_BOARD_END:
+                            self.refresh_singel.emit(4, get_node_id, seq, version_mcu, self.download_select[seq][box_id])
                         else:
-                            self.refresh_singel.emit(4, can_cmd[0][0], seq, version_fpga, self.download_select[seq][box_id])
+                            self.refresh_singel.emit(4, get_node_id, seq, version_fpga, self.download_select[seq][box_id])
 
         print('\r\nnode_id_all_exist:')
-        print('  1、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[0][3]))
-        print('  2、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][3]))
-        print('  3、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[2][4]))
-        print('  4、电源控制板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[3][3]))
-        print('  5、模拟信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[4][3]))
-        print('  6、数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][3]))
-        print('  7、LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][3]))
-        print('  8、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[7][3]))
-        print('  9、typec 板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[8][3]))
-        print('  10、usb监控板  : %s' % " ".join(hex(i) for i in self.AllNodeList[9][3]))
-        print('  11、usb监控板2 : %s' % " ".join(hex(i) for i in self.AllNodeList[10][3]))
-        print('  12、模拟FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[11][3]))
-        print('  13、数字FPGA板 : %s' % " ".join(hex(i) for i in self.AllNodeList[12][3]))
-        print('  14、LVDS FPGA  : %s' % " ".join(hex(i) for i in self.AllNodeList[13][3]))
-        print('  15、usb pd     : %s' % " ".join(hex(i) for i in self.AllNodeList[14][3]))
+        print('  1、 模拟FPGA板  : %s' % " ".join(hex(i) for i in self.AllNodeList[0][3]))
+        print('  2、 数字FPGA板  : %s' % " ".join(hex(i) for i in self.AllNodeList[1][3]))
+        print('  3、 LVDS FPGA   : %s' % " ".join(hex(i) for i in self.AllNodeList[2][3]))
+        print('  4、 usb pd      : %s' % " ".join(hex(i) for i in self.AllNodeList[3][3]))
+        print('  5、 模拟信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[4][3]))
+        print('  6、 数字信号板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[5][3]))
+        print('  7、 LVDS_IN 板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[6][3]))
+        print('  8、 电源控制板卡: %s' % " ".join(hex(i) for i in self.AllNodeList[7][3]))
+        print('  9、 typec 板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[8][3]))
+        print('  10、usb监控板   : %s' % " ".join(hex(i) for i in self.AllNodeList[9][3]))
+        print('  11、音频板卡    : %s' % " ".join(hex(i) for i in self.AllNodeList[10][3]))
+        print('  12、模拟IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[11][3]))
+        print('  13、数字IO板卡  : %s' % " ".join(hex(i) for i in self.AllNodeList[12][3]))
+        print('  14、底板 板卡   : %s' % " ".join(hex(i) for i in self.AllNodeList[13][3]))
         # self.message_singel.emit(' --> 完成.\r\n')
 
         showDownloadButton = False
