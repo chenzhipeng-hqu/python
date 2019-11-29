@@ -27,7 +27,9 @@ import os
 import sys
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
-sys.path.append(os.getcwd())
+    print('sys._MEIPASS: ', sys._MEIPASS)
+print(" \r\n".join(i for i in os.environ['PATH'].split(';')))
+# sys.path.append(os.getcwd())
 
 import time
 import serial
@@ -64,70 +66,85 @@ if args.config:
     print(path)
     conf.read(path, encoding="utf-8-sig")
     # 登陆信息
-    comx = conf.get('com', 'comx')
-    baudrate = conf.get('com', 'baudrate')
-    print(comx)
-    print(baudrate)
-    AudioBoard_list     = []
-    IoBoardAnalog_list  = []
-    IoBoardDigital_list = []
-    PowerBoard_list     = []
-    AnalogVideo_list    = []
-    DigitalVideo_list   = []
-    PcieBase_list       = []
-    TypecSwitch_list    = []
-    UsbMonitor_list     = []
-    AnalogFPGA_list     = []
-    DigitalFPGA_list    = []
-    UsbPd_list          = []
+    try:
+        comx = conf.get('com', 'comx')
+        baudrate = conf.get('com', 'baudrate')
+        print(comx)
+        print(baudrate)
+        AudioBoard_list     = []
+        IoBoardAnalog_list  = []
+        IoBoardDigital_list = []
+        PowerBoard_list     = []
+        AnalogVideo_list    = []
+        DigitalVideo_list   = []
+        PcieBase_list       = []
+        TypecSwitch_list    = []
+        UsbMonitor_list     = []
+        AnalogFPGA_list     = []
+        DigitalFPGA_list    = []
+        UsbPd_list          = []
 
-    AudioBoard = conf.get('board', 'AudioBoard')
-    if AudioBoard :
-        AudioBoard_list = [eval('[%s]'% i)[0] for i in AudioBoard.split(',')]
+        if conf.has_option('board', 'AudioBoard'):
+            AudioBoard = conf.get('board', 'AudioBoard')
+            if AudioBoard :
+                AudioBoard_list = [eval('[%s]'% i)[0] for i in AudioBoard.split(',')]
 
-    IoBoardAnalog = conf.get('board', 'IoBoardAnalog')
-    if IoBoardAnalog :
-        IoBoardAnalog_list = [eval('[%s]'% i)[0] for i in IoBoardAnalog.split(',')]
+        if conf.has_option('board', 'IoBoardAnalog'):
+            IoBoardAnalog = conf.get('board', 'IoBoardAnalog')
+            if IoBoardAnalog :
+                IoBoardAnalog_list = [eval('[%s]'% i)[0] for i in IoBoardAnalog.split(',')]
 
-    IoBoardDigital = conf.get('board', 'IoBoardDigital')
-    if IoBoardDigital :
-        IoBoardDigital_list = [eval('[%s]'% i)[0] for i in IoBoardDigital.split(',')]
+        if conf.has_option('board', 'IoBoardDigital'):
+            IoBoardDigital = conf.get('board', 'IoBoardDigital')
+            if IoBoardDigital :
+                IoBoardDigital_list = [eval('[%s]'% i)[0] for i in IoBoardDigital.split(',')]
 
-    PowerBoard = conf.get('board', 'PowerBoard')
-    if PowerBoard :
-        PowerBoard_list = [eval('[%s]'% i)[0] for i in PowerBoard.split(',')]
+        if conf.has_option('board', 'PowerBoard'):
+            PowerBoard = conf.get('board', 'PowerBoard')
+            if PowerBoard :
+                PowerBoard_list = [eval('[%s]'% i)[0] for i in PowerBoard.split(',')]
 
-    AnalogVideo = conf.get('board', 'AnalogVideo')
-    if AnalogVideo :
-        AnalogVideo_list = [eval('[%s]'% i)[0] for i in AnalogVideo.split(',')]
+        if conf.has_option('board', 'AnalogVideo'):
+            AnalogVideo = conf.get('board', 'AnalogVideo')
+            if AnalogVideo :
+                AnalogVideo_list = [eval('[%s]'% i)[0] for i in AnalogVideo.split(',')]
 
-    DigitalVideo = conf.get('board', 'DigitalVideo')
-    if DigitalVideo :
-        DigitalVideo_list = [eval('[%s]'% i)[0] for i in DigitalVideo.split(',')]
+        if conf.has_option('board', 'DigitalVideo'):
+            DigitalVideo = conf.get('board', 'DigitalVideo')
+            if DigitalVideo :
+                DigitalVideo_list = [eval('[%s]'% i)[0] for i in DigitalVideo.split(',')]
 
-    PcieBase = conf.get('board', 'PcieBase')
-    if PcieBase :
-        PcieBase_list = [eval('[%s]'% i)[0] for i in PcieBase.split(',')]
+        if conf.has_option('board', 'PcieBase'):
+            PcieBase = conf.get('board', 'PcieBase')
+            if PcieBase :
+                PcieBase_list = [eval('[%s]'% i)[0] for i in PcieBase.split(',')]
 
-    TypecSwitch = conf.get('board', 'TypecSwitch')
-    if TypecSwitch :
-        TypecSwitch_list = [eval('[%s]'% i)[0] for i in TypecSwitch.split(',')]
+        if conf.has_option('board', 'TypecSwitch'):
+            TypecSwitch = conf.get('board', 'TypecSwitch')
+            if TypecSwitch :
+                TypecSwitch_list = [eval('[%s]'% i)[0] for i in TypecSwitch.split(',')]
 
-    UsbMonitor = conf.get('board', 'UsbMonitor')
-    if UsbMonitor :
-        UsbMonitor_list = [eval('[%s]'% i)[0] for i in UsbMonitor.split(',')]
+        if conf.has_option('board', 'UsbMonitor'):
+            UsbMonitor = conf.get('board', 'UsbMonitor')
+            if UsbMonitor :
+                UsbMonitor_list = [eval('[%s]'% i)[0] for i in UsbMonitor.split(',')]
 
-    AnalogFPGA = conf.get('board', 'AnalogFPGA')
-    if AnalogFPGA :
-        AnalogFPGA_list = [eval('[%s]'% i)[0] for i in AnalogFPGA.split(',')]
+        if conf.has_option('board', 'AnalogFPGA'):
+            AnalogFPGA = conf.get('board', 'AnalogFPGA')
+            if AnalogFPGA :
+                AnalogFPGA_list = [eval('[%s]'% i)[0] for i in AnalogFPGA.split(',')]
 
-    DigitalFPGA = conf.get('board', 'DigitalFPGA')
-    if DigitalFPGA :
-        DigitalFPGA_list = [eval('[%s]'% i)[0] for i in DigitalFPGA.split(',')]
+        if conf.has_option('board', 'DigitalFPGA'):
+            DigitalFPGA = conf.get('board', 'DigitalFPGA')
+            if DigitalFPGA :
+                DigitalFPGA_list = [eval('[%s]'% i)[0] for i in DigitalFPGA.split(',')]
 
-    UsbPd = conf.get('board', 'UsbPd')
-    if UsbPd :
-        UsbPd_list = [eval('[%s]'% i)[0] for i in UsbPd.split(',')]
+        if conf.has_option('board', 'UsbPd'):
+            UsbPd = conf.get('board', 'UsbPd')
+            if UsbPd :
+                UsbPd_list = [eval('[%s]'% i)[0] for i in UsbPd.split(',')]
+    except Exception as err:
+        print(err)
 
 
 DEBUG = int(0)
@@ -1172,7 +1189,7 @@ class ProgramUpdateThread(QThread):
             # print('refreshBoard %d' % (sys._getframe().f_lineno))
             self.Canopen.sendStartCmd(node_id) #------- 发送启动命令
             # print('refreshBoard %d' % (sys._getframe().f_lineno))
-            QThread.msleep(5) # 加了这个更不容易丢失刷新的节点
+            QThread.msleep(10) # 加了这个更不容易丢失刷新的节点
             can_cmd = self.Canopen.getRevData(0x81, node_id, 5)
 
             while len(can_cmd):
@@ -1245,6 +1262,7 @@ def main():
     else:
         default_encoding = locale.getpreferredencoding()
 
+    print(" \r\n".join(i for i in sys.path))
     print('当前工作路径为：%s ' % (os.getcwd()))
     print('当前运行程序为：%s ' % (sys.argv[0]))
 

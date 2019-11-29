@@ -12,7 +12,7 @@ __author__ = 'chenzhipeng3472'
 
 import os
 import sys
-sys.path.append(os.getcwd())
+# sys.path.append(os.getcwd())
 
 import time
 
@@ -312,7 +312,8 @@ class UpgradeMCU(QThread):
                     # print('正在升级...  ',  end = '')
                     print('正在升级...  ')
                     print(" ".join(hex(i) for i in node_id_need_program))
-                    self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
+                    self.message_singel.emit('找到文件，正在升级 ' + file_name + ' ... \r\n')
+                    # self.message_singel.emit('找到文件，正在升级 ' + file_name + '  Version: ' + self.TimeStampToTime(creat_time) + ' ... \r\n')
                 else:
                     print("找不到该文件  %s , 请放置该文件到该目录下,放置后自动开始下载" % (file_name))
                     self.message_singel.emit('找不到该文件  %s , 请放置该文件到bin目录下,\r\n' % (file_name))
