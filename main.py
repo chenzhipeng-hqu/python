@@ -6,14 +6,20 @@
 
 import os
 import sys
+import codecs
 import logging
 import pyautogui
 import xml.sax
+import configparser
 import pandas as pd
 from financial_ui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
+from PySide2.QtGui import *
 from other_payables import *
+
+if hasattr(sys, 'frozen'):
+    os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 
 # logging.basicConfig(level=logging.DEBUG,
 #         filename='out.log',
@@ -29,16 +35,71 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self):
         super(UIMainWindow, self).__init__()
         self.initUI()
+        self.configure_init()
+        self.payables_init()
+        self.mouse_init()
 
+    def initUI(self):
+        self.setupUi(self)
+        self.download_payables_pushButton.clicked.connect(self.download_payables)
+
+        # 自定义文本验证器
+        validator = QRegExpValidator(self)
+        # 设置属性 设置文本允许出现的字符内容
+        validator.setRegExp(QRegExp('^(20[1-2][0-9])$'))
+        self.s_year_lineEdit.setValidator(validator)
+        self.e_year_lineEdit.setValidator(validator)
+
+        # 自定义文本验证器
+        validator = QRegExpValidator(self)
+        # 设置属性 设置文本允许出现的字符内容
+        validator.setRegExp(QRegExp('^(1[0-2]|0?[1-9])$'))
+        self.s_month_lineEdit.setValidator(validator)
+        self.e_month_lineEdit.setValidator(validator)
+
+        self.s_year_lineEdit.editingFinished.connect(self.s_year_editingFinished)
+        self.s_month_lineEdit.editingFinished.connect(self.s_month_editingFinished)
+        self.e_year_lineEdit.editingFinished.connect(self.e_year_editingFinished)
+        self.e_month_lineEdit.editingFinished.connect(self.e_month_editingFinished)
+        self.subject_lineEdit.editingFinished.connect(self.subject_editingFinished)
+
+    def configure_init(self):
+        self.conf = configparser.ConfigParser()
+        self.conf_path = os.path.join(os.getcwd(), 'configure.ini')
+        self.conf.read(self.conf_path, encoding="utf-8-sig")
+        # self.conf.readfp(codecs.open(self.conf_path, 'r', 'utf-8-sig'))
+
+        if self.conf.has_option('payables', 'start_year'):
+            s_year = self.conf.get('payables', 'start_year')
+            self.s_year_lineEdit.setText(s_year)
+
+        if self.conf.has_option('payables', 'start_month'):
+            s_month = self.conf.get('payables', 'start_month')
+            self.s_month_lineEdit.setText(s_month)
+
+        if self.conf.has_option('payables', 'end_year'):
+            e_year = self.conf.get('payables', 'end_year')
+            self.e_year_lineEdit.setText(e_year)
+
+        if self.conf.has_option('payables', 'end_month'):
+            e_month = self.conf.get('payables', 'end_month')
+            self.e_month_lineEdit.setText(e_month)
+
+        if self.conf.has_option('payables', 'subject'):
+            subject = self.conf.get('payables', 'subject')
+            self.subject_lineEdit.setText(subject)
+
+    def payables_init(self):
         self.thread_other_payables = QThread()
         self.worker_other_payables = WorkerOtherPayables()
         self.worker_other_payables.message_singel.connect(self.message_singel)
         self.worker_other_payables.finish_singel.connect(self.finish_singel)
         self.worker_other_payables.statusBar_singel.connect(self.statusBar_singel)
         self.worker_other_payables.moveToThread(self.thread_other_payables)
-        self.thread_other_payables.started.connect(self.worker_other_payables.merge)
+        self.thread_other_payables.started.connect(self.worker_other_payables.download)
         # self.thread_other_payables.finished.connect(self.finish_singel)
 
+    def mouse_init(self):
         self.thread_get_mouse = QThread()
         self.worker_get_mouse = WorkerGetMouse()
         self.worker_get_mouse.mouse_singel.connect(self.mouse_singel)
@@ -46,20 +107,40 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.thread_get_mouse.started.connect(self.worker_get_mouse.run)
         self.thread_get_mouse.start()
 
-    def initUI(self):
-        self.setupUi(self)
-
-        self.merge_other_payables_pushButton.clicked.connect(self.merge_other_payables)
-
-    def merge_other_payables(self):
-        self.merge_other_payables_pushButton.setEnabled(False)
+    def download_payables(self):
+        self.download_payables_pushButton.setEnabled(False)
         self.thread_other_payables.start()
+
+    def s_year_editingFinished(self):
+        # print(self.s_year_lineEdit.text())
+        self.conf.set('payables', 'start_year', self.s_year_lineEdit.text())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def s_month_editingFinished(self):
+        # print(self.s_month_lineEdit.text())
+        self.conf.set('payables', 'start_month', self.s_month_lineEdit.text())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def e_year_editingFinished(self):
+        # print(self.e_year_lineEdit.text())
+        self.conf.set('payables', 'end_year', self.e_year_lineEdit.text())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def e_month_editingFinished(self):
+        # print(self.e_month_lineEdit.text())
+        self.conf.set('payables', 'end_month', self.e_month_lineEdit.text())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def subject_editingFinished(self):
+        print(self.subject_lineEdit.text())
+        self.conf.set('payables', 'subject', self.subject_lineEdit.text())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
 
     def message_singel(self, str):
         # 移动光标到最后的文字
-        textCursor = self.textBrowser.textCursor()
-        textCursor.movePosition(textCursor.End)
-        self.textBrowser.setTextCursor(textCursor)
+        text_cursor = self.textBrowser.textCursor()
+        text_cursor.movePosition(text_cursor.End)
+        self.textBrowser.setTextCursor(text_cursor)
         self.textBrowser.insertPlainText(str)
 
     def statusBar_singel(self, msg):
@@ -67,7 +148,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
     def finish_singel(self):
         self.thread_other_payables.quit()
-        self.merge_other_payables_pushButton.setEnabled(True)
+        self.download_payables_pushButton.setEnabled(True)
         # print('finished')
 
     def mouse_singel(self, x, y):

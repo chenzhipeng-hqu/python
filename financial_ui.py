@@ -92,6 +92,8 @@ class Ui_MainWindow(object):
 
         self.s_year_lineEdit = QLineEdit(self.horizontalLayoutWidget)
         self.s_year_lineEdit.setObjectName(u"s_year_lineEdit")
+        self.s_year_lineEdit.setMouseTracking(False)
+        self.s_year_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_year_lineEdit)
 
@@ -104,6 +106,7 @@ class Ui_MainWindow(object):
 
         self.s_month_lineEdit = QLineEdit(self.horizontalLayoutWidget)
         self.s_month_lineEdit.setObjectName(u"s_month_lineEdit")
+        self.s_month_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_month_lineEdit)
 
@@ -116,6 +119,7 @@ class Ui_MainWindow(object):
 
         self.e_year_lineEdit = QLineEdit(self.horizontalLayoutWidget)
         self.e_year_lineEdit.setObjectName(u"e_year_lineEdit")
+        self.e_year_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.e_year_lineEdit)
 
@@ -128,6 +132,7 @@ class Ui_MainWindow(object):
 
         self.e_month_lineEdit = QLineEdit(self.horizontalLayoutWidget)
         self.e_month_lineEdit.setObjectName(u"e_month_lineEdit")
+        self.e_month_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.e_month_lineEdit)
 
@@ -138,17 +143,18 @@ class Ui_MainWindow(object):
 
         self.payables_horizontalLayout.addWidget(self.e_month_label)
 
-        self.object_label = QLabel(self.horizontalLayoutWidget)
-        self.object_label.setObjectName(u"object_label")
-        self.object_label.setLayoutDirection(Qt.LeftToRight)
-        self.object_label.setAlignment(Qt.AlignCenter)
+        self.subject_label = QLabel(self.horizontalLayoutWidget)
+        self.subject_label.setObjectName(u"subject_label")
+        self.subject_label.setLayoutDirection(Qt.LeftToRight)
+        self.subject_label.setAlignment(Qt.AlignCenter)
 
-        self.payables_horizontalLayout.addWidget(self.object_label)
+        self.payables_horizontalLayout.addWidget(self.subject_label)
 
-        self.object_lineEdit = QLineEdit(self.horizontalLayoutWidget)
-        self.object_lineEdit.setObjectName(u"object_lineEdit")
+        self.subject_lineEdit = QLineEdit(self.horizontalLayoutWidget)
+        self.subject_lineEdit.setObjectName(u"subject_lineEdit")
+        self.subject_lineEdit.setAlignment(Qt.AlignCenter)
 
-        self.payables_horizontalLayout.addWidget(self.object_lineEdit)
+        self.payables_horizontalLayout.addWidget(self.subject_lineEdit)
 
         self.download_payables_pushButton = QPushButton(self.horizontalLayoutWidget)
         self.download_payables_pushButton.setObjectName(u"download_payables_pushButton")
@@ -217,7 +223,7 @@ class Ui_MainWindow(object):
         self.s_month_label.setText(QCoreApplication.translate("MainWindow", u"\u6708  -", None))
         self.e_year_label.setText(QCoreApplication.translate("MainWindow", u"\u5e74", None))
         self.e_month_label.setText(QCoreApplication.translate("MainWindow", u"\u6708", None))
-        self.object_label.setText(QCoreApplication.translate("MainWindow", u"  \u79d1\u76ee", None))
+        self.subject_label.setText(QCoreApplication.translate("MainWindow", u"  \u79d1\u76ee", None))
         self.download_payables_pushButton.setText(QCoreApplication.translate("MainWindow", u"\u4e0b\u8f7d", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.payables_tab), QCoreApplication.translate("MainWindow", u"\u5e94\u6536/\u4ed8\u6b3e", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.test_tab), QCoreApplication.translate("MainWindow", u"\u6d4b\u8bd5", None))

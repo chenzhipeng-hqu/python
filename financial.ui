@@ -181,7 +181,14 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="s_year_lineEdit"/>
+        <widget class="QLineEdit" name="s_year_lineEdit">
+         <property name="mouseTracking">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="s_year_label">
@@ -197,7 +204,11 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="s_month_lineEdit"/>
+        <widget class="QLineEdit" name="s_month_lineEdit">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="s_month_label">
@@ -213,7 +224,11 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="e_year_lineEdit"/>
+        <widget class="QLineEdit" name="e_year_lineEdit">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="e_year_label">
@@ -229,7 +244,11 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="e_month_lineEdit"/>
+        <widget class="QLineEdit" name="e_month_lineEdit">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="e_month_label">
@@ -245,7 +264,7 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="object_label">
+        <widget class="QLabel" name="subject_label">
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
@@ -258,7 +277,11 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="object_lineEdit"/>
+        <widget class="QLineEdit" name="subject_lineEdit">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="download_payables_pushButton">
