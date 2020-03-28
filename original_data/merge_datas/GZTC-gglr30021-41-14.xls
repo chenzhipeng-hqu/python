@@ -1,0 +1,393 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns:C="urn:schemas-microsoft-com:office:component:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:x2="http://schemas.microsoft.com/office/excel/2003/xml"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:x="urn:schemas-microsoft-com:office:excel">
+<Worksheet ss:Name="Sheet1.00">
+  <Table>
+  <Row>
+    <Cell><Data ss:Type="String">科目编号</Data></Cell>
+    <Cell><Data ss:Type="String">科目名称</Data></Cell>
+    <Cell><Data ss:Type="String">部门</Data></Cell>
+    <Cell><Data ss:Type="String">部门名称</Data></Cell>
+    <Cell><Data ss:Type="String">核算项-1</Data></Cell>
+    <Cell><Data ss:Type="String">核算项-1名称</Data></Cell>
+    <Cell><Data ss:Type="String">借贷</Data></Cell>
+    <Cell><Data ss:Type="String">期初本币余额</Data></Cell>
+    <Cell><Data ss:Type="String">本币借方金额</Data></Cell>
+    <Cell><Data ss:Type="String">本币贷方金额</Data></Cell>
+    <Cell><Data ss:Type="String">借贷</Data></Cell>
+    <Cell><Data ss:Type="String">期末本币余额</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">100331</Data></Cell>
+    <Cell><Data ss:Type="String">九江天赐高新材料有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">29857059.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">1155907.050000</Data></Cell>
+    <Cell><Data ss:Type="Number">30581695.140000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">431270.910000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">100331</Data></Cell>
+    <Cell><Data ss:Type="String">九江天赐高新材料有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">424212.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">46110.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">470322.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">100998</Data></Cell>
+    <Cell><Data ss:Type="String">池州天赐高新材料有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">12795.640000</Data></Cell>
+    <Cell><Data ss:Type="Number">576668.930000</Data></Cell>
+    <Cell><Data ss:Type="Number">601370.820000</Data></Cell>
+    <Cell><Data ss:Type="String">贷</Data></Cell>
+    <Cell><Data ss:Type="Number">11906.250000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">100998</Data></Cell>
+    <Cell><Data ss:Type="String">池州天赐高新材料有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">242691.230000</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">242691.230000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">210900</Data></Cell>
+    <Cell><Data ss:Type="String">九江天祺氟硅新材料科技有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">189685.540000</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">189685.540000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">40000275</Data></Cell>
+    <Cell><Data ss:Type="String">广州天赐高新材料股份有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">21212531.880000</Data></Cell>
+    <Cell><Data ss:Type="Number">9945243.330000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">11267288.550000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">C180048</Data></Cell>
+    <Cell><Data ss:Type="String">张峰</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">3340.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">3340.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180005</Data></Cell>
+    <Cell><Data ss:Type="String">尤新华</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">11000.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">8000.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">19000.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180021</Data></Cell>
+    <Cell><Data ss:Type="String">曹军</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">54581.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">54581.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180032</Data></Cell>
+    <Cell><Data ss:Type="String">乔水</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">25000.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">25000.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180050</Data></Cell>
+    <Cell><Data ss:Type="String">方玉花</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">750.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">750.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180053</Data></Cell>
+    <Cell><Data ss:Type="String">陈光宏</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">17250.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">17250.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1221</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180072</Data></Cell>
+    <Cell><Data ss:Type="String">汪英</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">750.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">750.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122101</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-员工</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">C180048</Data></Cell>
+    <Cell><Data ss:Type="String">张峰</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">3340.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">3340.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122101</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-员工</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180005</Data></Cell>
+    <Cell><Data ss:Type="String">尤新华</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">11000.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">8000.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">19000.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122101</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-员工</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180021</Data></Cell>
+    <Cell><Data ss:Type="String">曹军</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">54581.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">54581.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122101</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-员工</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180032</Data></Cell>
+    <Cell><Data ss:Type="String">乔水</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">25000.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">25000.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122101</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-员工</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180050</Data></Cell>
+    <Cell><Data ss:Type="String">方玉花</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">750.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">750.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122101</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-员工</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180053</Data></Cell>
+    <Cell><Data ss:Type="String">陈光宏</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">17250.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">17250.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122101</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-员工</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">F180072</Data></Cell>
+    <Cell><Data ss:Type="String">汪英</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">750.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">750.000000</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122104</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-往来款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">100331</Data></Cell>
+    <Cell><Data ss:Type="String">九江天赐高新材料有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">29857059.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">1155907.050000</Data></Cell>
+    <Cell><Data ss:Type="Number">30581695.140000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">431270.910000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122104</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-往来款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">100331</Data></Cell>
+    <Cell><Data ss:Type="String">九江天赐高新材料有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">424212.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">46110.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">470322.000000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122104</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-往来款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">100998</Data></Cell>
+    <Cell><Data ss:Type="String">池州天赐高新材料有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">12795.640000</Data></Cell>
+    <Cell><Data ss:Type="Number">576668.930000</Data></Cell>
+    <Cell><Data ss:Type="Number">601370.820000</Data></Cell>
+    <Cell><Data ss:Type="String">贷</Data></Cell>
+    <Cell><Data ss:Type="Number">11906.250000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122104</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-往来款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">100998</Data></Cell>
+    <Cell><Data ss:Type="String">池州天赐高新材料有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">242691.230000</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">242691.230000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122104</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-往来款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">210900</Data></Cell>
+    <Cell><Data ss:Type="String">九江天祺氟硅新材料科技有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">189685.540000</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">189685.540000</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">122104</Data></Cell>
+    <Cell><Data ss:Type="String">其他应收款-往来款</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">40000275</Data></Cell>
+    <Cell><Data ss:Type="String">广州天赐高新材料股份有限公司</Data></Cell>
+    <Cell><Data ss:Type="String">平</Data></Cell>
+    <Cell><Data ss:Type="Number">0.000000</Data></Cell>
+    <Cell><Data ss:Type="Number">21212531.880000</Data></Cell>
+    <Cell><Data ss:Type="Number">9945243.330000</Data></Cell>
+    <Cell><Data ss:Type="String">借</Data></Cell>
+    <Cell><Data ss:Type="Number">11267288.550000</Data></Cell>
+  </Row>
+</Table>
+</Worksheet>
+</Workbook>
