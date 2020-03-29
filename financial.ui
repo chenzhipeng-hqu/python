@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>786</width>
-    <height>586</height>
+    <width>783</width>
+    <height>594</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,7 +45,7 @@
      <item>
       <widget class="QPushButton" name="merge_other_payables_pushButton">
        <property name="text">
-        <string>合并内部订单</string>
+        <string>PushButton</string>
        </property>
       </widget>
      </item>
@@ -82,7 +82,7 @@ p, li { white-space: pre-wrap; }
       <x>650</x>
       <y>500</y>
       <width>111</width>
-      <height>31</height>
+      <height>32</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="mouse_horizontalLayout" stretch="10,10">
@@ -142,155 +142,255 @@ p, li { white-space: pre-wrap; }
      <attribute name="title">
       <string>应收/付款</string>
      </attribute>
-     <widget class="QWidget" name="horizontalLayoutWidget">
+     <widget class="QWidget" name="">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>10</y>
         <width>741</width>
-        <height>41</height>
+        <height>71</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="payables_horizontalLayout" stretch="1,1,1,1,1,1,1,1,1,1,2,1">
-       <property name="spacing">
-        <number>6</number>
-       </property>
-       <property name="leftMargin">
-        <number>10</number>
-       </property>
-       <property name="topMargin">
-        <number>5</number>
-       </property>
-       <property name="rightMargin">
-        <number>10</number>
-       </property>
-       <property name="bottomMargin">
-        <number>5</number>
-       </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QLabel" name="time_label">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
+        <layout class="QHBoxLayout" name="payables_horizontalLayout" stretch="1,1,1,1,1,1,1,1,1,1,2">
+         <property name="spacing">
+          <number>6</number>
          </property>
-         <property name="text">
-          <string>期间</string>
+         <property name="leftMargin">
+          <number>17</number>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
+         <property name="topMargin">
+          <number>5</number>
          </property>
-        </widget>
+         <property name="rightMargin">
+          <number>10</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="time_label">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="text">
+            <string>期间</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="s_year_lineEdit">
+           <property name="mouseTracking">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>2019</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="s_year_label">
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="text">
+            <string>年</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="s_month_lineEdit">
+           <property name="text">
+            <string>03</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="s_month_label">
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="text">
+            <string>月  -</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="e_year_lineEdit">
+           <property name="text">
+            <string>2020</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="e_year_label">
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="text">
+            <string>年</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="e_month_lineEdit">
+           <property name="text">
+            <string>02</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::LogicalMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="e_month_label">
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="text">
+            <string>月</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="subject_label">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="text">
+            <string>  科目</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="subject_lineEdit">
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
-        <widget class="QLineEdit" name="s_year_lineEdit">
-         <property name="mouseTracking">
-          <bool>false</bool>
+        <layout class="QHBoxLayout" name="download_horizontalLayout" stretch="1,10,2">
+         <property name="spacing">
+          <number>10</number>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
+         <property name="leftMargin">
+          <number>0</number>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="s_year_label">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
+         <property name="topMargin">
+          <number>5</number>
          </property>
-         <property name="text">
-          <string>年</string>
+         <property name="rightMargin">
+          <number>10</number>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
+         <property name="bottomMargin">
+          <number>5</number>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="s_month_lineEdit">
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="s_month_label">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="text">
-          <string>月  -</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="e_year_lineEdit">
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="e_year_label">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="text">
-          <string>年</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="e_month_lineEdit">
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="e_month_label">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="text">
-          <string>月</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="subject_label">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="text">
-          <string>  科目</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="subject_lineEdit">
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="download_payables_pushButton">
-         <property name="text">
-          <string>下载</string>
-         </property>
-        </widget>
+         <item>
+          <widget class="QLabel" name="save_path_label">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="text">
+            <string>保存路径</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="save_path_pushButton">
+           <property name="font">
+            <font>
+             <family>楷体</family>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="download_payables_pushButton">
+           <property name="text">
+            <string>下载</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="adjust_tab">
+     <attribute name="title">
+      <string>内部订单调整</string>
+     </attribute>
+     <widget class="QPushButton" name="adjust_pushButton">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>50</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>订单调整</string>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="test_tab">
@@ -305,7 +405,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>786</width>
+     <width>783</width>
      <height>23</height>
     </rect>
    </property>
@@ -324,6 +424,12 @@ p, li { white-space: pre-wrap; }
      <family>楷体</family>
      <pointsize>14</pointsize>
     </font>
+   </property>
+   <property name="accessibleName">
+    <string>123</string>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::LeftToRight</enum>
    </property>
   </widget>
   <action name="actionauthor">
