@@ -136,13 +136,13 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="payables_tab">
      <attribute name="title">
       <string>应收/付款</string>
      </attribute>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -382,14 +382,32 @@ p, li { white-space: pre-wrap; }
      <widget class="QPushButton" name="adjust_pushButton">
       <property name="geometry">
        <rect>
-        <x>300</x>
-        <y>50</y>
-        <width>91</width>
-        <height>23</height>
+        <x>310</x>
+        <y>60</y>
+        <width>90</width>
+        <height>30</height>
        </rect>
       </property>
       <property name="text">
        <string>订单调整</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="cust_ctrl_tab">
+     <attribute name="title">
+      <string>自定义控制</string>
+     </attribute>
+     <widget class="QPushButton" name="cust_ctrl_pushButton">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>60</y>
+        <width>90</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>开始</string>
       </property>
      </widget>
     </widget>

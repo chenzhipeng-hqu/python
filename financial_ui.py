@@ -76,17 +76,17 @@ class Ui_MainWindow(object):
         self.tabWidget.setGeometry(QRect(20, 20, 751, 181))
         self.payables_tab = QWidget()
         self.payables_tab.setObjectName(u"payables_tab")
-        self.widget = QWidget(self.payables_tab)
-        self.widget.setObjectName(u"widget")
-        self.widget.setGeometry(QRect(0, 10, 741, 71))
-        self.verticalLayout_2 = QVBoxLayout(self.widget)
+        self.layoutWidget1 = QWidget(self.payables_tab)
+        self.layoutWidget1.setObjectName(u"layoutWidget1")
+        self.layoutWidget1.setGeometry(QRect(0, 10, 741, 71))
+        self.verticalLayout_2 = QVBoxLayout(self.layoutWidget1)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.payables_horizontalLayout = QHBoxLayout()
         self.payables_horizontalLayout.setSpacing(6)
         self.payables_horizontalLayout.setObjectName(u"payables_horizontalLayout")
         self.payables_horizontalLayout.setContentsMargins(17, 5, 10, 5)
-        self.time_label = QLabel(self.widget)
+        self.time_label = QLabel(self.layoutWidget1)
         self.time_label.setObjectName(u"time_label")
         font = QFont()
         font.setBold(True)
@@ -97,61 +97,61 @@ class Ui_MainWindow(object):
 
         self.payables_horizontalLayout.addWidget(self.time_label)
 
-        self.s_year_lineEdit = QLineEdit(self.widget)
+        self.s_year_lineEdit = QLineEdit(self.layoutWidget1)
         self.s_year_lineEdit.setObjectName(u"s_year_lineEdit")
         self.s_year_lineEdit.setMouseTracking(False)
         self.s_year_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_year_lineEdit)
 
-        self.s_year_label = QLabel(self.widget)
+        self.s_year_label = QLabel(self.layoutWidget1)
         self.s_year_label.setObjectName(u"s_year_label")
         self.s_year_label.setLayoutDirection(Qt.LeftToRight)
         self.s_year_label.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_year_label)
 
-        self.s_month_lineEdit = QLineEdit(self.widget)
+        self.s_month_lineEdit = QLineEdit(self.layoutWidget1)
         self.s_month_lineEdit.setObjectName(u"s_month_lineEdit")
         self.s_month_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_month_lineEdit)
 
-        self.s_month_label = QLabel(self.widget)
+        self.s_month_label = QLabel(self.layoutWidget1)
         self.s_month_label.setObjectName(u"s_month_label")
         self.s_month_label.setLayoutDirection(Qt.LeftToRight)
         self.s_month_label.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_month_label)
 
-        self.e_year_lineEdit = QLineEdit(self.widget)
+        self.e_year_lineEdit = QLineEdit(self.layoutWidget1)
         self.e_year_lineEdit.setObjectName(u"e_year_lineEdit")
         self.e_year_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.e_year_lineEdit)
 
-        self.e_year_label = QLabel(self.widget)
+        self.e_year_label = QLabel(self.layoutWidget1)
         self.e_year_label.setObjectName(u"e_year_label")
         self.e_year_label.setLayoutDirection(Qt.LeftToRight)
         self.e_year_label.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.e_year_label)
 
-        self.e_month_lineEdit = QLineEdit(self.widget)
+        self.e_month_lineEdit = QLineEdit(self.layoutWidget1)
         self.e_month_lineEdit.setObjectName(u"e_month_lineEdit")
         self.e_month_lineEdit.setAlignment(Qt.AlignCenter)
         self.e_month_lineEdit.setCursorMoveStyle(Qt.LogicalMoveStyle)
 
         self.payables_horizontalLayout.addWidget(self.e_month_lineEdit)
 
-        self.e_month_label = QLabel(self.widget)
+        self.e_month_label = QLabel(self.layoutWidget1)
         self.e_month_label.setObjectName(u"e_month_label")
         self.e_month_label.setLayoutDirection(Qt.LeftToRight)
         self.e_month_label.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.e_month_label)
 
-        self.subject_label = QLabel(self.widget)
+        self.subject_label = QLabel(self.layoutWidget1)
         self.subject_label.setObjectName(u"subject_label")
         self.subject_label.setFont(font)
         self.subject_label.setLayoutDirection(Qt.LeftToRight)
@@ -159,7 +159,7 @@ class Ui_MainWindow(object):
 
         self.payables_horizontalLayout.addWidget(self.subject_label)
 
-        self.subject_lineEdit = QLineEdit(self.widget)
+        self.subject_lineEdit = QLineEdit(self.layoutWidget1)
         self.subject_lineEdit.setObjectName(u"subject_lineEdit")
         self.subject_lineEdit.setAlignment(Qt.AlignCenter)
 
@@ -183,7 +183,7 @@ class Ui_MainWindow(object):
         self.download_horizontalLayout.setSpacing(10)
         self.download_horizontalLayout.setObjectName(u"download_horizontalLayout")
         self.download_horizontalLayout.setContentsMargins(0, 5, 10, 5)
-        self.save_path_label = QLabel(self.widget)
+        self.save_path_label = QLabel(self.layoutWidget1)
         self.save_path_label.setObjectName(u"save_path_label")
         self.save_path_label.setFont(font)
         self.save_path_label.setLayoutDirection(Qt.LeftToRight)
@@ -191,7 +191,7 @@ class Ui_MainWindow(object):
 
         self.download_horizontalLayout.addWidget(self.save_path_label)
 
-        self.save_path_pushButton = QPushButton(self.widget)
+        self.save_path_pushButton = QPushButton(self.layoutWidget1)
         self.save_path_pushButton.setObjectName(u"save_path_pushButton")
         font1 = QFont()
         font1.setFamily(u"\u6977\u4f53")
@@ -200,7 +200,7 @@ class Ui_MainWindow(object):
 
         self.download_horizontalLayout.addWidget(self.save_path_pushButton)
 
-        self.download_payables_pushButton = QPushButton(self.widget)
+        self.download_payables_pushButton = QPushButton(self.layoutWidget1)
         self.download_payables_pushButton.setObjectName(u"download_payables_pushButton")
 
         self.download_horizontalLayout.addWidget(self.download_payables_pushButton)
@@ -216,8 +216,14 @@ class Ui_MainWindow(object):
         self.adjust_tab.setObjectName(u"adjust_tab")
         self.adjust_pushButton = QPushButton(self.adjust_tab)
         self.adjust_pushButton.setObjectName(u"adjust_pushButton")
-        self.adjust_pushButton.setGeometry(QRect(300, 50, 91, 23))
+        self.adjust_pushButton.setGeometry(QRect(310, 60, 90, 30))
         self.tabWidget.addTab(self.adjust_tab, "")
+        self.cust_ctrl_tab = QWidget()
+        self.cust_ctrl_tab.setObjectName(u"cust_ctrl_tab")
+        self.cust_ctrl_pushButton = QPushButton(self.cust_ctrl_tab)
+        self.cust_ctrl_pushButton.setObjectName(u"cust_ctrl_pushButton")
+        self.cust_ctrl_pushButton.setGeometry(QRect(310, 60, 90, 30))
+        self.tabWidget.addTab(self.cust_ctrl_tab, "")
         self.test_tab = QWidget()
         self.test_tab.setObjectName(u"test_tab")
         self.tabWidget.addTab(self.test_tab, "")
@@ -243,7 +249,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -279,6 +285,8 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.payables_tab), QCoreApplication.translate("MainWindow", u"\u5e94\u6536/\u4ed8\u6b3e", None))
         self.adjust_pushButton.setText(QCoreApplication.translate("MainWindow", u"\u8ba2\u5355\u8c03\u6574", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.adjust_tab), QCoreApplication.translate("MainWindow", u"\u5185\u90e8\u8ba2\u5355\u8c03\u6574", None))
+        self.cust_ctrl_pushButton.setText(QCoreApplication.translate("MainWindow", u"\u5f00\u59cb", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.cust_ctrl_tab), QCoreApplication.translate("MainWindow", u"\u81ea\u5b9a\u4e49\u63a7\u5236", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.test_tab), QCoreApplication.translate("MainWindow", u"\u6d4b\u8bd5", None))
         self.menu.setTitle(QCoreApplication.translate("MainWindow", u"help", None))
 #if QT_CONFIG(accessibility)

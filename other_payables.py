@@ -56,6 +56,7 @@ class WorkerOtherPayables(QObject):
 
     def __init__(self):
         super(WorkerOtherPayables, self).__init__()
+        pyautogui.PAUSE = 0.5
         # self.center_list = []
         # 加载现有配置文件
         # conf = configparser.ConfigParser()
@@ -118,38 +119,56 @@ class WorkerOtherPayables(QObject):
 
     def login(self):
         # 0. 显示桌面 （1587, 888）
-        pyautogui.click(1587, 888, duration=3)
+        pyautogui.moveTo(1587, 888)
+        pyautogui.click()
         # 1. 打开Genero Desktop Client 软件（112, 574）
-        pyautogui.doubleClick(112, 574, duration=5)
+        pyautogui.moveTo(112, 574)
+        pyautogui.doubleClick(duration=1)
         # 2. 双击用户（624, 350）
-        pyautogui.doubleClick(624, 350, duration=2)
+        pyautogui.moveTo(624, 350)
+        pyautogui.doubleClick(duration=1)
         # 3. 输入账号（540, 512）
-        pyautogui.click(540, 512, duration=2)
+        pyautogui.moveTo(540, 512)
+        pyautogui.click()
         pyautogui.write('G190513')
         # 4. 输入密码（540, 540）
-        pyautogui.click(540, 540, duration=3)
+        pyautogui.moveTo(540, 540)
+        pyautogui.click()
         pyautogui.write('123456')
         # 5. 点击确定（483, 580）
-        pyautogui.click(483, 580, duration=2)
+        # pyautogui.moveTo(483, 580)
+        # pyautogui.click(duration=1)
+        pyautogui.press('ENTER', duration=1)
         pass
 
     def select_center(self, center):
         # print(center)
-        # 1. 选择账套(营运中心) 点击查询放大镜(1218, 558)
-        pyautogui.click(1218, 558, duration=1)
-        pyautogui.doubleClick(int(center[1][0]), int(center[1][1]))
-        # 2. 点击确定(1150, 200),
-        pyautogui.click(1150, 200, duration=1)
+        # # 1. 选择账套(营运中心) 点击查询放大镜(1218, 558)
+        # pyautogui.click(1218, 558, duration=1)
+        # pyautogui.doubleClick(int(center[1][0]), int(center[1][1]))
+        # # 2. 点击确定(1150, 200),
+        # pyautogui.click(1150, 200, duration=1)
+        # # 3. 点击确定(1200, 460)
+        # pyautogui.click(1200, 460, duration=1)
+
+        # 1. 选中营运中心输入框 (1080, 635)->(920, 635)
+        pyautogui.moveTo(1080, 635)
+        pyautogui.dragTo(920, 635, 0.2, button='left')
+        # 2. 输入营运中心
+        pyautogui.write(center[1][2])
         # 3. 点击确定(1200, 460)
-        pyautogui.click(1200, 460, duration=1)
+        pyautogui.moveTo(1200, 460)
+        pyautogui.click(duration=1)
         pass
 
     def input_job(self):
         # 1. 输入作业，cglq307(490, 145)
-        pyautogui.click(490, 145, duration=1)
+        pyautogui.moveTo(490, 145)
+        pyautogui.click()
         pyautogui.write('cglq307')
         # 2. 点击确定(760, 170)
-        pyautogui.click(760, 170, duration=1)
+        pyautogui.moveTo(760, 170)
+        pyautogui.click(duration=1)
         pass
 
     def filter(self):  # 4. 筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
@@ -178,17 +197,20 @@ class WorkerOtherPayables(QObject):
         pyautogui.write(self.duration[3])
         # print(self.duration[3], end='  ')
         # 9. 点击科目(30, 240)
-        pyautogui.click(30, 240)
+        pyautogui.moveTo(30, 240)
+        pyautogui.click()
         # 10. 输入科目编号（1221*，2241*）
         pyautogui.write(self.subject)
         # print(self.subject)
         # 11. 点击确定(1500, 115)
-        pyautogui.click(1500, 115, duration=8)
+        pyautogui.moveTo(1500, 115)
+        pyautogui.click(duration=8)
         pass
 
     def export(self, center):
         # 1. 点击汇出execl(330, 75)
-        pyautogui.click(330, 75, duration=2)
+        pyautogui.moveTo(330, 75)
+        pyautogui.click(duration=2)
         # 2. 修改保存路径(905, 418)->(648, 418)
         pyautogui.moveTo(905, 418)
         pyautogui.dragTo(648, 418, 0.2, button='left')
@@ -201,62 +223,62 @@ class WorkerOtherPayables(QObject):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        # 4. 更改文件名(添加 法人主体(营运中心)-默认) (800, 380), ('HOME')
-        pyautogui.click(800, 380, duration=1)
-        pyautogui.press('HOME')
+        # 4. 更改文件名(添加 法人主体(营运中心)-默认) (800, 380), ('home')
+        pyautogui.moveTo(800, 380)
+        pyautogui.click(duration=1)
+        pyautogui.press('home')
         pyautogui.write(center[0])
         # print(center[0])
         # 5. 保存(800, 520)
-        pyautogui.click(800, 520, duration=1)
+        pyautogui.moveTo(800, 520)
+        pyautogui.click(duration=1)
         pass
 
     def reback_center(self, center): # 1. 回到选择账套(营运中心)界面
         # 1. 关闭下载页面 (1133, 216)
-        pyautogui.click(1133, 216, duration=1)
+        pyautogui.moveTo(1133, 216)
+        pyautogui.click(duration=1)
         # 2. 最小化网页 (1500, 15)
-        pyautogui.click(1500, 15, duration=1)
+        pyautogui.moveTo(1500, 15)
+        pyautogui.click(duration=1)
         # 3. 关闭查询页面 (1580, 8)
-        pyautogui.click(1580, 8, duration=1)
+        pyautogui.moveTo(1580, 8)
+        pyautogui.click(duration=1)
         # 4. 点击更改营运中心 (970, 143)
-        pyautogui.click(970, 143, duration=1)
-        # 5. 点击查询放大镜 (1112, 640)
-        pyautogui.click(1112, 640, duration=1)
-        # 6. 拖拽下拉页面(1206, 550), 选择营运中心
-        pyautogui.moveTo(1206, 550)
-        pyautogui.dragTo(1206, 650, 0.2, button='left')
-        pyautogui.doubleClick(int(center[1][0]), int(center[1][1]))
-        # 7. 点击确定选择营运中心(1150, 200)
-        pyautogui.click(1150, 200, duration=1)
-        # 8. 点击营运中心确定(1200, 460)
-        pyautogui.click(1200, 460, duration=1)
+        pyautogui.moveTo(970, 143)
+        pyautogui.click(duration=1)
+
+        # # 5. 点击查询放大镜 (1112, 640)
+        # pyautogui.click(1112, 640, duration=1)
+        # # 6. 拖拽下拉页面(1206, 550), 选择营运中心
+        # pyautogui.moveTo(1206, 550)
+        # pyautogui.dragTo(1206, 650, 0.2, button='left')
+        # pyautogui.doubleClick(int(center[1][0]), int(center[1][1]))
+        # # 7. 点击确定选择营运中心(1150, 200)
+        # pyautogui.click(1150, 200, duration=1)
+        # # 8. 点击营运中心确定(1200, 460)
+        # pyautogui.click(1200, 460, duration=1)
         pass
 
     def download(self):
         # 1. 打开软件，登入账号
         self.login()
         self.message_singel.emit('开始下载.\r\n')
-        input()
-
-        # 2. 选择营运中心
-        self.select_center(center)
-        input()
 
         for center in self.centers.items():
+            # 2. 选择营运中心
+            self.select_center(center)
             # print(center[0])
             self.message_singel.emit('正在下载%s...\r\n' % center[0])
             # 3. 输入作业，cglq307, 点击确定
             self.input_job()
-            input()
             # 4. 点击查询，筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
             self.filter()
-            input()
             # 5. 导出/汇出excel
             # 6. 新建营运中心文件夹，保存、更改文件名(添加 法人主体(营运中心)-默认)
             self.export(center)
-            input()
             # 7. 回到选择账套(营运中心)界面
             self.reback_center(center)
-            input()
 
         # 8. 最后一列添加‘法人主体’， 合并文件名为‘科目-期间’
         self.merge()

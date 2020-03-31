@@ -18,6 +18,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from other_payables import *
 from internal_orders import *
+from custom_control import *
 
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
@@ -38,7 +39,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.configure_init()
         self.payables_init()
         self.inner_order_init()
-        self.mouse_init()
+        self.cust_ctrl_init()
 
     def initUI(self):
         self.setupUi(self)
@@ -121,13 +122,14 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.worker_inter_orders.moveToThread(self.thread_inter_orders)
         self.thread_inter_orders.started.connect(self.worker_inter_orders.filter)
 
-    def mouse_init(self):
-        self.thread_get_mouse = QThread()
-        self.worker_get_mouse = WorkerGetMouse()
-        self.worker_get_mouse.mouse_singel.connect(self.mouse_singel)
-        self.worker_get_mouse.moveToThread(self.thread_get_mouse)
-        self.thread_get_mouse.started.connect(self.worker_get_mouse.run)
-        self.thread_get_mouse.start()
+    def cust_ctrl_init(self):
+        self.thread_cust_ctrl = QThread()
+        self.worker_cust_ctrl = WorkerCustCtrl()
+        self.worker_cust_ctrl.moveToThread(self.thread_cust_ctrl)
+        self.worker_cust_ctrl.mouse_singel.connect(self.mouse_singel)
+        self.worker_cust_ctrl.message_singel.connect(self.message_singel)
+        self.thread_cust_ctrl.started.connect(self.worker_cust_ctrl.run)
+        self.thread_cust_ctrl.start()
 
     def download_payables(self):
         self.download_payables_pushButton.setEnabled(False)
@@ -213,23 +215,6 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
     def mouse_singel(self, x, y):
         self.x_label.setText('X: ' + str(x))
         self.y_label.setText('Y: ' + str(y))
-
-
-class WorkerGetMouse(QObject):
-    mouse_singel = Signal(int, int)
-
-    def __init__(self):
-        super(WorkerGetMouse, self).__init__()
-
-    def __del__(self):
-        print('delete Worker_Get_Mouse')
-
-    def run(self):
-        while True:
-            x, y = pyautogui.position()
-            self.mouse_singel.emit(x, y)
-            QThread.usleep(100000)
-            # positionStr = 'X: ' + str(x).rjust(4) + 'Y: ' + str(y).rjust(4)
 
 
 if __name__ == '__main__':
