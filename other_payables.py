@@ -81,7 +81,7 @@ class WorkerOtherPayables(QObject):
         self.centers = centers
         self.duration = duration
         self.subject = subject
-        self.save_path = os.path.join(save_path, subject)
+        self.save_path = save_path
 
     def merge(self):
         file_path = os.path.join(self.save_path, 'download')
@@ -117,49 +117,81 @@ class WorkerOtherPayables(QObject):
             self.message_singel.emit('未发现合并需要的文件.\r\n')
 
     def login(self):
-        # 1. 打开任务栏软件
-        pyautogui.moveTo(100, 200)
-        # 2. 双击用户
-        # 3. 输入账号
-        # 4. 输入密码
-        # 5. 点击确定
+        # 0. 显示桌面 （1587, 888）
+        pyautogui.click(1587, 888, duration=3)
+        # 1. 打开Genero Desktop Client 软件（112, 574）
+        pyautogui.doubleClick(112, 574, duration=5)
+        # 2. 双击用户（624, 350）
+        pyautogui.doubleClick(624, 350, duration=2)
+        # 3. 输入账号（540, 512）
+        pyautogui.click(540, 512, duration=2)
+        pyautogui.write('G190513')
+        # 4. 输入密码（540, 540）
+        pyautogui.click(540, 540, duration=3)
+        pyautogui.write('123456')
+        # 5. 点击确定（483, 580）
+        pyautogui.click(483, 580, duration=2)
         pass
 
     def select_center(self, center):
-        # 1. 选择账套(营运中心)
         # print(center)
-        pyautogui.moveTo(int(center[1][0]), int(center[1][1]))
-        # 2. 点击确定
+        # 1. 选择账套(营运中心) 点击查询放大镜(1218, 558)
+        pyautogui.click(1218, 558, duration=1)
+        pyautogui.doubleClick(int(center[1][0]), int(center[1][1]))
+        # 2. 点击确定(1150, 200),
+        pyautogui.click(1150, 200, duration=1)
+        # 3. 点击确定(1200, 460)
+        pyautogui.click(1200, 460, duration=1)
         pass
 
     def input_job(self):
-        # 1. 输入作业，cglq307
-        pyautogui.moveTo(700, 200)
-        # 2. 点击确定
+        # 1. 输入作业，cglq307(490, 145)
+        pyautogui.click(490, 145, duration=1)
+        pyautogui.write('cglq307')
+        # 2. 点击确定(760, 170)
+        pyautogui.click(760, 170, duration=1)
         pass
 
-    def filter(self):  # 4. 点击查询，筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
-        # 1. 点击年开始
+    def filter(self):  # 4. 筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
+        # 1. 点击年开始(100, 150)->(130, 150)
+        pyautogui.moveTo(100, 150)
+        pyautogui.dragTo(130, 150, 0.2, button='left')
         # 2. 输入年开始
+        pyautogui.write(self.duration[0])
         # print(self.duration[0], end='.')
-        # 3. 点击月开始
+        # 3. 点击月开始(220, 150)->(250, 150)
+        pyautogui.moveTo(220, 150)
+        pyautogui.dragTo(250, 150, 0.2, button='left')
         # 4. 输入月开始
+        pyautogui.write(self.duration[1])
         # print(self.duration[1], end=' - ')
-        # 5. 点击年结束
+        # 5. 点击年结束(100, 180)->(130, 180)
+        pyautogui.moveTo(100, 180)
+        pyautogui.dragTo(130, 180, 0.2, button='left')
         # 6. 输入年结束
+        pyautogui.write(self.duration[2])
         # print(self.duration[2], end='.')
-        # 7. 点击月结束
+        # 7. 点击月结束(220, 180)->(250, 180)
+        pyautogui.moveTo(220, 180)
+        pyautogui.dragTo(250, 180, 0.2, button='left')
         # 8. 输入月结束
+        pyautogui.write(self.duration[3])
         # print(self.duration[3], end='  ')
-        # 9. 点击科目
-        # 10. 输入科目
+        # 9. 点击科目(30, 240)
+        pyautogui.click(30, 240)
+        # 10. 输入科目编号（1221*，2241*）
+        pyautogui.write(self.subject)
         # print(self.subject)
-        # 11. 点击确定
+        # 11. 点击确定(1500, 115)
+        pyautogui.click(1500, 115, duration=8)
         pass
 
     def export(self, center):
-        # 1. 点击汇出execl
-        # 2. 点击保存
+        # 1. 点击汇出execl(330, 75)
+        pyautogui.click(330, 75, duration=2)
+        # 2. 修改保存路径(905, 418)->(648, 418)
+        pyautogui.moveTo(905, 418)
+        pyautogui.dragTo(648, 418, 0.2, button='left')
 
         # 3. 新建营运中心文件夹
         path = os.path.join(self.save_path, 'download')
@@ -169,33 +201,62 @@ class WorkerOtherPayables(QObject):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        # 4. 保存、更改文件名(添加 法人主体(营运中心)-默认)
+        # 4. 更改文件名(添加 法人主体(营运中心)-默认) (800, 380), ('HOME')
+        pyautogui.click(800, 380, duration=1)
+        pyautogui.press('HOME')
+        pyautogui.write(center[0])
         # print(center[0])
+        # 5. 保存(800, 520)
+        pyautogui.click(800, 520, duration=1)
         pass
 
-    def reback_center(self):
-        # 1. 回到选择账套(营运中心)界面
+    def reback_center(self, center): # 1. 回到选择账套(营运中心)界面
+        # 1. 关闭下载页面 (1133, 216)
+        pyautogui.click(1133, 216, duration=1)
+        # 2. 最小化网页 (1500, 15)
+        pyautogui.click(1500, 15, duration=1)
+        # 3. 关闭查询页面 (1580, 8)
+        pyautogui.click(1580, 8, duration=1)
+        # 4. 点击更改营运中心 (970, 143)
+        pyautogui.click(970, 143, duration=1)
+        # 5. 点击查询放大镜 (1112, 640)
+        pyautogui.click(1112, 640, duration=1)
+        # 6. 拖拽下拉页面(1206, 550), 选择营运中心
+        pyautogui.moveTo(1206, 550)
+        pyautogui.dragTo(1206, 650, 0.2, button='left')
+        pyautogui.doubleClick(int(center[1][0]), int(center[1][1]))
+        # 7. 点击确定选择营运中心(1150, 200)
+        pyautogui.click(1150, 200, duration=1)
+        # 8. 点击营运中心确定(1200, 460)
+        pyautogui.click(1200, 460, duration=1)
         pass
 
     def download(self):
         # 1. 打开软件，登入账号
         self.login()
         self.message_singel.emit('开始下载.\r\n')
+        input()
+
+        # 2. 选择营运中心
+        self.select_center(center)
+        input()
 
         for center in self.centers.items():
             # print(center[0])
             self.message_singel.emit('正在下载%s...\r\n' % center[0])
-            # 2. 选择营运中心
-            self.select_center(center)
             # 3. 输入作业，cglq307, 点击确定
             self.input_job()
+            input()
             # 4. 点击查询，筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
             self.filter()
+            input()
             # 5. 导出/汇出excel
             # 6. 新建营运中心文件夹，保存、更改文件名(添加 法人主体(营运中心)-默认)
             self.export(center)
+            input()
             # 7. 回到选择账套(营运中心)界面
-            self.reback_center()
+            self.reback_center(center)
+            input()
 
         # 8. 最后一列添加‘法人主体’， 合并文件名为‘科目-期间’
         self.merge()
