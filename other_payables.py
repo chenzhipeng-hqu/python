@@ -78,9 +78,10 @@ class WorkerOtherPayables(QObject):
     def __del__(self):
         print('delete WorkerOtherPayables')
 
-    def set_parameter(self, centers, duration, subject, save_path):
+    def set_parameter(self, centers, duration, job, subject, save_path):
         self.centers = centers
         self.duration = duration
+        self.job = job
         self.subject = subject
         self.save_path = save_path
 
@@ -138,7 +139,8 @@ class WorkerOtherPayables(QObject):
         # 5. 点击确定（483, 580）
         # pyautogui.moveTo(483, 580)
         # pyautogui.click(duration=1)
-        pyautogui.press('ENTER', duration=1)
+        pyautogui.press('ENTER')
+        QThread.usleep(1000000)
         pass
 
     def select_center(self, center):
@@ -165,7 +167,7 @@ class WorkerOtherPayables(QObject):
         # 1. 输入作业，cglq307(490, 145)
         pyautogui.moveTo(490, 145)
         pyautogui.click()
-        pyautogui.write('cglq307')
+        pyautogui.write(self.job)
         # 2. 点击确定(760, 170)
         pyautogui.moveTo(760, 170)
         pyautogui.click(duration=1)
@@ -261,31 +263,34 @@ class WorkerOtherPayables(QObject):
         pass
 
     def download(self):
-        # 1. 打开软件，登入账号
-        self.login()
-        self.message_singel.emit('开始下载.\r\n')
+        try:
+            # 1. 打开软件，登入账号
+            self.login()
+            self.message_singel.emit('开始下载.\r\n')
 
-        for center in self.centers.items():
-            # 2. 选择营运中心
-            self.select_center(center)
-            # print(center[0])
-            self.message_singel.emit('正在下载%s...\r\n' % center[0])
-            # 3. 输入作业，cglq307, 点击确定
-            self.input_job()
-            # 4. 点击查询，筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
-            self.filter()
-            # 5. 导出/汇出excel
-            # 6. 新建营运中心文件夹，保存、更改文件名(添加 法人主体(营运中心)-默认)
-            self.export(center)
-            # 7. 回到选择账套(营运中心)界面
-            self.reback_center(center)
+            for center in self.centers.items():
+                # 2. 选择营运中心
+                self.select_center(center)
+                # print(center[0])
+                self.message_singel.emit('正在下载%s...\r\n' % center[0])
+                # 3. 输入作业，cglq307, 点击确定
+                self.input_job()
+                # 4. 点击查询，筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
+                self.filter()
+                # 5. 导出/汇出excel
+                # 6. 新建营运中心文件夹，保存、更改文件名(添加 法人主体(营运中心)-默认)
+                self.export(center)
+                # 7. 回到选择账套(营运中心)界面
+                self.reback_center(center)
 
-        # 8. 最后一列添加‘法人主体’， 合并文件名为‘科目-期间’
-        self.merge()
-        # print('download finished')
-        self.message_singel.emit('下载完成.\r\n')
-        self.finish_singel.emit()
-        pass
+            # 8. 最后一列添加‘法人主体’， 合并文件名为‘科目-期间’
+            self.merge()
+            # print('download finished')
+            self.message_singel.emit('下载完成.\r\n')
+            self.finish_singel.emit()
+        except Exception as err:
+            print('catch error!!!')
+            print(err)
 
 
 if __name__ == '__main__':

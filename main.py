@@ -93,6 +93,10 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
             e_month = self.conf.get('payables', 'end_month')
             self.e_month_lineEdit.setText(e_month)
 
+        if self.conf.has_option('payables', 'job'):
+            job = self.conf.get('payables', 'job')
+            self.job_lineEdit.setText(job)
+
         if self.conf.has_option('payables', 'subject'):
             subject = self.conf.get('payables', 'subject')
             self.subject_lineEdit.setText(subject)
@@ -141,15 +145,21 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         centers = {position[0]: position[1].split(',') for position in center}
         # print(centers)
         logger.debug(centers)
+
         duration = [self.s_year_lineEdit.text(), self.s_month_lineEdit.text(),
                     self.e_year_lineEdit.text(), self.e_month_lineEdit.text()]
         # print(duration)
         logger.debug(duration)
+
+        job = self.job_lineEdit.text().strip()
+
         subject = self.subject_lineEdit.text().strip()
+
         save_path = self.save_path_pushButton.text()
         # print(save_path)
         logger.debug(save_path)
-        self.worker_other_payables.set_parameter(centers, duration, subject, save_path)
+
+        self.worker_other_payables.set_parameter(centers, duration, job, subject, save_path)
 
         self.thread_other_payables.start()
 
@@ -171,6 +181,11 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
     def e_month_editingFinished(self):
         # print(self.e_month_lineEdit.text())
         self.conf.set('payables', 'end_month', self.e_month_lineEdit.text())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def job_editingFinished(self):
+        # print(self.job_lineEdit.text())
+        self.conf.set('payables', 'job', self.job_lineEdit.text().strip())
         self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
 
     def subject_editingFinished(self):
