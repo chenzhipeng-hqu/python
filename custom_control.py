@@ -86,9 +86,12 @@ class WorkerCustCtrl(QObject):
                 pyautogui.hotkey(ctrl[1][1], ctrl[1][2])
         pass
 
+    def get_size(self):
+        return pyautogui.size()
+
     def run(self):
-        x, y = pyautogui.size()
-        self.message_singel.emit("当前屏幕的分辨率是{}*{}\r\n".format(x, y))
+        # x, y = pyautogui.size()
+        # self.message_singel.emit("当前屏幕的分辨率是{}*{}\r\n".format(x, y))
         while True:
             x, y = pyautogui.position()
             self.mouse_singel.emit(x, y)

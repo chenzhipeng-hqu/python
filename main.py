@@ -131,6 +131,9 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.thread_cust_ctrl.started.connect(self.worker_cust_ctrl.run)
         self.thread_cust_ctrl.start()
 
+        x, y = self.worker_cust_ctrl.get_size()
+        self.size_label.setText("{}*{}".format(x, y))
+
     def download_payables(self):
         self.download_payables_pushButton.setEnabled(False)
         self.statusBar_singel('开始下载...')

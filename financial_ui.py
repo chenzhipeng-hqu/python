@@ -20,50 +20,53 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(783, 594)
+        MainWindow.resize(895, 643)
         self.actionauthor = QAction(MainWindow)
         self.actionauthor.setObjectName(u"actionauthor")
         self.actionabout = QAction(MainWindow)
         self.actionabout.setObjectName(u"actionabout")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayoutWidget = QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setObjectName(u"verticalLayoutWidget")
-        self.verticalLayoutWidget.setGeometry(QRect(650, 220, 111, 211))
-        self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
+        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
+        self.centralwidget.setSizePolicy(sizePolicy)
+        self.gridLayout_2 = QGridLayout(self.centralwidget)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout = QGridLayout()
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setSizeConstraint(QLayout.SetMinimumSize)
+        self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(10)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
         self.verticalLayout.setContentsMargins(10, 10, 10, 10)
-        self.merge_other_payables_pushButton = QPushButton(self.verticalLayoutWidget)
-        self.merge_other_payables_pushButton.setObjectName(u"merge_other_payables_pushButton")
-
-        self.verticalLayout.addWidget(self.merge_other_payables_pushButton)
-
-        self.pushButton = QPushButton(self.verticalLayoutWidget)
+        self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setObjectName(u"pushButton")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
+        self.pushButton.setSizePolicy(sizePolicy1)
 
         self.verticalLayout.addWidget(self.pushButton)
 
-        self.verticalLayout.setStretch(1, 10)
-        self.textBrowser = QTextBrowser(self.centralwidget)
-        self.textBrowser.setObjectName(u"textBrowser")
-        self.textBrowser.setGeometry(QRect(20, 220, 611, 311))
-        self.layoutWidget = QWidget(self.centralwidget)
-        self.layoutWidget.setObjectName(u"layoutWidget")
-        self.layoutWidget.setGeometry(QRect(650, 500, 111, 32))
-        self.mouse_horizontalLayout = QHBoxLayout(self.layoutWidget)
+
+        self.gridLayout.addLayout(self.verticalLayout, 1, 1, 1, 1)
+
+        self.mouse_horizontalLayout = QHBoxLayout()
         self.mouse_horizontalLayout.setSpacing(10)
         self.mouse_horizontalLayout.setObjectName(u"mouse_horizontalLayout")
         self.mouse_horizontalLayout.setContentsMargins(10, 10, 10, 10)
-        self.x_label = QLabel(self.layoutWidget)
+        self.x_label = QLabel(self.centralwidget)
         self.x_label.setObjectName(u"x_label")
         self.x_label.setLayoutDirection(Qt.LeftToRight)
         self.x_label.setAlignment(Qt.AlignCenter)
 
         self.mouse_horizontalLayout.addWidget(self.x_label)
 
-        self.y_label = QLabel(self.layoutWidget)
+        self.y_label = QLabel(self.centralwidget)
         self.y_label.setObjectName(u"y_label")
         self.y_label.setAlignment(Qt.AlignCenter)
 
@@ -71,22 +74,32 @@ class Ui_MainWindow(object):
 
         self.mouse_horizontalLayout.setStretch(0, 10)
         self.mouse_horizontalLayout.setStretch(1, 10)
+
+        self.gridLayout.addLayout(self.mouse_horizontalLayout, 3, 1, 1, 1)
+
+        self.textBrowser = QTextBrowser(self.centralwidget)
+        self.textBrowser.setObjectName(u"textBrowser")
+
+        self.gridLayout.addWidget(self.textBrowser, 1, 0, 3, 1)
+
         self.tabWidget = QTabWidget(self.centralwidget)
         self.tabWidget.setObjectName(u"tabWidget")
-        self.tabWidget.setGeometry(QRect(20, 20, 751, 181))
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
+        self.tabWidget.setSizePolicy(sizePolicy2)
         self.payables_tab = QWidget()
         self.payables_tab.setObjectName(u"payables_tab")
-        self.layoutWidget1 = QWidget(self.payables_tab)
-        self.layoutWidget1.setObjectName(u"layoutWidget1")
-        self.layoutWidget1.setGeometry(QRect(0, 10, 741, 71))
-        self.verticalLayout_2 = QVBoxLayout(self.layoutWidget1)
+        self.gridLayout_3 = QGridLayout(self.payables_tab)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.payables_horizontalLayout = QHBoxLayout()
         self.payables_horizontalLayout.setSpacing(6)
         self.payables_horizontalLayout.setObjectName(u"payables_horizontalLayout")
         self.payables_horizontalLayout.setContentsMargins(17, 5, 10, 5)
-        self.time_label = QLabel(self.layoutWidget1)
+        self.time_label = QLabel(self.payables_tab)
         self.time_label.setObjectName(u"time_label")
         font = QFont()
         font.setBold(True)
@@ -97,61 +110,61 @@ class Ui_MainWindow(object):
 
         self.payables_horizontalLayout.addWidget(self.time_label)
 
-        self.s_year_lineEdit = QLineEdit(self.layoutWidget1)
+        self.s_year_lineEdit = QLineEdit(self.payables_tab)
         self.s_year_lineEdit.setObjectName(u"s_year_lineEdit")
         self.s_year_lineEdit.setMouseTracking(False)
         self.s_year_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_year_lineEdit)
 
-        self.s_year_label = QLabel(self.layoutWidget1)
+        self.s_year_label = QLabel(self.payables_tab)
         self.s_year_label.setObjectName(u"s_year_label")
         self.s_year_label.setLayoutDirection(Qt.LeftToRight)
         self.s_year_label.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_year_label)
 
-        self.s_month_lineEdit = QLineEdit(self.layoutWidget1)
+        self.s_month_lineEdit = QLineEdit(self.payables_tab)
         self.s_month_lineEdit.setObjectName(u"s_month_lineEdit")
         self.s_month_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_month_lineEdit)
 
-        self.s_month_label = QLabel(self.layoutWidget1)
+        self.s_month_label = QLabel(self.payables_tab)
         self.s_month_label.setObjectName(u"s_month_label")
         self.s_month_label.setLayoutDirection(Qt.LeftToRight)
         self.s_month_label.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.s_month_label)
 
-        self.e_year_lineEdit = QLineEdit(self.layoutWidget1)
+        self.e_year_lineEdit = QLineEdit(self.payables_tab)
         self.e_year_lineEdit.setObjectName(u"e_year_lineEdit")
         self.e_year_lineEdit.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.e_year_lineEdit)
 
-        self.e_year_label = QLabel(self.layoutWidget1)
+        self.e_year_label = QLabel(self.payables_tab)
         self.e_year_label.setObjectName(u"e_year_label")
         self.e_year_label.setLayoutDirection(Qt.LeftToRight)
         self.e_year_label.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.e_year_label)
 
-        self.e_month_lineEdit = QLineEdit(self.layoutWidget1)
+        self.e_month_lineEdit = QLineEdit(self.payables_tab)
         self.e_month_lineEdit.setObjectName(u"e_month_lineEdit")
         self.e_month_lineEdit.setAlignment(Qt.AlignCenter)
         self.e_month_lineEdit.setCursorMoveStyle(Qt.LogicalMoveStyle)
 
         self.payables_horizontalLayout.addWidget(self.e_month_lineEdit)
 
-        self.e_month_label = QLabel(self.layoutWidget1)
+        self.e_month_label = QLabel(self.payables_tab)
         self.e_month_label.setObjectName(u"e_month_label")
         self.e_month_label.setLayoutDirection(Qt.LeftToRight)
         self.e_month_label.setAlignment(Qt.AlignCenter)
 
         self.payables_horizontalLayout.addWidget(self.e_month_label)
 
-        self.subject_label = QLabel(self.layoutWidget1)
+        self.subject_label = QLabel(self.payables_tab)
         self.subject_label.setObjectName(u"subject_label")
         self.subject_label.setFont(font)
         self.subject_label.setLayoutDirection(Qt.LeftToRight)
@@ -159,7 +172,7 @@ class Ui_MainWindow(object):
 
         self.payables_horizontalLayout.addWidget(self.subject_label)
 
-        self.subject_lineEdit = QLineEdit(self.layoutWidget1)
+        self.subject_lineEdit = QLineEdit(self.payables_tab)
         self.subject_lineEdit.setObjectName(u"subject_lineEdit")
         self.subject_lineEdit.setAlignment(Qt.AlignCenter)
 
@@ -183,7 +196,7 @@ class Ui_MainWindow(object):
         self.download_horizontalLayout.setSpacing(10)
         self.download_horizontalLayout.setObjectName(u"download_horizontalLayout")
         self.download_horizontalLayout.setContentsMargins(0, 5, 10, 5)
-        self.save_path_label = QLabel(self.layoutWidget1)
+        self.save_path_label = QLabel(self.payables_tab)
         self.save_path_label.setObjectName(u"save_path_label")
         self.save_path_label.setFont(font)
         self.save_path_label.setLayoutDirection(Qt.LeftToRight)
@@ -191,7 +204,7 @@ class Ui_MainWindow(object):
 
         self.download_horizontalLayout.addWidget(self.save_path_label)
 
-        self.save_path_pushButton = QPushButton(self.layoutWidget1)
+        self.save_path_pushButton = QPushButton(self.payables_tab)
         self.save_path_pushButton.setObjectName(u"save_path_pushButton")
         font1 = QFont()
         font1.setFamily(u"\u6977\u4f53")
@@ -200,7 +213,7 @@ class Ui_MainWindow(object):
 
         self.download_horizontalLayout.addWidget(self.save_path_pushButton)
 
-        self.download_payables_pushButton = QPushButton(self.layoutWidget1)
+        self.download_payables_pushButton = QPushButton(self.payables_tab)
         self.download_payables_pushButton.setObjectName(u"download_payables_pushButton")
 
         self.download_horizontalLayout.addWidget(self.download_payables_pushButton)
@@ -211,26 +224,64 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addLayout(self.download_horizontalLayout)
 
+
+        self.gridLayout_3.addLayout(self.verticalLayout_2, 0, 0, 1, 1)
+
         self.tabWidget.addTab(self.payables_tab, "")
         self.adjust_tab = QWidget()
         self.adjust_tab.setObjectName(u"adjust_tab")
+        self.gridLayout_4 = QGridLayout(self.adjust_tab)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.adjust_pushButton = QPushButton(self.adjust_tab)
         self.adjust_pushButton.setObjectName(u"adjust_pushButton")
-        self.adjust_pushButton.setGeometry(QRect(310, 60, 90, 30))
+        sizePolicy.setHeightForWidth(self.adjust_pushButton.sizePolicy().hasHeightForWidth())
+        self.adjust_pushButton.setSizePolicy(sizePolicy)
+
+        self.gridLayout_4.addWidget(self.adjust_pushButton, 0, 0, 1, 1)
+
         self.tabWidget.addTab(self.adjust_tab, "")
         self.cust_ctrl_tab = QWidget()
         self.cust_ctrl_tab.setObjectName(u"cust_ctrl_tab")
+        self.gridLayout_5 = QGridLayout(self.cust_ctrl_tab)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.cust_ctrl_pushButton = QPushButton(self.cust_ctrl_tab)
         self.cust_ctrl_pushButton.setObjectName(u"cust_ctrl_pushButton")
-        self.cust_ctrl_pushButton.setGeometry(QRect(310, 60, 90, 30))
+        sizePolicy.setHeightForWidth(self.cust_ctrl_pushButton.sizePolicy().hasHeightForWidth())
+        self.cust_ctrl_pushButton.setSizePolicy(sizePolicy)
+
+        self.gridLayout_5.addWidget(self.cust_ctrl_pushButton, 0, 0, 1, 1)
+
         self.tabWidget.addTab(self.cust_ctrl_tab, "")
         self.test_tab = QWidget()
         self.test_tab.setObjectName(u"test_tab")
         self.tabWidget.addTab(self.test_tab, "")
+
+        self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
+
+        self.size_label = QLabel(self.centralwidget)
+        self.size_label.setObjectName(u"size_label")
+        self.size_label.setLayoutDirection(Qt.LeftToRight)
+        self.size_label.setAlignment(Qt.AlignBottom|Qt.AlignHCenter)
+
+        self.gridLayout.addWidget(self.size_label, 2, 1, 1, 1)
+
+        self.gridLayout.setRowStretch(0, 3)
+        self.gridLayout.setRowStretch(1, 7)
+        self.gridLayout.setRowStretch(2, 7)
+        self.gridLayout.setColumnStretch(0, 4)
+        self.gridLayout.setColumnStretch(1, 1)
+        self.gridLayout.setColumnMinimumWidth(0, 4)
+        self.gridLayout.setColumnMinimumWidth(1, 1)
+        self.gridLayout.setRowMinimumHeight(0, 4)
+        self.gridLayout.setRowMinimumHeight(1, 1)
+        self.gridLayout.setRowMinimumHeight(2, 1)
+
+        self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 783, 23))
+        self.menubar.setGeometry(QRect(0, 0, 895, 28))
         self.menu = QMenu(self.menubar)
         self.menu.setObjectName(u"menu")
         MainWindow.setMenuBar(self.menubar)
@@ -249,7 +300,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -259,16 +310,15 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.actionauthor.setText(QCoreApplication.translate("MainWindow", u"author", None))
         self.actionabout.setText(QCoreApplication.translate("MainWindow", u"about", None))
-        self.merge_other_payables_pushButton.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
+        self.x_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
+        self.y_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
         self.textBrowser.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">\u6b22\u8fce\u4f7f\u7528\u8d22\u52a1\u5c0f\u5de5\u5177</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p></body></html>", None))
-        self.x_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
-        self.y_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
+"</style></head><body style=\" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'SimSun'; font-size:12pt;\">\u6b22\u8fce\u4f7f\u7528\u8d22\u52a1\u5c0f\u5de5\u5177</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'SimSun'; font-size:12pt;\"><br /></p></body></html>", None))
         self.time_label.setText(QCoreApplication.translate("MainWindow", u"\u671f\u95f4", None))
         self.s_year_lineEdit.setText(QCoreApplication.translate("MainWindow", u"2019", None))
         self.s_year_label.setText(QCoreApplication.translate("MainWindow", u"\u5e74", None))
@@ -288,6 +338,7 @@ class Ui_MainWindow(object):
         self.cust_ctrl_pushButton.setText(QCoreApplication.translate("MainWindow", u"\u5f00\u59cb", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.cust_ctrl_tab), QCoreApplication.translate("MainWindow", u"\u81ea\u5b9a\u4e49\u63a7\u5236", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.test_tab), QCoreApplication.translate("MainWindow", u"\u6d4b\u8bd5", None))
+        self.size_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
         self.menu.setTitle(QCoreApplication.translate("MainWindow", u"help", None))
 #if QT_CONFIG(accessibility)
         self.statusbar.setAccessibleName(QCoreApplication.translate("MainWindow", u"123", None))
