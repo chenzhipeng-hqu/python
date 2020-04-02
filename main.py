@@ -236,7 +236,6 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
 
 if __name__ == '__main__':
-
     try:
         # 每一pyqt5应用程序必须创建一个应用程序对象。sys.argv参数是一个列表，从命令行输入参数
         app = QApplication(sys.argv)
@@ -247,7 +246,7 @@ if __name__ == '__main__':
         # 的exec_()方法有下划线。因为执行是一个Python关键词。因此，exec_()代替
         app.exec_()
     except Exception as err:
-        print('catch error!!!')
+        print('ui catch error!!!')
         print(err)
     finally:
         # 系统exit()方法确保应用程序干净的退出
