@@ -34,6 +34,7 @@ class WorkerCustCtrl(QObject):
     finish_singel = Signal()
     statusBar_singel = Signal(str)
     mouse_singel = Signal(int, int)
+    rgb_singel = Signal(int, int, int)
 
     def __init__(self):
         super(WorkerCustCtrl, self).__init__()
@@ -95,7 +96,9 @@ class WorkerCustCtrl(QObject):
         while True:
             x, y = pyautogui.position()
             self.mouse_singel.emit(x, y)
-            QThread.usleep(100000)
+            r, g, b = pyautogui.pixel(x, y)
+            self.rgb_singel.emit(r, g, b)
+            QThread.usleep(10000)
             # positionStr = 'X: ' + str(x).rjust(4) + 'Y: ' + str(y).rjust(4)
 
 
