@@ -63,18 +63,45 @@ class WorkerOtherPayables(QObject):
     def __del__(self):
         print('delete WorkerOtherPayables')
 
-    def set_parameter(self, centers, duration, job, subject, save_path):
-        self.centers = centers
-        self.duration = duration
-        self.job = job
-        self.subject = subject
-        self.save_path = save_path
+    # def set_parameter(self, centers, duration, job, subjects, save_path):
+    def set_parameter(self, *args, ** kwargs):
+        self.centers = kwargs.get('centers')
+        print(self.centers)
+        self.duration = kwargs.get('duration')
+        print(self.duration)
+        self.job = kwargs.get('job')
+        print(self.job)
+        self.subjects = kwargs.get('subjects')
+        print(self.subjects)
+        self.save_path = kwargs.get('save_path')
+        print(self.save_path)
+
+    def wait_pic(self, pic, *args, ** kwargs):
+        pci_location = None
+        while (pci_location == None):
+            pci_location = pyautogui.locateCenterOnScreen(
+                    pic, region=(0, 0, 1000, 800))
+            #pci_location = pyautogui.locateOnScreen(
+            #        pic, confidence=0.9, region=(0, 0, 1000, 800))
+            #print(pci_location)
+            if pci_location:
+                break
+            else:
+                tip = kwargs.get('tip')
+                if tip == False:
+                    pass
+                else:
+                    pyautogui.alert(text=r'未找到'+str(pic)+'的坐标', title='未找到坐标', button='OK')
+                time.sleep(0.5)
+
+        return pci_location
 
     def merge(self):
         file_path = os.path.join(self.save_path, 'download')
         dst_name = os.path.join(self.save_path, 'export')
         dst_name = os.path.join(dst_name, '%s-%s%s-%s%s.xlsx' % (self.job, self.duration[0], self.duration[1].zfill(2), self.duration[2], self.duration[3].zfill(2)))
-
+        print(file_path)
+        print(dst_name)
         filelist = []
 
         for root, dirs, files in os.walk(file_path, topdown=False):
@@ -82,7 +109,7 @@ class WorkerOtherPayables(QObject):
                 str = os.path.join(root, name)
                 if str.split('.')[-1] == 'xls':
                     filelist.append(str)
-        # print(filelist)
+        print(filelist)
 
         dfs = []
         for file in filelist:
@@ -106,15 +133,24 @@ class WorkerOtherPayables(QObject):
 
     def login(self):
         # 0. 显示桌面 （1587, 888）
-        pyautogui.moveTo(1587, 888)
-        pyautogui.click()
+        #pyautogui.moveTo(1592, 880)
+        #pyautogui.click()
+        #pyautogui.hotkey('win', 'd')
+        #print('显示桌面')
+        #time.sleep(1)
         # 1. 打开Genero Desktop Client 软件（112, 574）
-        pyautogui.moveTo(112, 574)
-        pyautogui.doubleClick(duration=1)
+        #pyautogui.moveTo(112, 574)
+        #pyautogui.doubleClick(duration=1)
+        os.system(r'"C:\Program Files\FourJs\gdc\bin\gdc.exe" -Da')
+        time.sleep(0.5)
+        #print('打开软件')
+        # 查看软件是否打开
+        position = self.wait_pic('datas/picture/GeneroDeskTop.png')
         # 2. 双击用户（624, 350）
-        pyautogui.moveTo(500, 285)
-        pyautogui.doubleClick(duration=1)
+        pyautogui.moveTo(position[0], position[1])
+        pyautogui.doubleClick()
         # 3. 输入账号（540, 512）
+        time.sleep(0.5)
         #pyautogui.moveTo(540, 512)
         #pyautogui.click()
         pyautogui.write('G190513')
@@ -127,10 +163,13 @@ class WorkerOtherPayables(QObject):
         # pyautogui.moveTo(483, 580)
         # pyautogui.click(duration=1)
         pyautogui.press('ENTER')
-        time.sleep(1)
+        #time.sleep(1)
         pass
 
     def select_center(self, center):
+        # 查看软件是否打开
+        #self.wait_pic('datas/picture/select_center.png', tip=False)
+        time.sleep(1)
         # print(center)
         # # 1. 选择账套(营运中心) 点击查询放大镜(1218, 558)
         # pyautogui.click(1218, 558, duration=1)
@@ -145,14 +184,16 @@ class WorkerOtherPayables(QObject):
         #pyautogui.dragTo(920, 635, 0.2, button='left')
         # 2. 输入营运中心
         pyautogui.write(center[1][2])
-        time.sleep(0.3)
+        time.sleep(0.5)
         # 3. 点击确定(1200, 460)
         pyautogui.press('ENTER')
         # pyautogui.moveTo(1200, 460)
         # pyautogui.click(duration=1)
         pass
 
-    def input_job(self):
+    def input_job(self):      
+        # 查看是否找到输入作业页面
+        #self.wait_pic('datas/picture/input_job.png')
         # 1. 输入作业，cglq307(490, 145)
         pyautogui.moveTo(490, 145)
         pyautogui.click()
@@ -163,12 +204,13 @@ class WorkerOtherPayables(QObject):
         pyautogui.press('ENTER')
         pass
 
-    def filter(self):  # 4. 筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
+    def filter_duration(self):  # 4. 筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
         # 1. 点击年开始(100, 150)->(130, 150)
-        pyautogui.moveTo(100, 155)
-        pyautogui.click(duration=1)
-        #pyautogui.press('tab')
-        pyautogui.hotkey('ctrl', 'a')
+        #pyautogui.moveTo(100, 155)
+        #pyautogui.click(duration=1)
+        #pyautogui.hotkey('ctrl', 'a')
+        time.sleep(1)
+        pyautogui.press('tab')
         # pyautogui.moveTo(100, 150)
         # pyautogui.dragTo(130, 150, 0.2, button='left')
         # 2. 输入年开始
@@ -177,8 +219,8 @@ class WorkerOtherPayables(QObject):
         # 3. 点击月开始(220, 150)->(250, 150)
         #pyautogui.moveTo(220, 155)
         #pyautogui.click(duration=0.1)
+        #pyautogui.hotkey('ctrl', 'a')
         pyautogui.press('tab')
-        pyautogui.hotkey('ctrl', 'a')
         # pyautogui.dragTo(250, 150, 0.2, button='left')
         # 4. 输入月开始
         pyautogui.write(self.duration[1])
@@ -186,8 +228,8 @@ class WorkerOtherPayables(QObject):
         # 5. 点击年结束(100, 180)->(130, 180)
         #pyautogui.moveTo(100, 180)
         #pyautogui.click(duration=0.1)
+        #pyautogui.hotkey('ctrl', 'a')
         pyautogui.press('tab')
-        pyautogui.hotkey('ctrl', 'a')
         # pyautogui.dragTo(130, 180, 0.2, button='left')
         # 6. 输入年结束
         pyautogui.write(self.duration[2])
@@ -195,31 +237,36 @@ class WorkerOtherPayables(QObject):
         # 7. 点击月结束(220, 180)->(250, 180)
         #pyautogui.moveTo(220, 180)
         #pyautogui.click(duration=0.1)
+        #pyautogui.hotkey('ctrl', 'a')
         pyautogui.press('tab')
-        pyautogui.hotkey('ctrl', 'a')
         # pyautogui.dragTo(250, 180, 0.2, button='left')
         # 8. 输入月结束
         pyautogui.write(self.duration[3])
         # print(self.duration[3], end='  ')
+
+    def filter_subject(self, subject):  # 4. 筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
         # 9. 点击科目(30, 240)
         pyautogui.moveTo(30, 240)
-        pyautogui.click(duration=0.1)
+        pyautogui.click(duration=0.5)
         # 10. 输入科目编号（1221*，2241*）
-        pyautogui.write(self.subject)
-        # print(self.subject)
+        pyautogui.write(subject)
+        print(subject)
         # 11. 点击确定(1500, 115)
         pyautogui.hotkey('ctrl', 'enter')
         # pyautogui.moveTo(1500, 115)
         # pyautogui.click(duration=8)
-        time.sleep(16)
+        # time.sleep(16)
+        # 查看是否查询完成
+        self.wait_pic('datas/picture/export.png', tip=False)
         pass
 
     def export(self, center):
         # 1. 点击汇出execl(330, 75)
         pyautogui.moveTo(330, 75)
         pyautogui.click(duration=1)
-        time.sleep(1)
-
+        #time.sleep(1)
+        # 查看是否打开下载页面
+        self.wait_pic('datas/picture/download.png', tip=False)   
         # 2. 更改文件名(添加 法人主体(营运中心)-默认) (800, 380), ('home')
         pyperclip.copy(str(center[0]))
         pyautogui.moveTo(800, 380)
@@ -257,17 +304,24 @@ class WorkerOtherPayables(QObject):
         pyautogui.press('enter')
         pass
 
-    def reback_center(self, center): # 1. 回到选择账套(营运中心)界面
+    def reback_filter(self): # 1. 回到过滤页面
         # 1. 关闭下载页面 (1133, 216)
         pyautogui.moveTo(1133, 216)
         pyautogui.click(duration=1)
         # 2. 最小化网页 (1500, 15)
         pyautogui.moveTo(1500, 15)
         pyautogui.click(duration=1)
-        # 3. 关闭查询页面 (1580, 8)
+
+    def click_query(self):
+        # 3. 点击查询按钮 (408, 63)
+        pyautogui.moveTo(408, 63)
+        pyautogui.click(duration=1)
+
+    def reback_center(self, center): # 1. 回到选择账套(营运中心)界面
+        # 1. 关闭查询页面 (1580, 8)
         pyautogui.moveTo(1580, 8)
         pyautogui.click(duration=1)
-        # 4. 点击更改营运中心 (970, 143)
+        # 2. 点击更改营运中心 (970, 143)
         pyautogui.moveTo(970, 143)
         pyautogui.click(duration=1)
 
@@ -296,12 +350,20 @@ class WorkerOtherPayables(QObject):
                 self.message_singel.emit('正在下载%s...\r\n' % center[0])
                 # 3. 输入作业，cglq307, 点击确定
                 self.input_job()
-                # 4. 点击查询，筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
-                self.filter()
-                # 5. 导出/汇出excel
-                # 6. 新建营运中心文件夹，保存、更改文件名(添加 法人主体(营运中心)-默认)
-                self.export(center)
-                # 7. 回到选择账套(营运中心)界面
+                # 4. 筛选条件(期间(年、月、年、月)
+                self.filter_duration()
+                for subject in self.subjects:
+                    # 4. 输入科目, 点击确定筛选
+                    self.filter_subject(subject)
+                    # 5. 导出/汇出excel
+                    # 6. 新建营运中心文件夹，保存、更改文件名(添加 法人主体(营运中心)-默认)
+                    self.export(center)
+                    # 7. 回到过滤页面
+                    self.reback_filter()                   
+                    # 8. 点击查询按钮
+                    if subject != self.subjects[-1]:
+                        self.click_query()
+                # 8. 回到选择账套(营运中心)界面
                 self.reback_center(center)
 
             # 8. 最后一列添加‘法人主体’， 合并文件名为‘科目-期间’
@@ -330,16 +392,21 @@ if __name__ == '__main__':
                 conf.get('payables', 'end_year'),
                 conf.get('payables', 'end_month'),
                 ]
-    subject = conf.get('payables', 'subject')
+    subjects = conf.get('payables', 'subject').split(',')
+    print(subjects)
     save_path = conf.get('payables', 'save_path')
     job = conf.get('payables', 'job')
-    worker_other_payables.set_parameter(centers, duration, job, subject, save_path)
+    worker_other_payables.set_parameter(centers=centers,
+                                        duration=duration,
+                                        job=job,
+                                        subjects=subjects,
+                                        save_path=save_path)
     #worker_other_payables.download()
 
     worker_other_payables.login()
     center = centers.popitem()
-    worker_other_payables.select_center(center)
-    worker_other_payables.input_job()
-    #worker_other_payables.filter()
+    # worker_other_payables.select_center(center)
+    # worker_other_payables.input_job()
+    # worker_other_payables.filter()
     #worker_other_payables.export(center)
     #worker_other_payables.merge()

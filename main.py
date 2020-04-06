@@ -23,9 +23,11 @@ from custom_control import *
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 
-logging.basicConfig(level=logging.DEBUG,  filename='out.log',
-                    datefmt='%Y/%m/%d %H:%M:%S',
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename='out.log',
+    datefmt='%Y/%m/%d %H:%M:%S',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
     def initUI(self):
         self.setupUi(self)
+
         # payables
         self.download_payables_pushButton.clicked.connect(self.download_payables)
 
@@ -62,14 +65,22 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
         self.s_year_lineEdit.editingFinished.connect(self.s_year_editingFinished)
         self.s_month_lineEdit.editingFinished.connect(self.s_month_editingFinished)
-        self.e_year_lineEdit.editingFinished.connect(self.e_year_editingFinished)
+        self.e_year_lineEdit.editingFinished.connect( self.e_year_editingFinished)
         self.e_month_lineEdit.editingFinished.connect(self.e_month_editingFinished)
         self.subject_lineEdit.editingFinished.connect(self.subject_editingFinished)
 
         self.save_path_pushButton.clicked.connect(self.OpenFileDialog)
 
+        self.login_payables_pushButton.clicked.connect(self.login_payables)
+        self.filter_payables_pushButton.clicked.connect(self.filter_payables)
+        self.export_payables_pushButton.clicked.connect(self.export_payables)
+        self.merge_payables_pushButton.clicked.connect(self.merge_payables)
+
         # internal_orders
         self.adjust_pushButton.clicked.connect(self.inter_order_adjust)
+
+        # test
+        self.pushButton.clicked.connect(self.test)
 
     def configure_init(self):
         self.conf = configparser.ConfigParser()
@@ -112,19 +123,24 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.worker_other_payables = WorkerOtherPayables()
         self.worker_other_payables.message_singel.connect(self.message_singel)
         self.worker_other_payables.finish_singel.connect(self.finish_singel)
-        self.worker_other_payables.statusBar_singel.connect(self.statusBar_singel)
+        self.worker_other_payables.statusBar_singel.connect(
+            self.statusBar_singel)
         self.worker_other_payables.moveToThread(self.thread_other_payables)
-        self.thread_other_payables.started.connect(self.worker_other_payables.download)
+        self.thread_other_payables.started.connect(
+            self.worker_other_payables.download)
         # self.thread_other_payables.finished.connect(self.finish_singel)
 
     def inner_order_init(self):
         self.thread_inter_orders = QThread()
         self.worker_inter_orders = WorkerInterOrders()
         self.worker_inter_orders.message_singel.connect(self.message_singel)
-        self.worker_inter_orders.statusBar_singel.connect(self.statusBar_singel)
-        self.worker_inter_orders.finish_singel.connect(self.inter_order_finish_singel)
+        self.worker_inter_orders.statusBar_singel.connect(
+            self.statusBar_singel)
+        self.worker_inter_orders.finish_singel.connect(
+            self.inter_order_finish_singel)
         self.worker_inter_orders.moveToThread(self.thread_inter_orders)
-        self.thread_inter_orders.started.connect(self.worker_inter_orders.filter)
+        self.thread_inter_orders.started.connect(
+            self.worker_inter_orders.filter)
 
     def cust_ctrl_init(self):
         self.thread_cust_ctrl = QThread()
@@ -138,9 +154,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         x, y = self.worker_cust_ctrl.get_size()
         self.size_label.setText("{}*{}".format(x, y))
 
-    def download_payables(self):
-        self.download_payables_pushButton.setEnabled(False)
-        self.statusBar_singel('开始下载...')
+    def set_parameter_payables(self):
         center = self.conf.items("center")
         centers = {position[0]: position[1].split(',') for position in center}
         # print(centers)
@@ -153,14 +167,23 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
         job = self.job_lineEdit.text().strip()
 
-        subject = self.subject_lineEdit.text().strip()
+        subjects = self.subject_lineEdit.text().strip().split(',')
 
         save_path = self.save_path_pushButton.text()
         # print(save_path)
         logger.debug(save_path)
 
-        self.worker_other_payables.set_parameter(centers, duration, job, subject, save_path)
+        # self.worker_other_payables.set_parameter(centers, duration, job, subject, save_path)
+        self.worker_other_payables.set_parameter(centers=centers,
+                                                 duration=duration,
+                                                 job=job,
+                                                 subjects=subjects,
+                                                 save_path=save_path)
 
+    def download_payables(self):
+        self.download_payables_pushButton.setEnabled(False)
+        self.statusBar_singel('开始下载...')
+        self.set_parameter_payables()
         self.thread_other_payables.start()
 
     def s_year_editingFinished(self):
@@ -190,11 +213,15 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
     def subject_editingFinished(self):
         # print(self.subject_lineEdit.text())
-        self.conf.set('payables', 'subject', self.subject_lineEdit.text().strip())
+        self.conf.set(
+            'payables',
+            'subject',
+            self.subject_lineEdit.text().strip())
         self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
 
     def OpenFileDialog(self):
-        path = QFileDialog.getExistingDirectory(self, '选择文件夹', self.save_path_pushButton.text())
+        path = QFileDialog.getExistingDirectory(
+            self, '选择文件夹', self.save_path_pushButton.text())
         # print(path)
         if os.path.isdir(path):
             self.save_path_pushButton.setText(path)
@@ -202,10 +229,26 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
             self.conf.set('payables', 'save_path', path)
             self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
 
+    def login_payables(self):
+        self.set_parameter_payables()
+        self.worker_other_payables.login()
+
+    def filter_payables(self):
+        pass
+
+    def export_payables(self):
+        pass
+
+    def merge_payables(self):
+        self.set_parameter_payables()
+        self.worker_other_payables.merge()
+        self.message_singel('合并完成。')
+        self.statusBar_singel('合并完成。')
+
     def inter_order_adjust(self):
         self.adjust_pushButton.setEnabled(False)
         self.statusBar_singel('开始调整...')
-        path = os.path.join(os.getcwd(), 'datas\original_data')
+        path = os.path.join(os.getcwd(), r'datas\original_data')
         self.worker_inter_orders.set_parameter(path)
         self.thread_inter_orders.start()
 
@@ -223,6 +266,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.thread_other_payables.quit()
         self.download_payables_pushButton.setEnabled(True)
         self.statusBar_singel('下载完成。')
+        QMessageBox.about(self, "提示", "下载完成")
         # print('finished')
 
     def inter_order_finish_singel(self):
@@ -231,9 +275,11 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.statusBar_singel('调整完成。')
 
     def mouse_singel(self, x, y):
-        self.x_label.setText('X: ' + str(x))
-        self.y_label.setText('Y: ' + str(y))
+        self.x_label.setText('X: ' + str(x).rjust(4))
+        self.y_label.setText('Y: ' + str(y).rjust(4))
 
+    def test(self):
+        pass
 
 if __name__ == '__main__':
     try:

@@ -53,7 +53,7 @@ class WorkerCustCtrl(QObject):
         # position_list = [position[1].split(',') for position in center]
         # self.centers = dict(zip(center_list, position_list))
         self.controls = {ctrl[0]: ctrl[1].split(',') for ctrl in control}
-        print(self.controls)
+        # print(self.controls)
 
     def set_parameter(self):
         pass
@@ -98,8 +98,35 @@ class WorkerCustCtrl(QObject):
             QThread.usleep(100000)
             # positionStr = 'X: ' + str(x).rjust(4) + 'Y: ' + str(y).rjust(4)
 
+    def get_pic_center(self):
+        pass
 
 if __name__ == '__main__':
     worker_cust_ctrl = WorkerCustCtrl()
     worker_cust_ctrl.set_parameter()
-    worker_cust_ctrl.start()
+    # worker_cust_ctrl.start()
+    button7location = pyautogui.locateOnScreen('datas/picture/button7.png')
+    print(button7location)
+    button7location = pyautogui.locateCenterOnScreen('datas/picture/button7.png')
+    print(button7location)
+
+    button7greylocation = None
+    while(button7greylocation == None):
+        button7greylocation = pyautogui.locateCenterOnScreen( 'datas/picture/button7grey.png')
+        # button7greylocation = pyautogui.locateCenterOnScreen(
+        #                 'datas/picture/button7grey.png', region=(190, 250, 300, 200))
+        print(button7greylocation)
+        time.sleep(3)
+
+    # try:
+    #     while True:
+    #         x, y = pyautogui.position()
+    #         positionStr = 'X: ' + str(x).rjust(4) + ' Y: ' + str(y).rjust(4)
+    #         pixelColor = pyautogui.screenshot().getpixel((x, y))
+    #         positionStr += 'RGB: (' + str(pixelColor[0]).rjust(3)
+    #         positionStr += ', ' + str(pixelColor[1]).rjust(3)
+    #         positionStr += ', ' + str(pixelColor[2]).rjust(3) + ')'
+    #         print(positionStr, end='')
+    #         print('\b' * len(positionStr), end='')
+    # except KeyboardInterrupt:
+    #     print('\nDone.')
