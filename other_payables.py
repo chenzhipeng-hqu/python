@@ -52,7 +52,7 @@ class ExcelHandler(xml.sax.ContentHandler):
 
 
 class WorkerOtherPayables(QObject):
-    message_singel = Signal(str)
+    #message_singel = Signal(str)
     finish_singel = Signal()
     statusBar_singel = Signal(str)
 
@@ -129,7 +129,7 @@ class WorkerOtherPayables(QObject):
             # df.to_excel(r'%s/%s.xlsx' % (file_path, dst_name), index=False)
             df.to_excel(dst_name, index=False)
         else:
-            self.message_singel.emit('未发现合并需要的文件.\r\n')
+            self.statusBar_singel.emit('未发现合并需要的文件.\r\n')
 
     def login(self):
         # 0. 显示桌面 （1587, 888）
@@ -183,7 +183,7 @@ class WorkerOtherPayables(QObject):
         #pyautogui.moveTo(1080, 635)
         #pyautogui.dragTo(920, 635, 0.2, button='left')
         # 2. 输入营运中心
-        pyautogui.write(center[1][2])
+        pyautogui.write(center)
         time.sleep(0.5)
         # 3. 点击确定(1200, 460)
         pyautogui.press('ENTER')
@@ -317,7 +317,7 @@ class WorkerOtherPayables(QObject):
         pyautogui.moveTo(408, 63)
         pyautogui.click(duration=1)
 
-    def reback_center(self, center): # 1. 回到选择账套(营运中心)界面
+    def reback_center(self): # 1. 回到选择账套(营运中心)界面
         # 1. 关闭查询页面 (1580, 8)
         pyautogui.moveTo(1580, 8)
         pyautogui.click(duration=1)
@@ -341,13 +341,13 @@ class WorkerOtherPayables(QObject):
         try:
             # 1. 打开软件，登入账号
             self.login()
-            self.message_singel.emit('开始下载.\r\n')
+            self.statusBar_singel.emit('开始下载.\r\n')
 
             for center in self.centers.items():
                 # 2. 选择营运中心
-                self.select_center(center)
+                self.select_center(center[1][0])
                 # print(center[0])
-                self.message_singel.emit('正在下载%s...\r\n' % center[0])
+                self.statusBar_singel.emit('正在下载%s...\r\n' % center[0])
                 # 3. 输入作业，cglq307, 点击确定
                 self.input_job()
                 # 4. 筛选条件(期间(年、月、年、月)
@@ -364,12 +364,12 @@ class WorkerOtherPayables(QObject):
                     if subject != self.subjects[-1]:
                         self.click_query()
                 # 8. 回到选择账套(营运中心)界面
-                self.reback_center(center)
+                self.reback_center()
 
             # 8. 最后一列添加‘法人主体’， 合并文件名为‘科目-期间’
             self.merge()
             # print('download finished')
-            self.message_singel.emit('下载完成.\r\n')
+            self.statusBar_singel.emit('下载完成.\r\n')
             self.finish_singel.emit()
         except Exception as err:
             print('payables catch error!!!')
@@ -405,7 +405,7 @@ if __name__ == '__main__':
 
     worker_other_payables.login()
     center = centers.popitem()
-    # worker_other_payables.select_center(center)
+    # worker_other_payables.select_center(center[1][0])
     # worker_other_payables.input_job()
     # worker_other_payables.filter()
     #worker_other_payables.export(center)

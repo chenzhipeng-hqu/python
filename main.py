@@ -47,7 +47,8 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.setupUi(self)
 
         # payables
-        self.download_payables_pushButton.clicked.connect(self.download_payables)
+        self.download_payables_pushButton.clicked.connect(
+            self.download_payables)
 
         # 自定义文本验证器
         validator = QRegExpValidator(self)
@@ -63,11 +64,16 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.s_month_lineEdit.setValidator(validator)
         self.e_month_lineEdit.setValidator(validator)
 
-        self.s_year_lineEdit.editingFinished.connect(self.s_year_editingFinished)
-        self.s_month_lineEdit.editingFinished.connect(self.s_month_editingFinished)
-        self.e_year_lineEdit.editingFinished.connect( self.e_year_editingFinished)
-        self.e_month_lineEdit.editingFinished.connect(self.e_month_editingFinished)
-        self.subject_lineEdit.editingFinished.connect(self.subject_editingFinished)
+        self.s_year_lineEdit.editingFinished.connect(
+            self.s_year_editingFinished)
+        self.s_month_lineEdit.editingFinished.connect(
+            self.s_month_editingFinished)
+        self.e_year_lineEdit.editingFinished.connect(
+            self.e_year_editingFinished)
+        self.e_month_lineEdit.editingFinished.connect(
+            self.e_month_editingFinished)
+        self.subject_lineEdit.editingFinished.connect(
+            self.subject_editingFinished)
 
         self.save_path_pushButton.clicked.connect(self.OpenFileDialog)
 
@@ -118,36 +124,51 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         else:
             self.save_path_pushButton.setText(os.getcwd())
 
+        center = self.conf.items("center")
+        self.centers = {position[0]: position[1].split(',') for position in center}
+        print(self.centers)
+
+        __sortingEnabled = self.treeWidget.isSortingEnabled()
+        self.treeWidget.setSortingEnabled(False)
+        # for row in range(0, 6):
+        #     item = QTreeWidgetItem(self.treeWidget)
+        #     for col in range(0, 4):
+        #         item.setCheckState(col, Qt.Checked);
+        #         item.setText(col, QCoreApplication.translate("MainWindow", u'啊', None))
+        for (cnt, center) in enumerate(self.centers.items()):
+            #print(cnt, center)
+            if cnt % 4 == 0:
+                item = QTreeWidgetItem(self.treeWidget)
+            item.setCheckState(cnt % 4, Qt.Checked)
+            item.setText(cnt % 4, QCoreApplication.translate("MainWindow", center[0], None))
+        self.treeWidget.itemChanged.connect(self.center_select)
+        self.treeWidget.setSortingEnabled(__sortingEnabled)
+
     def payables_init(self):
         self.thread_other_payables = QThread()
         self.worker_other_payables = WorkerOtherPayables()
-        self.worker_other_payables.message_singel.connect(self.message_singel)
+        # self.worker_other_payables.message_singel.connect(self.message_singel)
         self.worker_other_payables.finish_singel.connect(self.finish_singel)
-        self.worker_other_payables.statusBar_singel.connect(
-            self.statusBar_singel)
+        self.worker_other_payables.statusBar_singel.connect(self.statusBar_singel)
         self.worker_other_payables.moveToThread(self.thread_other_payables)
-        self.thread_other_payables.started.connect(
-            self.worker_other_payables.download)
+        self.thread_other_payables.started.connect(self.worker_other_payables.download)
         # self.thread_other_payables.finished.connect(self.finish_singel)
 
     def inner_order_init(self):
         self.thread_inter_orders = QThread()
         self.worker_inter_orders = WorkerInterOrders()
-        self.worker_inter_orders.message_singel.connect(self.message_singel)
-        self.worker_inter_orders.statusBar_singel.connect(
-            self.statusBar_singel)
-        self.worker_inter_orders.finish_singel.connect(
-            self.inter_order_finish_singel)
+        # self.worker_inter_orders.message_singel.connect(self.message_singel)
+        self.worker_inter_orders.statusBar_singel.connect(self.statusBar_singel)
+        self.worker_inter_orders.finish_singel.connect(self.inter_order_finish_singel)
         self.worker_inter_orders.moveToThread(self.thread_inter_orders)
-        self.thread_inter_orders.started.connect(
-            self.worker_inter_orders.filter)
+        self.thread_inter_orders.started.connect(self.worker_inter_orders.filter)
 
     def cust_ctrl_init(self):
         self.thread_cust_ctrl = QThread()
         self.worker_cust_ctrl = WorkerCustCtrl()
         self.worker_cust_ctrl.moveToThread(self.thread_cust_ctrl)
         self.worker_cust_ctrl.mouse_singel.connect(self.mouse_singel)
-        self.worker_cust_ctrl.message_singel.connect(self.message_singel)
+        # self.worker_cust_ctrl.message_singel.connect(self.message_singel)
         self.thread_cust_ctrl.started.connect(self.worker_cust_ctrl.run)
         self.thread_cust_ctrl.start()
 
@@ -155,10 +176,8 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.size_label.setText("{}*{}".format(x, y))
 
     def set_parameter_payables(self):
-        center = self.conf.items("center")
-        centers = {position[0]: position[1].split(',') for position in center}
         # print(centers)
-        logger.debug(centers)
+        logger.debug(self.centers)
 
         duration = [self.s_year_lineEdit.text(), self.s_month_lineEdit.text(),
                     self.e_year_lineEdit.text(), self.e_month_lineEdit.text()]
@@ -174,7 +193,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         logger.debug(save_path)
 
         # self.worker_other_payables.set_parameter(centers, duration, job, subject, save_path)
-        self.worker_other_payables.set_parameter(centers=centers,
+        self.worker_other_payables.set_parameter(centers=self.centers,
                                                  duration=duration,
                                                  job=job,
                                                  subjects=subjects,
@@ -245,6 +264,22 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.message_singel('合并完成。')
         self.statusBar_singel('合并完成。')
 
+    def center_select(self, item, column):
+        source = self.sender()
+        if item.checkState(column) == Qt.Checked:
+            print("checked", item.text(column))
+            if self.conf.has_option('center', str(item.text(column))):
+                center_code = self.conf.get('center', item.text(column))
+                self.centers[item.text(column)] = center_code
+                print(self.centers)
+
+        if item.checkState(column) == Qt.Unchecked:
+            print("unchecked", item.text(column))
+            if self.conf.has_option('center', str(item.text(column))):
+                center_code = self.conf.get('center', item.text(column))
+                self.centers.pop(str(item.text(column)))
+                print(self.centers)
+
     def inter_order_adjust(self):
         self.adjust_pushButton.setEnabled(False)
         self.statusBar_singel('开始调整...')
@@ -254,10 +289,11 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
     def message_singel(self, str):
         # 移动光标到最后的文字
-        text_cursor = self.textBrowser.textCursor()
-        text_cursor.movePosition(text_cursor.End)
-        self.textBrowser.setTextCursor(text_cursor)
-        self.textBrowser.insertPlainText(str)
+        #text_cursor = self.textBrowser.textCursor()
+        # text_cursor.movePosition(text_cursor.End)
+        # self.textBrowser.setTextCursor(text_cursor)
+        # self.textBrowser.insertPlainText(str)
+        pass
 
     def statusBar_singel(self, msg):
         self.statusBar().showMessage(msg)
@@ -280,6 +316,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
     def test(self):
         pass
+
 
 if __name__ == '__main__':
     try:

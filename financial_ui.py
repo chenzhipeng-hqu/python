@@ -40,6 +40,38 @@ class Ui_MainWindow(object):
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
         self.gridLayout.setContentsMargins(1, 5, 5, 1)
+        self.size_label = QLabel(self.centralwidget)
+        self.size_label.setObjectName(u"size_label")
+        self.size_label.setMaximumSize(QSize(200, 16777215))
+        self.size_label.setLayoutDirection(Qt.LeftToRight)
+        self.size_label.setAlignment(Qt.AlignBottom|Qt.AlignHCenter)
+
+        self.gridLayout.addWidget(self.size_label, 3, 1, 1, 1)
+
+        self.mouse_horizontalLayout = QHBoxLayout()
+        self.mouse_horizontalLayout.setSpacing(10)
+        self.mouse_horizontalLayout.setObjectName(u"mouse_horizontalLayout")
+        self.mouse_horizontalLayout.setContentsMargins(10, 10, 10, 10)
+        self.x_label = QLabel(self.centralwidget)
+        self.x_label.setObjectName(u"x_label")
+        self.x_label.setMaximumSize(QSize(100, 16777215))
+        self.x_label.setLayoutDirection(Qt.LeftToRight)
+        self.x_label.setAlignment(Qt.AlignCenter)
+
+        self.mouse_horizontalLayout.addWidget(self.x_label)
+
+        self.y_label = QLabel(self.centralwidget)
+        self.y_label.setObjectName(u"y_label")
+        self.y_label.setMaximumSize(QSize(100, 16777215))
+        self.y_label.setAlignment(Qt.AlignCenter)
+
+        self.mouse_horizontalLayout.addWidget(self.y_label)
+
+        self.mouse_horizontalLayout.setStretch(0, 10)
+        self.mouse_horizontalLayout.setStretch(1, 10)
+
+        self.gridLayout.addLayout(self.mouse_horizontalLayout, 4, 1, 1, 1)
+
         self.tabWidget = QTabWidget(self.centralwidget)
         self.tabWidget.setObjectName(u"tabWidget")
         sizePolicy1 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
@@ -338,17 +370,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
 
-        self.textBrowser = QTextBrowser(self.centralwidget)
-        self.textBrowser.setObjectName(u"textBrowser")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.textBrowser.sizePolicy().hasHeightForWidth())
-        self.textBrowser.setSizePolicy(sizePolicy5)
-        self.textBrowser.setMaximumSize(QSize(500, 300))
-
-        self.gridLayout.addWidget(self.textBrowser, 1, 0, 3, 1)
-
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(10)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -356,6 +377,9 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(10, 10, 10, 10)
         self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setObjectName(u"pushButton")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
         self.pushButton.setSizePolicy(sizePolicy5)
         self.pushButton.setMaximumSize(QSize(100, 30))
@@ -363,52 +387,15 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.pushButton)
 
 
-        self.gridLayout.addLayout(self.verticalLayout, 1, 1, 1, 1)
+        self.gridLayout.addLayout(self.verticalLayout, 2, 1, 1, 1)
 
-        self.mouse_horizontalLayout = QHBoxLayout()
-        self.mouse_horizontalLayout.setSpacing(10)
-        self.mouse_horizontalLayout.setObjectName(u"mouse_horizontalLayout")
-        self.mouse_horizontalLayout.setContentsMargins(10, 10, 10, 10)
-        self.x_label = QLabel(self.centralwidget)
-        self.x_label.setObjectName(u"x_label")
-        self.x_label.setMaximumSize(QSize(100, 16777215))
-        self.x_label.setLayoutDirection(Qt.LeftToRight)
-        self.x_label.setAlignment(Qt.AlignCenter)
+        self.treeWidget = QTreeWidget(self.centralwidget)
+        self.treeWidget.setObjectName(u"treeWidget")
 
-        self.mouse_horizontalLayout.addWidget(self.x_label)
-
-        self.y_label = QLabel(self.centralwidget)
-        self.y_label.setObjectName(u"y_label")
-        self.y_label.setMaximumSize(QSize(100, 16777215))
-        self.y_label.setAlignment(Qt.AlignCenter)
-
-        self.mouse_horizontalLayout.addWidget(self.y_label)
-
-        self.mouse_horizontalLayout.setStretch(0, 10)
-        self.mouse_horizontalLayout.setStretch(1, 10)
-
-        self.gridLayout.addLayout(self.mouse_horizontalLayout, 3, 1, 1, 1)
-
-        self.size_label = QLabel(self.centralwidget)
-        self.size_label.setObjectName(u"size_label")
-        self.size_label.setMaximumSize(QSize(200, 16777215))
-        self.size_label.setLayoutDirection(Qt.LeftToRight)
-        self.size_label.setAlignment(Qt.AlignBottom|Qt.AlignHCenter)
-
-        self.gridLayout.addWidget(self.size_label, 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.treeWidget, 2, 0, 3, 1)
 
         self.gridLayout.setRowStretch(0, 2)
-        self.gridLayout.setRowStretch(1, 1)
-        self.gridLayout.setRowStretch(2, 1)
-        self.gridLayout.setRowStretch(3, 1)
         self.gridLayout.setColumnStretch(0, 5)
-        self.gridLayout.setColumnStretch(1, 1)
-        self.gridLayout.setColumnMinimumWidth(0, 5)
-        self.gridLayout.setColumnMinimumWidth(1, 1)
-        self.gridLayout.setRowMinimumHeight(0, 2)
-        self.gridLayout.setRowMinimumHeight(1, 1)
-        self.gridLayout.setRowMinimumHeight(2, 1)
-        self.gridLayout.setRowMinimumHeight(3, 1)
 
         self.horizontalLayout.addLayout(self.gridLayout)
 
@@ -444,6 +431,9 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.actionauthor.setText(QCoreApplication.translate("MainWindow", u"author", None))
         self.actionabout.setText(QCoreApplication.translate("MainWindow", u"about", None))
+        self.size_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
+        self.x_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
+        self.y_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
         self.subject_label.setText(QCoreApplication.translate("MainWindow", u"\u79d1\u76ee", None))
         self.s_year_lineEdit.setText(QCoreApplication.translate("MainWindow", u"2019", None))
         self.s_year_label.setText(QCoreApplication.translate("MainWindow", u"\u5e74", None))
@@ -469,16 +459,12 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.cust_ctrl_tab), QCoreApplication.translate("MainWindow", u"\u81ea\u5b9a\u4e49\u63a7\u5236", None))
         self.test_pushButton.setText(QCoreApplication.translate("MainWindow", u"\u6d4b\u8bd5", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.test_tab), QCoreApplication.translate("MainWindow", u"\u6d4b\u8bd5", None))
-        self.textBrowser.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">\u6b22\u8fce\u4f7f\u7528\u8d22\u52a1\u5c0f\u5de5\u5177</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p></body></html>", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"PushButton", None))
-        self.x_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
-        self.y_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
-        self.size_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
+        ___qtreewidgetitem = self.treeWidget.headerItem()
+        ___qtreewidgetitem.setText(3, QCoreApplication.translate("MainWindow", u"4", None));
+        ___qtreewidgetitem.setText(2, QCoreApplication.translate("MainWindow", u"3", None));
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("MainWindow", u"2", None));
+        ___qtreewidgetitem.setText(0, QCoreApplication.translate("MainWindow", u"1", None));
         self.menu.setTitle(QCoreApplication.translate("MainWindow", u"help", None))
 #if QT_CONFIG(accessibility)
         self.statusbar.setAccessibleName(QCoreApplication.translate("MainWindow", u"123", None))
