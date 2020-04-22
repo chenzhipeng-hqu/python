@@ -19,6 +19,8 @@ from PySide2.QtGui import *
 from other_payables import *
 from internal_orders import *
 from custom_control import *
+from others.merge import *
+from others.fetch import *
 
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
@@ -42,6 +44,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.payables_init()
         self.inner_order_init()
         self.cust_ctrl_init()
+        self.other_fetch_init()
 
     def initUI(self):
         self.setupUi(self)
@@ -84,6 +87,15 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
         # internal_orders
         self.adjust_pushButton.clicked.connect(self.inter_order_adjust)
+
+        # other_merge
+        self.merge_pushButton.clicked.connect(self.other_merge)
+
+        # other_fetch
+        self.fetch_pushButton.clicked.connect(self.other_fetch)
+        self.fetch_file_pushButton.clicked.connect(self.other_fetch_file_dialog)
+        self.blance_subject_lineEdit.editingFinished.connect(self.fetch_subject_editingFinished)
+        self.blance_month_lineEdit.editingFinished.connect(self.fetch_month_editingFinished)
 
         # test
         self.pushButton.clicked.connect(self.test)
@@ -144,6 +156,25 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.treeWidget.itemChanged.connect(self.center_select)
         self.treeWidget.setSortingEnabled(__sortingEnabled)
 
+        # other
+        if self.conf.has_option('other', 'other_merge_path'):
+            merge_path = self.conf.get('other', 'other_merge_path')
+            self.merge_path_pushButton.setText(merge_path)
+        else:
+            self.merge_path_pushButton.setText(os.getcwd())
+
+        if self.conf.has_option('other', 'other_fetch_file'):
+            fetch_path = self.conf.get('other', 'other_fetch_file')
+            self.fetch_file_pushButton.setText(fetch_path)
+
+        if self.conf.has_option('other', 'other_fetch_subject'):
+            subject = self.conf.get('other', 'other_fetch_subject')
+            self.blance_subject_lineEdit.setText(subject)
+
+        if self.conf.has_option('other', 'other_fetch_month'):
+            month = self.conf.get('other', 'other_fetch_month')
+            self.blance_month_lineEdit.setText(month)
+
     def payables_init(self):
         self.thread_other_payables = QThread()
         self.worker_other_payables = WorkerOtherPayables()
@@ -162,6 +193,35 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.worker_inter_orders.finish_singel.connect(self.inter_order_finish_singel)
         self.worker_inter_orders.moveToThread(self.thread_inter_orders)
         self.thread_inter_orders.started.connect(self.worker_inter_orders.filter)
+
+    def other_merge(self):
+        # self.thread_other_merge = QThread()
+        self.worker_other_merge = WorkerMerge()
+        self.worker_other_merge.statusBar_singel.connect(self.statusBar_singel)
+        # self.worker_other_merge.finish_singel.connect(self.other_merge_finish_singel)
+        # self.worker_other_merge.moveToThread(self.thread_other_merge)
+        # self.thread_other_merge.started.connect(self.worker_other_merge.)
+        self.worker_other_merge.merge('D:\CZP\python\FinancialTools\datas\merge', 'merge.xlsx')
+
+    def other_fetch_init(self):
+        self.thread_other_fetch = QThread()
+        self.worker_other_fetch = WorkerFetch()
+        self.worker_other_fetch.statusBar_singel.connect(self.statusBar_singel)
+        self.worker_other_fetch.finish_singel.connect(self.other_fetch_finish_singel)
+        self.worker_other_fetch.moveToThread(self.thread_other_fetch)
+        self.thread_other_fetch.started.connect(self.worker_other_fetch.balance_sheet_fetch)
+
+    def other_fetch(self):
+        self.fetch_pushButton.setEnabled(False)
+        subject = self.blance_subject_lineEdit.text().strip()
+        month = self.blance_month_lineEdit.text().strip()
+        src_file = self.fetch_file_pushButton.text()
+
+        self.worker_other_fetch.balance_sheet_set_parameter(\
+                        src_file=src_file,\
+                        subject=subject,\
+                        month=month)
+        self.thread_other_fetch.start()
 
     def cust_ctrl_init(self):
         self.thread_cust_ctrl = QThread()
@@ -248,6 +308,32 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
             self.conf.set('payables', 'save_path', path)
             self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
 
+    def other_fetch_file_dialog(self):
+        fname, ftype = QFileDialog.getOpenFileName(
+            self, '选择文件', self.fetch_file_pushButton.text(), 'All Files (*)')
+        print(fname)
+        if os.path.isfile(fname):
+            self.fetch_file_pushButton.setText(fname)
+            self.statusBar_singel(fname)
+            self.conf.set('other', 'other_fetch_file', fname)
+            self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def fetch_subject_editingFinished(self):
+        # print(self.subject_lineEdit.text())
+        self.conf.set(
+            'other',
+            'other_fetch_subject',
+            self.blance_subject_lineEdit.text().strip())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def fetch_month_editingFinished(self):
+        # print(self.subject_lineEdit.text())
+        self.conf.set(
+            'other',
+            'other_fetch_month',
+            self.blance_month_lineEdit.text().strip())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
     def login_payables(self):
         self.set_parameter_payables()
         self.worker_other_payables.login()
@@ -304,6 +390,10 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.statusBar_singel('下载完成。')
         QMessageBox.about(self, "提示", "下载完成")
         # print('finished')
+
+    def other_fetch_finish_singel(self):
+        self.thread_other_fetch.quit()
+        self.fetch_pushButton.setEnabled(True)
 
     def inter_order_finish_singel(self):
         self.thread_inter_orders.quit()
