@@ -90,6 +90,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
         # other_merge
         self.merge_pushButton.clicked.connect(self.other_merge)
+        self.merge_path_pushButton.clicked.connect(self.other_merge_path_dialog)
 
         # other_fetch
         self.fetch_pushButton.clicked.connect(self.other_fetch)
@@ -156,13 +157,14 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.treeWidget.itemChanged.connect(self.center_select)
         self.treeWidget.setSortingEnabled(__sortingEnabled)
 
-        # other
+        # other merge
         if self.conf.has_option('other', 'other_merge_path'):
             merge_path = self.conf.get('other', 'other_merge_path')
             self.merge_path_pushButton.setText(merge_path)
         else:
             self.merge_path_pushButton.setText(os.getcwd())
 
+        # other fetch
         if self.conf.has_option('other', 'other_fetch_file'):
             fetch_path = self.conf.get('other', 'other_fetch_file')
             self.fetch_file_pushButton.setText(fetch_path)
@@ -201,7 +203,8 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         # self.worker_other_merge.finish_singel.connect(self.other_merge_finish_singel)
         # self.worker_other_merge.moveToThread(self.thread_other_merge)
         # self.thread_other_merge.started.connect(self.worker_other_merge.)
-        self.worker_other_merge.merge('D:\CZP\python\FinancialTools\datas\merge', 'merge.xlsx')
+        path = self.merge_path_pushButton.text().strip()
+        self.worker_other_merge.merge(path, 'merge.xlsx')
 
     def other_fetch_init(self):
         self.thread_other_fetch = QThread()
@@ -306,6 +309,16 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
             self.save_path_pushButton.setText(path)
             self.statusBar_singel(path)
             self.conf.set('payables', 'save_path', path)
+            self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def other_merge_path_dialog(self):
+        path = QFileDialog.getExistingDirectory(
+            self, '选择文件夹', self.merge_path_pushButton.text())
+        # print(path)
+        if os.path.isdir(path):
+            self.merge_path_pushButton.setText(path)
+            self.statusBar_singel(path)
+            self.conf.set('other', 'other_merge_path', path)
             self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
 
     def other_fetch_file_dialog(self):

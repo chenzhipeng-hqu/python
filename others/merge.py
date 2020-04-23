@@ -50,7 +50,8 @@ class WorkerMerge(QObject):
             for name in files:
                 str = os.path.join(root, name)
                 if str.split('.')[-1] == 'xlsx' or str.split('.')[-1] == 'xls':
-                    filelist.append(str)
+                    if os.path.basename(str) != 'merge.xlsx':
+                        filelist.append(str)
         print(filelist)
 
         dfs = []
@@ -67,6 +68,7 @@ class WorkerMerge(QObject):
             # print(df.head(), df.shape)
             # df.to_excel(r'%s/%s.xlsx' % (file_path, dst_name), index=False)
             df.to_excel(dst_name, index=False)
+            self.statusBar_singel.emit('合并完成')
         else:
             self.statusBar_singel.emit('未发现合并需要的文件.\r\n')
 
