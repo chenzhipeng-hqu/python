@@ -84,9 +84,11 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.filter_payables_pushButton.clicked.connect(self.filter_payables)
         self.export_payables_pushButton.clicked.connect(self.export_payables)
         self.merge_payables_pushButton.clicked.connect(self.merge_payables)
+        self.login_payables_pushButton.setEnabled(False)
+        self.merge_payables_pushButton.setEnabled(False)
 
         # internal_orders
-        self.adjust_pushButton.clicked.connect(self.inter_order_adjust)
+        # self.adjust_pushButton.clicked.connect(self.inter_order_adjust)
 
         # other_merge
         self.merge_pushButton.clicked.connect(self.other_merge)
@@ -99,7 +101,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.blance_month_lineEdit.editingFinished.connect(self.fetch_month_editingFinished)
 
         # test
-        self.pushButton.clicked.connect(self.test)
+        # self.pushButton.clicked.connect(self.test)
 
     def configure_init(self):
         self.conf = configparser.ConfigParser()
@@ -219,6 +221,9 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         subject = self.blance_subject_lineEdit.text().strip()
         month = self.blance_month_lineEdit.text().strip()
         src_file = self.fetch_file_pushButton.text()
+        print(subject)
+        print(month)
+        print(src_file)
 
         self.worker_other_fetch.balance_sheet_set_parameter(\
                         src_file=src_file,\
@@ -379,12 +384,12 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
                 self.centers.pop(str(item.text(column)))
                 print(self.centers)
 
-    def inter_order_adjust(self):
-        self.adjust_pushButton.setEnabled(False)
-        self.statusBar_singel('开始调整...')
-        path = os.path.join(os.getcwd(), r'datas\original_data')
-        self.worker_inter_orders.set_parameter(path)
-        self.thread_inter_orders.start()
+    # def inter_order_adjust(self):
+    #     self.adjust_pushButton.setEnabled(False)
+    #     self.statusBar_singel('开始调整...')
+    #     path = os.path.join(os.getcwd(), r'datas\original_data')
+    #     self.worker_inter_orders.set_parameter(path)
+    #     self.thread_inter_orders.start()
 
     def message_singel(self, str):
         # 移动光标到最后的文字

@@ -51,7 +51,6 @@ class WorkerFetch(QObject):
 
     def balance_sheet_fetch(self):
         # print(self.src_file)
-        # print(self.dst_file)
         # print(self.subject)
         # print(self.month)
         if self.subject == '' or self.month == '':
