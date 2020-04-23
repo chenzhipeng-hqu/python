@@ -131,7 +131,6 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.worker_cust_ctrl = WorkerCustCtrl()
         self.worker_cust_ctrl.moveToThread(self.thread_cust_ctrl)
         self.worker_cust_ctrl.mouse_singel.connect(self.mouse_singel)
-        self.worker_cust_ctrl.rgb_singel.connect(self.rgb_singel)
         self.worker_cust_ctrl.message_singel.connect(self.message_singel)
         self.thread_cust_ctrl.started.connect(self.worker_cust_ctrl.run)
         self.thread_cust_ctrl.start()
@@ -234,11 +233,6 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
     def mouse_singel(self, x, y):
         self.x_label.setText('X: ' + str(x))
         self.y_label.setText('Y: ' + str(y))
-
-    def rgb_singel(self, r, g, b):
-        # self.rgb_label.setText('r:' + str(r)+', g:' + str(g)+', b:' + str(b))
-        self.rgb_label.setText('(' + str(r)+', ' + str(g)+', ' + str(b)+')')
-        pass
 
 
 if __name__ == '__main__':
