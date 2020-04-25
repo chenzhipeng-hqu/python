@@ -38,28 +38,28 @@ class Ui_MainWindow(object):
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout_8 = QGridLayout()
         self.gridLayout_8.setObjectName(u"gridLayout_8")
-        self.x_label = QLabel(self.centralwidget)
-        self.x_label.setObjectName(u"x_label")
-        self.x_label.setMaximumSize(QSize(100, 16777215))
-        self.x_label.setLayoutDirection(Qt.LeftToRight)
-        self.x_label.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_8.addWidget(self.x_label, 0, 1, 1, 1)
-
-        self.y_label = QLabel(self.centralwidget)
-        self.y_label.setObjectName(u"y_label")
-        self.y_label.setMaximumSize(QSize(100, 16777215))
-        self.y_label.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_8.addWidget(self.y_label, 0, 2, 1, 1)
-
         self.size_label = QLabel(self.centralwidget)
         self.size_label.setObjectName(u"size_label")
-        self.size_label.setMaximumSize(QSize(200, 16777215))
+        self.size_label.setMaximumSize(QSize(100, 16777215))
         self.size_label.setLayoutDirection(Qt.LeftToRight)
-        self.size_label.setAlignment(Qt.AlignBottom|Qt.AlignHCenter)
+        self.size_label.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_8.addWidget(self.size_label, 0, 0, 1, 1)
+        self.gridLayout_8.addWidget(self.size_label, 0, 1, 1, 1)
+
+        self.mouse_label = QLabel(self.centralwidget)
+        self.mouse_label.setObjectName(u"mouse_label")
+        self.mouse_label.setMaximumSize(QSize(100, 16777215))
+        self.mouse_label.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_8.addWidget(self.mouse_label, 0, 2, 1, 1)
+
+        self.label = QLabel(self.centralwidget)
+        self.label.setObjectName(u"label")
+        self.label.setMaximumSize(QSize(200, 16777215))
+        self.label.setLayoutDirection(Qt.LeftToRight)
+        self.label.setAlignment(Qt.AlignBottom|Qt.AlignHCenter)
+
+        self.gridLayout_8.addWidget(self.label, 0, 0, 1, 1)
 
         self.gridLayout_8.setColumnStretch(0, 5)
         self.gridLayout_8.setColumnStretch(1, 1)
@@ -448,9 +448,9 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.actionauthor.setText(QCoreApplication.translate("MainWindow", u"author", None))
         self.actionabout.setText(QCoreApplication.translate("MainWindow", u"about", None))
-        self.x_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
-        self.y_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
         self.size_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
+        self.mouse_label.setText(QCoreApplication.translate("MainWindow", u"0", None))
+        self.label.setText("")
         self.subject_label.setText(QCoreApplication.translate("MainWindow", u"\u79d1\u76ee", None))
         self.s_year_lineEdit.setText(QCoreApplication.translate("MainWindow", u"2019", None))
         self.s_year_label.setText(QCoreApplication.translate("MainWindow", u"\u5e74", None))
@@ -476,7 +476,7 @@ class Ui_MainWindow(object):
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("MainWindow", u"1", None));
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.payables_tab), QCoreApplication.translate("MainWindow", u"\u5e94\u6536/\u4ed8\u6b3e", None))
 #if QT_CONFIG(statustip)
-        self.merge_path_pushButton.setStatusTip(QCoreApplication.translate("MainWindow", u"\u9009\u62e9\u9700\u8981\u63d0\u53d6\u7684\u6587\u4ef6", None))
+        self.merge_path_pushButton.setStatusTip(QCoreApplication.translate("MainWindow", u"\u9009\u62e9\u9700\u8981\u5408\u5e76\u7684\u6587\u4ef6\u5939", None))
 #endif // QT_CONFIG(statustip)
         self.merge_path_pushButton.setText("")
         self.merge_pushButton.setText(QCoreApplication.translate("MainWindow", u"\u5408\u5e76", None))

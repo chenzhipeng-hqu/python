@@ -419,8 +419,9 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.statusBar_singel('调整完成。')
 
     def mouse_singel(self, x, y):
-        self.x_label.setText('X: ' + str(x).rjust(4))
-        self.y_label.setText('Y: ' + str(y).rjust(4))
+        # self.x_label.setText('X: ' + str(x).rjust(4))
+        # self.y_label.setText('Y: ' + str(y).rjust(4))
+        self.mouse_label.setText('X: ' + str(x).rjust(4) + '  Y: ' + str(y).rjust(4))
 
     def test(self):
         pass
