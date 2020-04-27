@@ -73,7 +73,8 @@ class WorkerFetch(QObject):
             data['项目'].at[i] = self.subject
             data['月份'].at[i] = self.month
             df = pd.read_excel(self.src_file, sheet_name=name, header=4, index_col=0, dtype=str)
-            value = df[df.index == self.subject][self.month].values
+            # value = df[df.index == self.subject][self.month].values
+            value = df.loc[[self.subject], [self.month]].values
             data['数据'].at[i] = float(value[0])
             # data['数据'].at[i] = round(float(value[0]), 2)
         # df = pd.read_excel(src_file, sheet_name=f.sheet_names[0], header=4, index_col=0, dtype=str)
