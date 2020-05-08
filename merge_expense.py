@@ -29,6 +29,8 @@ logging.basicConfig(level=logging.DEBUG,  filename='out.log',
 
 logger = logging.getLogger(__name__)
 
+nowTime = lambda:int(round(time.time()*1000))
+
 def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
                        truncate_sheet=False,
                        **to_excel_kwargs):
@@ -56,10 +58,13 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
     # import pandas as pd
 
     # ignore [engine] parameter if it was passed
+    starttime = nowTime()
     if 'engine' in to_excel_kwargs:
         to_excel_kwargs.pop('engine')
 
+    starttime = nowTime()
     writer = pd.ExcelWriter(filename, engine='openpyxl')
+    print('pd.ExcelWriter: ', nowTime()-starttime)
 
     # Python 2.x: define [FileNotFoundError] exception if it doesn't exist
     try:
@@ -69,7 +74,9 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
 
     try:
         # try to open an existing workbook
+        starttime = nowTime()
         writer.book = openpyxl.load_workbook(filename)
+        print('openpyxl.load_workbook: ', nowTime()-starttime)
 
         # get the last row in the existing Excel sheet
         # if it was not specified explicitly
@@ -85,8 +92,10 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
             # create an empty sheet [sheet_name] using old index
             writer.book.create_sheet(sheet_name, idx)
 
+        starttime = nowTime()
         # copy existing sheets
         writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
+        print('writer.sheets: ', nowTime()-starttime)
     except FileNotFoundError:
         # file does not exist yet, we will create it
         pass
@@ -94,11 +103,18 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
     if startrow is None:
         startrow = 0
 
+    starttime = nowTime()
     # write out the new sheet
     df.to_excel(writer, sheet_name, startrow=startrow, **to_excel_kwargs)
+    print('df.to_excel: ', nowTime()-starttime)
 
     # save the workbook
+    starttime = nowTime()
     writer.save()
+    print('writer.save: ', nowTime()-starttime)
+    starttime = nowTime()
+    writer.close()
+    print('writer.close: ', nowTime()-starttime)
 
 class MergeExpense(QObject):
     #message_singel = Signal(str)
@@ -110,6 +126,20 @@ class MergeExpense(QObject):
 
     def __del__(self):
         print('delete %s' % self.__class__.__name__)
+
+    def open_dst_file(self, filename):
+        self.writer = pd.ExcelWriter(filename, engine='openpyxl')
+        # try to open an existing workbook
+        self.writer.book = openpyxl.load_workbook(filename)
+
+        # copy existing sheets
+        self.writer.sheets = {ws.title: ws for ws in self.writer.book.worksheets}
+
+    def save_dst_file(self):
+        self.writer.save()
+
+    def modify_dst_file(self, dataframe, **to_excel_kwargs):
+        dataframe.to_excel(self.writer, **to_excel_kwargs)
 
     def run(self):
         """
@@ -128,16 +158,18 @@ class MergeExpense(QObject):
         # # print(filelist)
         # print(len(filelist))
 
-        src_file = r'D:\CZP\python\FinancialTools\datas\费用合并底稿\202003\202003安徽天孚报表-费用.xlsx'
+        src_file = r'./datas/费用合并底稿/202003/202003安徽天孚报表-费用.xlsx'
         src_sheet = r'2020实际制造费用安徽天孚'
         # f = pd.ExcelFile(src_file)
         # print(f.sheet_names)
 
         # src_df = pd.read_excel(f, sheet_name=src_sheet, header=4, index_col=2)
+        # starttime = nowTime()
         src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=4, index_col=2)
+        # print('pd.read_excel: ', nowTime()-starttime)
         # print(df.head())
         # print(src_df['3月'])
-        dst_file = r'.\datas\费用合并底稿\123.xlsx'
+        dst_file = r'./datas/费用合并底稿/123.xlsx'
         dst_sheet = r'Z-安徽天孚'
         # writer = pd.ExcelWriter(dst_file, engine='openpyxl')
         # writer.book = openpyxl.load_workbook(dst_file)
@@ -145,10 +177,15 @@ class MergeExpense(QObject):
         # dst_df = pd.read_excel(dst_file, sheet_name=dst_sheet)
         print(src_df.head())
         # print(src_df.index)
+        # starttime = nowTime()
         src_data = src_df['3月'][:92]
+        # print('src_data: ', nowTime()-starttime)
         # print(src_df['2020年3月'])
-        print(src_data)
-        append_df_to_excel(dst_file, src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
+        # print(src_data)
+        # append_df_to_excel(dst_file, src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
+        self.open_dst_file(dst_file)
+        self.modify_dst_file(src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
+        self.save_dst_file()
         # for i, data in enumerate(src_df['3月']):
         #     print(data)
         #     dst_df['2020年4月'].at[i] = data
@@ -158,6 +195,7 @@ class MergeExpense(QObject):
         # dst_df.to_excel(writer, index=False)
 
 if __name__ == '__main__':
+    starttime = nowTime()
     merge_expense = MergeExpense()
     merge_expense.run()
-    print('finish')
+    print('finish', nowTime()-starttime, 'ms')
