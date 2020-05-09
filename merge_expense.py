@@ -123,6 +123,31 @@ class MergeExpense(QObject):
 
     def __init__(self):
         super(MergeExpense, self).__init__()
+        self.expense_table = [
+            #0.identification   1.expense 2.max_row
+            ['G', '管理费用', 98-5],
+            ['Y', '研发费用', 98-5],
+            ['X', '营业费用', 103-5],
+            ['C', '财务费用', 13-5],
+            ['Z', '制造费用', 97-5],
+        ]
+
+        self.company_table = [
+            #0.company in file  #1.company in sheet
+            ['池州天赐', '池州天赐'],
+            ['江西创新', '江西创新'],
+            ['宜春天赐', '宜春天赐'],
+            ['中硝', '中硝'],
+            ['中天鸿锂', '中天鸿锂'],
+            ['天津', '天津'],
+            ['安徽天孚', '安徽天孚'],
+            ['九江天祺', '九江天祺'],
+            ['宁德', '宁德'],
+            ['九江天赐', '九江'],
+            ['香港', '香港'],
+            ['高新', '高新'],
+            ['有机硅', '有机硅'],
+        ]
 
     def __del__(self):
         print('delete %s' % self.__class__.__name__)
@@ -144,55 +169,85 @@ class MergeExpense(QObject):
     def run(self):
         """
         1. 打开文件夹里待提取的第一个文件
-        2. 提取 制造费用 数据
+        2. 提取 管理费用(G), 研究开发费用(Y), 销售费用(X), 财务费用(C), 制造费用(Z), 数据
         3. 打开待合并文件， 填入相应位置
         """
-        # file_path = r'D:\CZP\python\FinancialTools\datas\费用合并底稿\202003'
-        # filelist = []
-        # for root, dirs, files in os.walk(file_path, topdown=False):
-        #     for name in files:
-        #         str = os.path.join(root, name)
-        #         if str.split('.')[-1] == 'xlsx' or str.split('.')[-1] == 'xls':
-        #             if os.path.basename(str) != 'merge.xlsx':
-        #                 filelist.append(str)
-        # # print(filelist)
-        # print(len(filelist))
+        file_path = r'./datas/费用合并底稿/202003'
+        filelist = []
+        for root, dirs, files in os.walk(file_path, topdown=False):
+            for name in files:
+                str = os.path.join(root, name)
+                if str.endswith('.xlsx') or str.endswith('.xls'):
+                    if str.endswith('merge.xlsx') or str.find('~') != -1:
+                        continue
+                    else:
+                        filelist.append(str)
+                        # break # just test
+        # print(filelist)
+        print(len(filelist))
 
-        src_file = r'./datas/费用合并底稿/202003/202003安徽天孚报表-费用.xlsx'
-        src_sheet = r'2020实际制造费用安徽天孚'
-        # f = pd.ExcelFile(src_file)
-        # print(f.sheet_names)
-
-        # src_df = pd.read_excel(f, sheet_name=src_sheet, header=4, index_col=2)
-        # starttime = nowTime()
-        src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=4, index_col=2)
-        # print('pd.read_excel: ', nowTime()-starttime)
-        # print(df.head())
-        # print(src_df['3月'])
         dst_file = r'./datas/费用合并底稿/123.xlsx'
-        dst_sheet = r'Z-安徽天孚'
-        # writer = pd.ExcelWriter(dst_file, engine='openpyxl')
-        # writer.book = openpyxl.load_workbook(dst_file)
-        # dst_df = pd.read_excel(writer, sheet_name=dst_sheet, header=4, index_col=2)
-        # dst_df = pd.read_excel(dst_file, sheet_name=dst_sheet)
-        print(src_df.head())
-        # print(src_df.index)
-        # starttime = nowTime()
-        src_data = src_df['3月'][:92]
-        # print('src_data: ', nowTime()-starttime)
-        # print(src_df['2020年3月'])
-        # print(src_data)
-        # append_df_to_excel(dst_file, src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
         self.open_dst_file(dst_file)
-        self.modify_dst_file(src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
+        print(self.writer.sheets.keys())
+
+        for src_file in filelist:
+            print(src_file)
+            # 找到对应的公司名称
+            for company in self.company_table:
+                if company[0] in src_file:
+                    print(company)
+                    break
+            excel_file = pd.ExcelFile(src_file)
+            print(excel_file.sheet_names)
+            for i, expense in enumerate(self.expense_table):
+                # 找到源文件对应的费用名称
+                print(expense, end=', ')
+                src_sheet = ''
+                src_sheet_match = '2020实际' + expense[1]
+                for sheet in excel_file.sheet_names:
+                    if src_sheet_match in sheet:
+                        src_sheet = sheet
+                        break
+                if src_sheet != '':
+                    print(src_sheet, end=', ')
+                # else:
+                #     print('')
+                #     continue
+
+                # 找到目标文件对应公司对应的费用名称费用的表格
+                dst_sheet = ''
+                dst_sheet_match = expense[0]+'-'+company[1]
+                for sheet in self.writer.sheets:
+                    if dst_sheet_match in sheet:
+                        dst_sheet = sheet
+                        break
+
+                if dst_sheet != '' and src_sheet != '':
+                    # print(src_sheet, end=', ')
+                    print(dst_sheet, end=', ')
+                    src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=4, index_col=2)
+                    print(len(src_df['3月']))
+                    if len(src_df['3月']) <= expense[2]:
+                        src_data = src_df['3月']
+                    else:
+                        src_data = src_df['3月'][:expense[2]]
+                    self.modify_dst_file(src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
+
+                print('')
+
+                pass
+            print('')
+            excel_file.close()
+
+        # src_file = r'./datas/费用合并底稿/202003/202003安徽天孚报表-费用.xlsx'
+        # src_sheet = r'2020实际制造费用安徽天孚'
+        # src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=4, index_col=2)
+        # print(src_df.head())
+        # src_data = src_df['3月'][:92]
+        #
+        # self.modify_dst_file(src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
+        #
         self.save_dst_file()
-        # for i, data in enumerate(src_df['3月']):
-        #     print(data)
-        #     dst_df['2020年4月'].at[i] = data
-        # # dst_df['2020年4月'][:99] = src_df['3月'][:99]
-        # print(dst_df['2020年4月'])
-        # # dst_df.to_excel(r".\datas\费用合并底稿\123.xlsx", index=False)
-        # dst_df.to_excel(writer, index=False)
 
 if __name__ == '__main__':
     starttime = nowTime()
