@@ -31,91 +31,6 @@ logger = logging.getLogger(__name__)
 
 nowTime = lambda:int(round(time.time()*1000))
 
-def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
-                       truncate_sheet=False,
-                       **to_excel_kwargs):
-    """
-    Append a DataFrame [df] to existing Excel file [filename]
-    into [sheet_name] Sheet.
-    If [filename] doesn't exist, then this function will create it.
-    Parameters:
-      filename : File path or existing ExcelWriter
-                 (Example: '/path/to/file.xlsx')
-      df : dataframe to save to workbook
-      sheet_name : Name of sheet which will contain DataFrame.
-                   (default: 'Sheet1')
-      startrow : upper left cell row to dump data frame.
-                 Per default (startrow=None) calculate the last row
-                 in the existing DF and write to the next row...
-      truncate_sheet : truncate (remove and recreate) [sheet_name]
-                       before writing DataFrame to Excel file
-      to_excel_kwargs : arguments which will be passed to `DataFrame.to_excel()`
-                        [can be dictionary]
-    Returns: None
-    """
-    # from openpyxl import load_workbook
-
-    # import pandas as pd
-
-    # ignore [engine] parameter if it was passed
-    starttime = nowTime()
-    if 'engine' in to_excel_kwargs:
-        to_excel_kwargs.pop('engine')
-
-    starttime = nowTime()
-    writer = pd.ExcelWriter(filename, engine='openpyxl')
-    print('pd.ExcelWriter: ', nowTime()-starttime)
-
-    # Python 2.x: define [FileNotFoundError] exception if it doesn't exist
-    try:
-        FileNotFoundError
-    except NameError:
-        FileNotFoundError = IOError
-
-    try:
-        # try to open an existing workbook
-        starttime = nowTime()
-        writer.book = openpyxl.load_workbook(filename)
-        print('openpyxl.load_workbook: ', nowTime()-starttime)
-
-        # get the last row in the existing Excel sheet
-        # if it was not specified explicitly
-        if startrow is None and sheet_name in writer.book.sheetnames:
-            startrow = writer.book[sheet_name].max_row
-
-        # truncate sheet
-        if truncate_sheet and sheet_name in writer.book.sheetnames:
-            # index of [sheet_name] sheet
-            idx = writer.book.sheetnames.index(sheet_name)
-            # remove [sheet_name]
-            writer.book.remove(writer.book.worksheets[idx])
-            # create an empty sheet [sheet_name] using old index
-            writer.book.create_sheet(sheet_name, idx)
-
-        starttime = nowTime()
-        # copy existing sheets
-        writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
-        print('writer.sheets: ', nowTime()-starttime)
-    except FileNotFoundError:
-        # file does not exist yet, we will create it
-        pass
-
-    if startrow is None:
-        startrow = 0
-
-    starttime = nowTime()
-    # write out the new sheet
-    df.to_excel(writer, sheet_name, startrow=startrow, **to_excel_kwargs)
-    print('df.to_excel: ', nowTime()-starttime)
-
-    # save the workbook
-    starttime = nowTime()
-    writer.save()
-    print('writer.save: ', nowTime()-starttime)
-    starttime = nowTime()
-    writer.close()
-    print('writer.close: ', nowTime()-starttime)
-
 class MergeExpense(QObject):
     #message_singel = Signal(str)
     finish_singel = Signal()
@@ -124,29 +39,32 @@ class MergeExpense(QObject):
     def __init__(self):
         super(MergeExpense, self).__init__()
         self.expense_table = [
-            #0.identification   1.expense 2.max_row
-            ['G', '管理费用', 98-5],
-            ['Y', '研发费用', 98-5],
-            ['X', '营业费用', 103-5],
-            ['C', '财务费用', 13-5],
-            ['Z', '制造费用', 97-5],
+            #0.identification, 1.expense, 2.copy_row, 3.read_row, 4, read_col
+            ['G', '管理费用', 92-5, 4, 2],
+            ['Y', '研发费用', 92-5, 4, 2],
+            ['X', '营业费用', 92-5, 4, 2],
+            ['X', '销售费用', 92-5, 4, 2],
+            ['C', '财务费用', 12-5, 4, 1],
+            ['Z', '制造费用', 92-5, 4, 2],
         ]
 
         self.company_table = [
             #0.company in file  #1.company in sheet
+            ['高新', '高新'],
+            ['有机硅', '有机硅'],
+            ['香港', '香港'],
+            ['九江天祺', '天祺'],
+            ['九江天赐', '九江'],
             ['池州天赐', '池州天赐'],
-            ['江西创新', '江西创新'],
+            ['江西创新', '创新中心'],
             ['宜春天赐', '宜春天赐'],
             ['中硝', '中硝'],
             ['中天鸿锂', '中天鸿锂'],
             ['天津', '天津'],
             ['安徽天孚', '安徽天孚'],
-            ['九江天祺', '九江天祺'],
             ['宁德', '宁德'],
-            ['九江天赐', '九江'],
-            ['香港', '香港'],
-            ['高新', '高新'],
-            ['有机硅', '有机硅'],
+            ['捷克', '捷克天赐'],
+            ['浙江天硕', '浙江天硕'],
         ]
 
     def __del__(self):
@@ -172,7 +90,7 @@ class MergeExpense(QObject):
         2. 提取 管理费用(G), 研究开发费用(Y), 销售费用(X), 财务费用(C), 制造费用(Z), 数据
         3. 打开待合并文件， 填入相应位置
         """
-        file_path = r'./datas/费用合并底稿/202003'
+        file_path = r'./datas/费用合并底稿/202004'
         filelist = []
         for root, dirs, files in os.walk(file_path, topdown=False):
             for name in files:
@@ -186,7 +104,7 @@ class MergeExpense(QObject):
         # print(filelist)
         print(len(filelist))
 
-        dst_file = r'./datas/费用合并底稿/123.xlsx'
+        dst_file = r'./datas/费用合并底稿/202004费用合并（公式）底稿 - 副本.xlsx'
         self.open_dst_file(dst_file)
         print(self.writer.sheets.keys())
 
@@ -208,8 +126,8 @@ class MergeExpense(QObject):
                     if src_sheet_match in sheet:
                         src_sheet = sheet
                         break
-                if src_sheet != '':
-                    print(src_sheet, end=', ')
+                # if src_sheet != '':
+                #     print(src_sheet, end=', ')
                 # else:
                 #     print('')
                 #     continue
@@ -218,35 +136,29 @@ class MergeExpense(QObject):
                 dst_sheet = ''
                 dst_sheet_match = expense[0]+'-'+company[1]
                 for sheet in self.writer.sheets:
-                    if dst_sheet_match in sheet:
+                    if dst_sheet_match == sheet:
                         dst_sheet = sheet
                         break
 
+                print(src_sheet, end=', ')
+                print(dst_sheet, end=', ')
+
                 if dst_sheet != '' and src_sheet != '':
-                    # print(src_sheet, end=', ')
-                    print(dst_sheet, end=', ')
-                    src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=4, index_col=2)
-                    print(len(src_df['3月']))
+                    src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=expense[3], index_col=expense[4])
+                    print(len(src_df['3月']), end=', ')
+                    # print(src_df['3月'])
                     if len(src_df['3月']) <= expense[2]:
                         src_data = src_df['3月']
                     else:
                         src_data = src_df['3月'][:expense[2]]
+                    # elif expense[2] == 86:
+                    #     src_data = src_df['3月'][:86]
+                    # elif expense[2] == 6:
+                    #     src_data = src_df['3月'][:6]
                     self.modify_dst_file(src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
-
                 print('')
-
-                pass
             print('')
             excel_file.close()
-
-        # src_file = r'./datas/费用合并底稿/202003/202003安徽天孚报表-费用.xlsx'
-        # src_sheet = r'2020实际制造费用安徽天孚'
-        # src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=4, index_col=2)
-        # print(src_df.head())
-        # src_data = src_df['3月'][:92]
-        #
-        # self.modify_dst_file(src_data, sheet_name=dst_sheet, startcol=6, startrow=5, index=False, header=False)
-        #
         self.save_dst_file()
 
 if __name__ == '__main__':
