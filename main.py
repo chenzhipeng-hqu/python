@@ -18,6 +18,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from other_payables import *
 from internal_orders import *
+from database_match import *
 from custom_control import *
 from others.merge import *
 from others.fetch import *
@@ -45,6 +46,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.inner_order_init()
         self.cust_ctrl_init()
         self.other_fetch_init()
+        self.database_match_init()
 
     def initUI(self):
         self.setupUi(self)
@@ -93,6 +95,10 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         # other_merge
         self.merge_pushButton.clicked.connect(self.other_merge)
         self.merge_path_pushButton.clicked.connect(self.other_merge_path_dialog)
+
+        # database_match
+        self.database_fetch_pushButton.clicked.connect(self.database_match_fetch)
+        # self.database_fetch_path_pushButton.clicked.connect(self.other_merge_path_dialog)
 
         # other_fetch
         self.fetch_pushButton.clicked.connect(self.other_fetch)
@@ -198,6 +204,15 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.worker_inter_orders.moveToThread(self.thread_inter_orders)
         self.thread_inter_orders.started.connect(self.worker_inter_orders.filter)
 
+    def database_match_init(self):
+        self.thread_database_match = QThread()
+        self.worker_database_match = DatabaseMatch()
+        # self.worker_inter_orders.message_singel.connect(self.message_singel)
+        self.worker_database_match.statusBar_singel.connect(self.statusBar_singel)
+        self.worker_database_match.finish_singel.connect(self.database_match_finish_singel)
+        self.worker_database_match.moveToThread(self.thread_database_match)
+        self.thread_database_match.started.connect(self.worker_database_match.run)
+
     def other_merge(self):
         # self.thread_other_merge = QThread()
         self.worker_other_merge = WorkerMerge()
@@ -230,6 +245,13 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
                         subject=subject,\
                         month=month)
         self.thread_other_fetch.start()
+
+    def database_match_fetch(self):
+        self.database_fetch_pushButton.setEnabled(False)
+        src_path = self.database_fetch_pushButton.text()
+
+        self.worker_database_match.set_parameter(src_path=src_path)
+        self.thread_database_match.start()
 
     def cust_ctrl_init(self):
         self.thread_cust_ctrl = QThread()
@@ -417,6 +439,12 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.thread_inter_orders.quit()
         self.adjust_pushButton.setEnabled(True)
         self.statusBar_singel('调整完成。')
+
+    def database_match_finish_singel(self):
+        self.thread_database_match.quit()
+        self.database_fetch_pushButton.setEnabled(True)
+        self.statusBar_singel('提取完成。')
+        QMessageBox.about(self, "提示", "提取完成")
 
     def mouse_singel(self, x, y):
         # self.x_label.setText('X: ' + str(x).rjust(4))

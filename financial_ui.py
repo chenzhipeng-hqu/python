@@ -413,6 +413,34 @@ class Ui_MainWindow(object):
         self.gridLayout_4.addWidget(self.fetch_file_pushButton, 0, 0, 1, 3)
 
         self.tabWidget.addTab(self.adjust_tab, "")
+        self.tab = QWidget()
+        self.tab.setObjectName(u"tab")
+        self.layoutWidget_3 = QWidget(self.tab)
+        self.layoutWidget_3.setObjectName(u"layoutWidget_3")
+        self.layoutWidget_3.setGeometry(QRect(20, 10, 521, 41))
+        self.gridLayout_6 = QGridLayout(self.layoutWidget_3)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.gridLayout_6.setSizeConstraint(QLayout.SetDefaultConstraint)
+        self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.database_fetch_path_pushButton = QPushButton(self.layoutWidget_3)
+        self.database_fetch_path_pushButton.setObjectName(u"database_fetch_path_pushButton")
+        self.database_fetch_path_pushButton.setEnabled(True)
+        sizePolicy5.setHeightForWidth(self.database_fetch_path_pushButton.sizePolicy().hasHeightForWidth())
+        self.database_fetch_path_pushButton.setSizePolicy(sizePolicy5)
+        self.database_fetch_path_pushButton.setMaximumSize(QSize(400, 16777215))
+
+        self.gridLayout_6.addWidget(self.database_fetch_path_pushButton, 0, 0, 1, 1)
+
+        self.database_fetch_pushButton = QPushButton(self.layoutWidget_3)
+        self.database_fetch_pushButton.setObjectName(u"database_fetch_pushButton")
+        sizePolicy5.setHeightForWidth(self.database_fetch_pushButton.sizePolicy().hasHeightForWidth())
+        self.database_fetch_pushButton.setSizePolicy(sizePolicy5)
+        self.database_fetch_pushButton.setMinimumSize(QSize(50, 0))
+        self.database_fetch_pushButton.setMaximumSize(QSize(70, 16777215))
+
+        self.gridLayout_6.addWidget(self.database_fetch_pushButton, 0, 1, 1, 1)
+
+        self.tabWidget.addTab(self.tab, "")
 
         self.gridLayout.addWidget(self.tabWidget, 1, 0, 1, 1)
 
@@ -504,6 +532,12 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(statustip)
         self.fetch_file_pushButton.setText("")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.adjust_tab), QCoreApplication.translate("MainWindow", u"\u63d0\u53d6", None))
+#if QT_CONFIG(statustip)
+        self.database_fetch_path_pushButton.setStatusTip(QCoreApplication.translate("MainWindow", u"\u9009\u62e9\u6570\u636e\u6e90\u6587\u4ef6\u5939", None))
+#endif // QT_CONFIG(statustip)
+        self.database_fetch_path_pushButton.setText("")
+        self.database_fetch_pushButton.setText(QCoreApplication.translate("MainWindow", u"\u63d0\u53d6", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"\u6570\u636e\u5e93SAP", None))
         self.menu.setTitle(QCoreApplication.translate("MainWindow", u"help", None))
 #if QT_CONFIG(accessibility)
         self.statusbar.setAccessibleName(QCoreApplication.translate("MainWindow", u"123", None))

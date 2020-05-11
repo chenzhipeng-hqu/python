@@ -53,7 +53,7 @@ class DatabaseMatch(QObject):
         elif pd.isnull(data['功能范围']):
             ret = '#N/A'
         else:
-            ret = self.src_index_df[self.src_index_df['功能范围'] == data['功能范围']]['功能范围名称'].values[0] + \
+            ret = self.src_index_df[self.src_index_df['功能范围'] == data['功能范围']]['功能范围描述'].values[0] + \
                   self.src_index_df[self.src_index_df['总账科目'] == data['总账科目']]['长文本'].values[0]
 
         return ret
@@ -77,18 +77,17 @@ class DatabaseMatch(QObject):
     def project_num_ops(self, data):
         if pd.isnull(data['订单']):
             ret = ''
-        else:
+        elif 200000 <= data['订单'] < 999999:
             temp = self.src_index_df[self.src_index_df['SAP订单号'] == data['订单']]
             if temp.empty:
                 ret = '#N/A'
             else:
                 ret = temp['SAP项目名称'].values[0]
+        else:
+            ret = ''
         return ret
 
     def company_ops(self, data):
-    #     if pd.isnull(data['公司代码']):
-    #         ret = ''
-    #     else:
         temp = self.src_index_df[self.src_index_df['编码'] == data['公司代码']]
         if temp.empty:
             ret = '#N/A'
@@ -96,22 +95,50 @@ class DatabaseMatch(QObject):
             ret = temp['简称'].values[0]
         return ret
 
+    def apply_id_ops(self, data):
+        temp = self.src_FB03_df[self.src_FB03_df['apply_id'] == data['apply_id']]
+        if temp.empty:
+            ret = '#N/A'
+        else:
+            ret = temp['用户名'].values[0]
+        return ret
+
+    def staff_ops(self, data):
+        temp = self.src_index_df[self.src_index_df['号码'] == data['申请人']]
+        if temp.empty:
+            ret = '#N/A'
+        else:
+            ret = temp['姓名'].values[0]
+        return ret
+
     def src_data_ops(self, data):
         # return self.project_num_ops(data), self.company_ops(data)
         return self.subject_num_ops(data), self.abstract_ops(data), self.department_name_ops(data), self.project_num_ops(data), self.company_ops(data)
 
-    def run(self):
-        src_file = r'./datas/original_data/调整内部订单号.xls'
-        dst_file = r'./datas/original_data/module - 副本.xls'
+    def set_parameter(self, *args, ** kwargs):
+        self.src_path = kwargs.get('src_path')
+        print(self.src_path)
 
-        self.src_index_df = pd.read_excel(src_file, sheet_name='索引')
-        src_data_df = pd.read_excel(src_file, sheet_name='FAGLL03')
+    def run(self):
+        self.statusBar_singel.emit('正在提取...\r\n')
+        src_file = r'./datas/数据库底稿-SAP/FAGLL03.xlsx'
+        # src_file = r'./datas/original_data/调整内部订单号.xls'
+        src_index_file = r'./datas/数据库底稿-SAP/索引.xlsx'
+        src_FB03_file = r'./datas/数据库底稿-SAP/FB03.xlsx'
+        dst_file = r'./datas/数据库底稿-SAP/数据库底稿-SAP类.xlsx'
+
+        self.src_index_df = pd.read_excel(src_index_file, sheet_name='索引')
+        self.src_FB03_df = pd.read_excel(src_FB03_file, sheet_name='Sheet1')
+        src_data_df = pd.read_excel(src_file, sheet_name='Sheet1')
+        # src_data_df = pd.read_excel(src_file, sheet_name='FAGLL03')
         # print(src_index_df.head())
         # print(src_data_df.head())
 
-        # dst_df = pd.DataFrame(columns=['会计年度', '期间', '凭证日期', '凭证编号', '科目编号', '科目名称', '借方本币', '摘要', '部门', '部门名称', '申请人',
-        #                                '员工姓名', '项目编号', '项目名称', '账套'])
-        dst_df = pd.read_excel(dst_file)
+        self.src_FB03_df['apply_id'] = self.src_FB03_df['公司代码'] + self.src_FB03_df['凭证编号']
+
+        dst_df = pd.DataFrame(columns=['会计年度', '期间', '凭证日期', '凭证编号', '科目编号', '科目名称', '借方本币', '摘要', '部门', '部门名称', '申请人',
+                                       '员工姓名', '项目编号', '项目名称', '账套'])
+        # dst_df = pd.read_excel(dst_file)
         dst_df['会计年度'] = src_data_df['会计年度']
         dst_df['期间'] = src_data_df['记帐期间']
         dst_df['凭证日期'] = src_data_df['过账日期'].dt.strftime('%Y-%m-%d')
@@ -127,9 +154,16 @@ class DatabaseMatch(QObject):
         dst_df['项目名称'] = src_data_df.apply(self.project_num_ops, axis=1)
         dst_df['账套'] = src_data_df.apply(self.company_ops, axis=1)
 
+        src_data_df['apply_id'] = src_data_df['公司代码'] + src_data_df['凭证编号']
+        dst_df['申请人'] = src_data_df.apply(self.apply_id_ops, axis=1)
+        # src_data_df['申请人'] = dst_df['申请人']
+        dst_df['员工姓名'] = dst_df.apply(self.staff_ops, axis=1)
+
         # dst_df[['科目名称', '摘要', '部门名称', '项目名称', '账套']] = src_data_df.apply(self.src_data_ops, axis=1, result_type='expand')
 
         dst_df.to_excel(dst_file, index=False, engine='openpyxl')
+        self.statusBar_singel.emit('完成.\r\n')
+        self.finish_singel.emit()
 
 if __name__ == '__main__':
     starttime = nowTime()
