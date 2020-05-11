@@ -28,8 +28,8 @@ if hasattr(sys, 'frozen'):
 logging.basicConfig(
     level=logging.DEBUG,
     filename='out.log',
-    datefmt='%Y/%m/%d %H:%M:%S',
-    format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
+    datefmt='%Y-%m-%d %H:%M:%S',
+    format='%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s')
 
 logger = logging.getLogger(__name__)
 
@@ -96,9 +96,13 @@ class DatabaseMatch(QObject):
             ret = temp['简称'].values[0]
         return ret
 
+    def src_data_ops(self, data):
+        # return self.project_num_ops(data), self.company_ops(data)
+        return self.subject_num_ops(data), self.abstract_ops(data), self.department_name_ops(data), self.project_num_ops(data), self.company_ops(data)
+
     def run(self):
         src_file = r'./datas/original_data/调整内部订单号.xls'
-        dst_file = r'./datas/original_data/module.xls'
+        dst_file = r'./datas/original_data/module - 副本.xls'
 
         self.src_index_df = pd.read_excel(src_file, sheet_name='索引')
         src_data_df = pd.read_excel(src_file, sheet_name='FAGLL03')
@@ -123,10 +127,7 @@ class DatabaseMatch(QObject):
         dst_df['项目名称'] = src_data_df.apply(self.project_num_ops, axis=1)
         dst_df['账套'] = src_data_df.apply(self.company_ops, axis=1)
 
-        # print(temp)
-        # print(len(temp))
-        # dst_df['科目名称'] = temp
-
+        # dst_df[['科目名称', '摘要', '部门名称', '项目名称', '账套']] = src_data_df.apply(self.src_data_ops, axis=1, result_type='expand')
 
         dst_df.to_excel(dst_file, index=False, engine='openpyxl')
 
