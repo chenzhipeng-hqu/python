@@ -98,6 +98,8 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
         # database_match
         self.database_fetch_pushButton.clicked.connect(self.database_match_fetch)
+        path = os.path.join(os.getcwd(), r'datas\数据库底稿-SAP')
+        self.database_fetch_path_pushButton.setText(path)
         # self.database_fetch_path_pushButton.clicked.connect(self.other_merge_path_dialog)
 
         # other_fetch

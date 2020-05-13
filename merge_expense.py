@@ -40,12 +40,12 @@ class MergeExpense(QObject):
         super(MergeExpense, self).__init__()
         self.expense_table = [
             #0.identification, 1.expense, 2.copy_row, 3.read_row, 4, read_col
-            ['G', '管理费用', 92-5, 4, 2],
-            ['Y', '研发费用', 92-5, 4, 2],
-            ['X', '营业费用', 92-5, 4, 2],
-            ['X', '销售费用', 92-5, 4, 2],
-            ['C', '财务费用', 12-5, 4, 1],
-            ['Z', '制造费用', 92-5, 4, 2],
+            ['G', '管理费用', 92-5, 4, [0, 1, 2]],
+            ['Y', '研发费用', 92-5, 4, [0, 1, 2]],
+            ['X', '营业费用', 92-5, 4, [0, 1, 2]],
+            ['X', '销售费用', 92-5, 4, [0, 1, 2]],
+            ['C', '财务费用', 12-5, 4, [0, 1]],
+            ['Z', '制造费用', 92-5, 4, [0, 1, 2]],
         ]
 
         self.company_table = [
@@ -90,7 +90,7 @@ class MergeExpense(QObject):
         2. 提取 管理费用(G), 研究开发费用(Y), 销售费用(X), 财务费用(C), 制造费用(Z), 数据
         3. 打开待合并文件， 填入相应位置
         """
-        file_path = r'./datas/费用合并底稿/202004'
+        file_path = r'./datas/费用合并底稿/202004d'
         filelist = []
         for root, dirs, files in os.walk(file_path, topdown=False):
             for name in files:
@@ -147,6 +147,14 @@ class MergeExpense(QObject):
                     src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=expense[3], index_col=expense[4])
                     print(len(src_df['3月']), end=', ')
                     # print(src_df['3月'])
+                    # print(src_df.index)
+                    if expense[1] == '财务费用':
+                        # print(src_df.loc[('财务费用合计', '其他费用'), '3月'])
+                        print(src_df.xs(('财务费用合计', '其他费用'))['3月'], end=', ')
+                    else:
+                        # print(src_df.loc[(r'其中：个人护理（日化事业部）', '其他', '其他'), '3月'])
+                        print(src_df.xs(('其中：个人护理（日化事业部）', '其他', '其他'))['3月'], end=', ')
+
                     if len(src_df['3月']) <= expense[2]:
                         src_data = src_df['3月']
                     else:
