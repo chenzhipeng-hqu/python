@@ -19,6 +19,7 @@ from PySide2.QtGui import *
 from other_payables import *
 from internal_orders import *
 from database_match import *
+from merge_expense import *
 from custom_control import *
 from others.merge import *
 from others.fetch import *
@@ -47,6 +48,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.cust_ctrl_init()
         self.other_fetch_init()
         self.database_match_init()
+        self.merge_expense_init()
 
     def initUI(self):
         self.setupUi(self)
@@ -101,6 +103,12 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         path = os.path.join(os.getcwd(), r'datas\数据库底稿-SAP')
         self.database_fetch_path_pushButton.setText(path)
         # self.database_fetch_path_pushButton.clicked.connect(self.other_merge_path_dialog)
+
+        # merge_expense
+        self.merge_expense_pushButton.clicked.connect(self.merge_expense)
+        self.merge_expense_path_pushButton.clicked.connect(self.merge_expense_path_dialog)
+        self.merge_expense_file_pushButton.clicked.connect(self.merge_expense_file_dialog)
+        self.merge_expense_month_lineEdit.editingFinished.connect(self.merge_expense_month_editingFinished)
 
         # other_fetch
         self.fetch_pushButton.clicked.connect(self.other_fetch)
@@ -187,6 +195,19 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
             month = self.conf.get('other', 'other_fetch_month')
             self.blance_month_lineEdit.setText(month)
 
+        # merge expense
+        if self.conf.has_option('expense', 'expense_file'):
+            file = self.conf.get('expense', 'expense_file')
+            self.merge_expense_file_pushButton.setText(file)
+
+        if self.conf.has_option('expense', 'expense_path'):
+            path = self.conf.get('expense', 'expense_path')
+            self.merge_expense_path_pushButton.setText(path)
+
+        if self.conf.has_option('expense', 'expense_month'):
+            month = self.conf.get('expense', 'expense_month')
+            self.merge_expense_month_lineEdit.setText(month)
+
     def payables_init(self):
         self.thread_other_payables = QThread()
         self.worker_other_payables = WorkerOtherPayables()
@@ -214,6 +235,15 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.worker_database_match.finish_singel.connect(self.database_match_finish_singel)
         self.worker_database_match.moveToThread(self.thread_database_match)
         self.thread_database_match.started.connect(self.worker_database_match.run)
+
+    def merge_expense_init(self):
+        self.thread_merge_expense = QThread()
+        self.worker_merge_expense = MergeExpense()
+        # self.worker_inter_orders.message_singel.connect(self.message_singel)
+        self.worker_merge_expense.statusBar_singel.connect(self.statusBar_singel)
+        self.worker_merge_expense.finish_singel.connect(self.merge_expense_finish_singel)
+        self.worker_merge_expense.moveToThread(self.thread_merge_expense)
+        self.thread_merge_expense.started.connect(self.worker_merge_expense.run)
 
     def other_merge(self):
         # self.thread_other_merge = QThread()
@@ -254,6 +284,15 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 
         self.worker_database_match.set_parameter(src_path=src_path)
         self.thread_database_match.start()
+
+    def merge_expense(self):
+        self.merge_expense_pushButton.setEnabled(False)
+        dst_file = self.merge_expense_file_pushButton.text()
+        src_path = self.merge_expense_path_pushButton.text()
+        month = self.merge_expense_month_lineEdit.text()
+
+        self.worker_merge_expense.set_parameter(month=month, file_path=src_path, dst_file=dst_file)
+        self.thread_merge_expense.start()
 
     def cust_ctrl_init(self):
         self.thread_cust_ctrl = QThread()
@@ -360,6 +399,34 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
             self.conf.set('other', 'other_fetch_file', fname)
             self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
 
+    def merge_expense_file_dialog(self):
+        fname, ftype = QFileDialog.getOpenFileName(
+            self, '选择文件', self.merge_expense_file_pushButton.text(), 'All Files (*)')
+        print(fname)
+        if os.path.isfile(fname):
+            self.merge_expense_file_pushButton.setText(fname)
+            self.statusBar_singel(fname)
+            self.conf.set('expense', 'expense_file', fname)
+            self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def merge_expense_path_dialog(self):
+        path = QFileDialog.getExistingDirectory(
+            self, '选择文件夹', self.merge_expense_path_pushButton.text())
+        # print(path)
+        if os.path.isdir(path):
+            self.merge_expense_path_pushButton.setText(path)
+            self.statusBar_singel(path)
+            self.conf.set('expense', 'expense_path', path)
+            self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
+    def merge_expense_month_editingFinished(self):
+        # print(self.subject_lineEdit.text())
+        self.conf.set(
+            'expense',
+            'expense_month',
+            self.merge_expense_month_lineEdit.text().strip())
+        self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
     def fetch_subject_editingFinished(self):
         # print(self.subject_lineEdit.text())
         self.conf.set(
@@ -447,6 +514,12 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.database_fetch_pushButton.setEnabled(True)
         self.statusBar_singel('提取完成。')
         QMessageBox.about(self, "提示", "提取完成")
+
+    def merge_expense_finish_singel(self):
+        self.thread_merge_expense.quit()
+        self.merge_expense_pushButton.setEnabled(True)
+        self.statusBar_singel('完成。')
+        QMessageBox.about(self, "提示", "完成")
 
     def mouse_singel(self, x, y):
         # self.x_label.setText('X: ' + str(x).rjust(4))
