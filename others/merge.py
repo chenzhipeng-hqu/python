@@ -11,7 +11,9 @@
 import os
 import sys
 import time
+import xlrd
 import logging
+import openpyxl
 import pyautogui
 import pyperclip
 import xml.sax
@@ -58,9 +60,14 @@ class WorkerMerge(QObject):
         for file in filelist:
             file_name = os.path.basename(file)
             # print(file_name.split('-')[0])
-            df = pd.read_excel(file)
-            df['月份'] = os.path.splitext(file_name)[0].split('-')[0]
-            dfs.append(df)
+            workbook = xlrd.open_workbook(file)
+            worksheets = workbook.sheet_names()
+            # month = os.path.splitext(file_name)[0].split('-')[0]
+            for sheet in worksheets:
+                df = pd.read_excel(file, sheet_name=sheet)
+                df['文件'] = file_name
+                df['sheet'] = sheet
+                dfs.append(df)
 
         if dfs:
             # 将多个DataFrame合并为一个

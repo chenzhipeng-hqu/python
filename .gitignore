@@ -4,3 +4,4 @@ main.spec
 out.log
 .idea/
 venv/
+~*.xls*
