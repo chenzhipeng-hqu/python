@@ -22,11 +22,11 @@ import financial_ui as ui
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 
-logging.basicConfig(level=logging.DEBUG,  filename='out.log',
-                    datefmt='%Y/%m/%d %H:%M:%S',
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
-
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.DEBUG,  filename='out.log',
+#                     datefmt='%Y/%m/%d %H:%M:%S',
+#                     format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
+#
+# logger = logging.getLogger(__name__)
 
 
 class WorkerFetch(QObject):

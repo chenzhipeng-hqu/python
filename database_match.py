@@ -25,13 +25,6 @@ from others.fetch import *
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename='out.log',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    format='%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s')
-
-logger = logging.getLogger(__name__)
 
 nowTime = lambda:int(round(time.time()*1000))
 

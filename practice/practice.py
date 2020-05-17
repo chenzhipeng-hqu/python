@@ -22,13 +22,6 @@ import financial_ui as ui
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     filename='out.log',
-#     datefmt='%Y-%m-%d %H:%M:%S',
-#     format='%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s')
-
-logger = logging.getLogger(__name__)
 
 class Practice(QObject):
     #message_singel = Signal(str)

@@ -4,23 +4,31 @@
 # @Author  : 陈志鹏
 # @File    : xxx.py
 
-import logging
 import unittest
 from test_all import *
+import log
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename='out.log',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    format='%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s')
+logger = log.Log(__name__).getlog()
 
-logger = logging.getLogger()
+def log_test():
+    logger.critical("test")
+    logger.error("test")
+    logger.warning("test")
+    logger.info("test")
+    logger.debug("test")
 
 
 if __name__ == '__main__':
     '''
     https://blog.csdn.net/xiaoquantouer/article/details/75089200
     '''
+    logger.critical("start")
+    logger.error("start")
+    logger.warning("start")
+    logger.info("start")
+    logger.debug("start")
+    log_test()
+
     suite = unittest.TestSuite()
 
     tests = [TestDict("test_init"),

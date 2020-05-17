@@ -7,7 +7,7 @@
 import os
 import sys
 import codecs
-import logging
+import log
 import pyautogui
 import xml.sax
 import configparser
@@ -27,13 +27,7 @@ from others.fetch import *
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename='out.log',
-    datefmt='%Y/%m/%d %H:%M:%S',
-    format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
-
-logger = logging.getLogger(__name__)
+logger = log.Log(__name__).getlog()
 
 
 class UIMainWindow(Ui_MainWindow, QMainWindow):

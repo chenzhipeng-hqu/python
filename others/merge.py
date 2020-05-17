@@ -12,7 +12,7 @@ import os
 import sys
 import time
 import xlrd
-import logging
+import log
 import openpyxl
 import pyautogui
 import pyperclip
@@ -23,12 +23,13 @@ import financial_ui as ui
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 
-logging.basicConfig(level=logging.DEBUG,  filename='out.log',
-                    datefmt='%Y/%m/%d %H:%M:%S',
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
+# logging.basicConfig(level=logging.DEBUG,  filename='out.log',
+#                     datefmt='%Y/%m/%d %H:%M:%S',
+#                     format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
+#
+# logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
+logger = log.Log(__name__).getlog()
 
 class WorkerMerge(QObject):
     #message_singel = Signal(str)
@@ -37,6 +38,7 @@ class WorkerMerge(QObject):
 
     def __init__(self):
         super(WorkerMerge, self).__init__()
+        logger.info(" ")
 
     def __del__(self):
         print('delete %s' % self.__class__.__name__)

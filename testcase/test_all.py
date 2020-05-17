@@ -7,7 +7,7 @@
 import os
 import sys
 import codecs
-import logging
+import log
 import pyautogui
 import xml.sax
 import unittest
@@ -23,13 +23,7 @@ from custom_control import *
 from others.merge import *
 from others.fetch import *
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename='out.log',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    format='%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s')
-
-logger = logging.getLogger()
+logger = log.Log(__name__).getlog()
 
 class test:
     def warning(self):
