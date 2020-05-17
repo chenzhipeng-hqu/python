@@ -4,26 +4,10 @@
 # @Author  : 陈志鹏
 # @File    : financial_tools.py
 
-import os
-import sys
-import codecs
-import logging
-import pyautogui
-import xml.sax
-import configparser
-import pandas as pd
-from financial_ui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from other_payables import *
-from internal_orders import *
-from custom_control import *
-from others.merge import *
-from others.fetch import *
+from project.fetch import *
 
-if hasattr(sys, 'frozen'):
-    os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
+# if hasattr(sys, 'frozen'):
+#     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 
 
 nowTime = lambda:int(round(time.time()*1000))

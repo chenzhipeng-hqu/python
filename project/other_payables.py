@@ -5,16 +5,12 @@
 # @File    : other_payables.py
 
 import os
-import sys
 import time
-import logging
 import pyautogui
 import pyperclip
 import xml.sax
 import configparser
 import pandas as pd
-import financial_ui as ui
-from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 
 
@@ -185,7 +181,7 @@ class WorkerOtherPayables(QObject):
         # pyautogui.click(duration=1)
         pass
 
-    def input_job(self):      
+    def input_job(self):
         # 查看是否找到输入作业页面
         #self.wait_pic('datas/picture/input_job.png')
         # 1. 输入作业，cglq307(490, 145)
@@ -260,7 +256,7 @@ class WorkerOtherPayables(QObject):
         pyautogui.click(duration=1)
         #time.sleep(1)
         # 查看是否打开下载页面
-        self.wait_pic('datas/picture/download.png', tip=False)   
+        self.wait_pic('datas/picture/download.png', tip=False)
         # 2. 更改文件名(添加 法人主体(营运中心)-默认) (800, 380), ('home')
         pyperclip.copy(str(center[0]))
         pyautogui.moveTo(800, 380)
@@ -271,7 +267,7 @@ class WorkerOtherPayables(QObject):
         pyautogui.hotkey('ctrl', 'v')
         # pyautogui.write(str(center[0]))
         pyautogui.write('-')
-        
+
         # 3. 修改保存路径(905, 418)->(648, 418)
         # pyautogui.moveTo(905, 418)
         # pyautogui.dragTo(648, 418, 0.2, button='left')
@@ -286,7 +282,7 @@ class WorkerOtherPayables(QObject):
         time.sleep(0.5)
         if not os.path.exists(path):
             os.makedirs(path)
-            
+
         path = os.path.join(self.save_path, 'export')
         if not os.path.exists(path):
             os.makedirs(path)
@@ -353,7 +349,7 @@ class WorkerOtherPayables(QObject):
                     # 6. 新建营运中心文件夹，保存、更改文件名(添加 法人主体(营运中心)-默认)
                     self.export(center)
                     # 7. 回到过滤页面
-                    self.reback_filter()                   
+                    self.reback_filter()
                     # 8. 点击查询按钮
                     if subject != self.subjects[-1]:
                         self.click_query()

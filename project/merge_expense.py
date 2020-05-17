@@ -9,18 +9,9 @@
 """
 
 import os
-import sys
 import time
-import logging
-import pyautogui
-import pyperclip
-import xml.sax
-import configparser
 import pandas as pd
-import numpy as np
 import openpyxl
-import financial_ui as ui
-from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 
 nowTime = lambda:int(round(time.time()*1000))

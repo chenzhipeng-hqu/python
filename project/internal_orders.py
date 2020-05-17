@@ -5,18 +5,10 @@
 # @File    : *.py
 
 import os
-import sys
-import codecs
-import log
-import pyautogui
-import xml.sax
-import configparser
-import pandas as pd
-from financial_ui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from other_payables import *
+from project.other_payables import *
 
 
 class WorkerInterOrders(QObject):

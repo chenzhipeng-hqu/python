@@ -4,23 +4,10 @@
 # @Author  : 陈志鹏
 # @File    : custom_control.py
 
-import os
-import sys
-import codecs
-import logging
-import pyautogui
-import xml.sax
-import configparser
-import pandas as pd
-from financial_ui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from other_payables import *
-from internal_orders import *
+from project.internal_orders import *
 
-if hasattr(sys, 'frozen'):
-    os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
+# if hasattr(sys, 'frozen'):
+#     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 
 
 class WorkerCustCtrl(QObject):

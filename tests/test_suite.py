@@ -6,7 +6,7 @@
 
 import unittest
 from test_all import *
-import log
+from project import log
 
 logger = log.Log(__name__).getlog()
 

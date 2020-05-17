@@ -12,17 +12,17 @@ import pyautogui
 import xml.sax
 import configparser
 import pandas as pd
-from financial_ui import *
+from project.financial_ui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from other_payables import *
-from internal_orders import *
-from database_match import *
-from merge_expense import *
-from custom_control import *
-from others.merge import *
-from others.fetch import *
+from project.other_payables import *
+from project.internal_orders import *
+from project.database_match import *
+from project.merge_expense import *
+from project.custom_control import *
+from project.merge import *
+from project.fetch import *
 
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']

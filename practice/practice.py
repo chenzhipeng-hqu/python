@@ -9,17 +9,8 @@
 """
 
 import os
-import sys
-import time
-import logging
-import pyautogui
-import pyperclip
-import xml.sax
-import configparser
 import pandas as pd
 import openpyxl
-import financial_ui as ui
-from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 
 
