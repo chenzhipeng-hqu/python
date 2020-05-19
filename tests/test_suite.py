@@ -39,9 +39,9 @@ if __name__ == '__main__':
 
     suite.addTests(tests)
 
-    # with open('UnittestTextReport.txt', 'a') as f:
-    #     runner = unittest.TextTestRunner(stream=f, verbosity=2)
-    #     runner.run(suite)
+    with open('UnittestTextReport.txt', 'w') as f:
+        runner = unittest.TextTestRunner(stream=f, verbosity=2)
+        runner.run(suite)
 
-    runner = unittest.TextTestRunner(verbosity=2)
-    runner.run(suite)
+    # runner = unittest.TextTestRunner(verbosity=2)
+    # runner.run(suite)
