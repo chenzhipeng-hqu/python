@@ -1,1 +1,1 @@
-python project/main.py
+python ../project/main.py
