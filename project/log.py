@@ -5,23 +5,16 @@
 # @File    : xxx.py
 
 import os
+import sys
 import time
 import logging
-
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     filename='out.log',
-#     datefmt='%Y-%m-%d %H:%M:%S',
-#     format='%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s')
-#
-# logger = logging.getLogger()
 
 class Log(object):
     """
     封装后的logging
     """
 
-    def __init__(self, logger=None, log_cate='search'):
+    def __init__(self, logger=None, log_cate='search', log_path=os.getcwd()):
         """
         指定保存日志的文件路径，日志级别，以及调用文件
         将日志存入到指定的文件中
@@ -32,12 +25,16 @@ class Log(object):
         self.logger.setLevel(logging.DEBUG)
         # 创建一个handler，用于写入日志文件
         self.log_time = time.strftime("%Y_%m_%d")
-        file_dir = os.getcwd() + '/../log'
+        # if log_path == None:
+        #     file_dir = os.path.join(os.getcwd(), "log")
+        # else:
+
+        file_dir = os.path.join(log_path, "log")
         if not os.path.exists(file_dir):
             os.mkdir(file_dir)
             # print(file_dir)
-        self.log_path = file_dir
-        self.log_name = self.log_path + "/" + log_cate + "." + self.log_time + '.log'
+        # self.log_path = file_dir
+        self.log_name = file_dir + "/" + log_cate + "." + self.log_time + '.log'
         # print(self.log_name)
 
         # fh = logging.FileHandler(self.log_name, 'a')  # 追加模式  这个是python2的
@@ -80,4 +77,3 @@ if __name__ == '__main__':
     log = Log(__name__)
     logger = log.getlog()
     log.test()
-    pass
