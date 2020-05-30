@@ -50,7 +50,7 @@ class Log(object):
 
         # 定义handler的输出格式
         formatter = logging.Formatter(
-            '[%(asctime)s] %(filename)s->%(funcName)s line:%(lineno)d [%(levelname)s]%(message)s')
+            '[%(asctime)s] %(filename)s->%(funcName)s:%(lineno)d [%(levelname)1.1s] %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
 
@@ -68,6 +68,15 @@ class Log(object):
     def getlog(self):
         return self.logger
 
+    def test(self):
+        self.logger.critical("test")
+        self.logger.error("test")
+        self.logger.warning("test")
+        self.logger.info("test")
+        self.logger.debug("test")
+
 
 if __name__ == '__main__':
-    pass
+    log = Log(__name__)
+    logger = log.getlog()
+    log.test()
