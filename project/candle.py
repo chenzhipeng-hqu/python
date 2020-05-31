@@ -716,7 +716,10 @@ class Candle(object):
 
 if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
-    candle = Candle('正川股份', '603976', start='2020-05-15')
+    # candle = Candle('正川股份', '603976', start='2020-05-15')
+    # candle = Candle('中兴通讯', '000063', start='2020-05-15')
+    # candle = Candle('供销大集', '000564', start='2020-05-15')
+    candle = Candle('轴研科技', '002046', start='2020-05-15')
     # print(candle.get_attr())
     candle.get_mode()
     # candle.plot()
