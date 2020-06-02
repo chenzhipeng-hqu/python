@@ -6,6 +6,11 @@
 
 import os
 import sys
+
+work_path = os.path.join(os.path.dirname(sys.argv[0]), "../")
+sys.path.append(os.path.abspath(work_path))
+os.chdir(work_path)
+
 import codecs
 import log
 import pyautogui
@@ -26,6 +31,7 @@ from project.fetch import *
 
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
+
 
 logger = log.Log(__name__).getlog()
 
@@ -96,6 +102,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.database_fetch_pushButton.clicked.connect(self.database_match_fetch)
         path = os.path.join(os.getcwd(), r'datas\数据库底稿-SAP')
         self.database_fetch_path_pushButton.setText(path)
+        self.database_fetch_path_pushButton.setEnabled(False)
         # self.database_fetch_path_pushButton.clicked.connect(self.other_merge_path_dialog)
 
         # merge_expense
@@ -527,6 +534,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
 if __name__ == '__main__':
     try:
         # 每一pyqt5应用程序必须创建一个应用程序对象。sys.argv参数是一个列表，从命令行输入参数
+        logger.info('\r\n ---------------- welcom to use -----------------')
         app = QApplication(sys.argv)
         ui = UIMainWindow()
         ui.show()
