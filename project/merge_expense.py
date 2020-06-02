@@ -45,7 +45,7 @@ class MergeExpense(QObject):
         self.company_table = [
             #0.company in file  #1.company in sheet  #2. handle_G  #3. handle_Y  #4. handle_X  #5. handle_X2  #6. handle_C  #6. handle_Z
             ['高新', '高新', self.handle_GYXZ_other_data, self.handle_GYXZ_other_data, self.handle_GYXZ_other_data, self.handle_GYXZ_other_data, self.handle_general, self.handle_Z_GX],
-            ['有机硅', '有机硅', self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
+            ['有机硅', '有机硅', self.handle_general, None, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
             ['香港', '香港', self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
             ['九江天祺', '天祺', self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
             ['九江天赐', '九江', self.handle_G_JJTC, self.handle_YZ_JJTC, self.handle_X_JJTC, self.handle_X_JJTC, self.handle_general, self.handle_YZ_JJTC],
@@ -70,9 +70,11 @@ class MergeExpense(QObject):
         self.dst_file = kwargs.get('dst_file')
 
     def open_dst_file(self):
-        self.writer = pd.ExcelWriter(self.dst_file, engine='openpyxl', data_only=True)
+        # self.writer = pd.ExcelWriter(self.dst_file, engine='openpyxl', data_only=True)
+        self.writer = pd.ExcelWriter(self.dst_file, engine='openpyxl')
         # try to open an existing workbook
-        self.writer.book = openpyxl.load_workbook(self.dst_file, data_only=True)
+        # self.writer.book = openpyxl.load_workbook(self.dst_file, data_only=True)
+        self.writer.book = openpyxl.load_workbook(self.dst_file)
 
         # copy existing sheets
         self.writer.sheets = {ws.title: ws for ws in self.writer.book.worksheets}
@@ -100,7 +102,7 @@ class MergeExpense(QObject):
         wsheet = self.writer.book['目录']
         for i, sheet in enumerate(self.writer.sheets.keys()):
             link = r'{}#{}{}{}!E1'.format(os.path.basename(self.dst_file), "'", sheet, "'")
-            wsheet.cell(row=i+3, column=1, value=sheet).hyperlink = link
+            wsheet.cell(row=i+3, column=2, value=sheet).hyperlink = link
 
     def find_company_in_filename(self, src_file):
         for company in self.company_table:
@@ -122,7 +124,8 @@ class MergeExpense(QObject):
     def find_dst_col(self, match, sheet):
         for i in range(1, sheet.max_column+1):
             value = sheet.cell(row=5, column=i).value
-            if value == match:
+            # print(type(match), ', ', match, ';  ', type(value), ', ', value)
+            if str(match) in str(value):
                 # print(value, i)
                 # return i #just for test
                 return i - 1
@@ -207,7 +210,7 @@ class MergeExpense(QObject):
         self.open_dst_file()
         print(self.writer.sheets.keys())
 
-        # self.hyperlink_for_sheets()
+        self.hyperlink_for_sheets()
 
         for src_file in filelist:
             print(src_file)
@@ -215,6 +218,7 @@ class MergeExpense(QObject):
             excel_file = pd.ExcelFile(src_file)
             print(excel_file.sheet_names)
             for i, expense in enumerate(self.expense_table):
+                self.statusBar_singel.emit('正在合并%s %s\r\n' % (os.path.basename(src_file), expense[1]))
                 print(expense, end=', ')
 
                 # 找到源文件对应的费用名称
@@ -227,10 +231,11 @@ class MergeExpense(QObject):
                 dst_sheet = self.find_dst_sheet(dst_sheet_match, self.writer.sheets)
                 print(dst_sheet, end=', ')
 
-                if dst_sheet != '' and src_sheet != '':
+                if dst_sheet != '' and src_sheet != '' and company[i+2] != None:
                     wsheet = self.writer.book[dst_sheet]
                     month = '2020年' + self.month
-                    dst_month_col = self.find_dst_col(month, wsheet)
+                    dst_month_col = self.find_dst_col(self.month, wsheet)
+                    assert(dst_month_col != 0)
                     print('[dst_col:%d]' % (dst_month_col), end=', ')
 
                     src_df = pd.read_excel(src_file, sheet_name=src_sheet, header=expense[3])
@@ -256,10 +261,10 @@ class MergeExpense(QObject):
 if __name__ == '__main__':
     starttime = nowTime()
     merge_expense = MergeExpense()
-    merge_expense.set_parameter(month='4月', file_path=r'../datas/费用合并底稿/202004',
-                            dst_file=r'../datas/费用合并底稿/202004费用合并（公式）底稿(副本).xlsm')
-    # merge_expense.set_parameter(month='4月', file_path=r'./datas/费用合并底稿/202004',
-    #                         dst_file=r'./datas/费用合并底稿/202004费用合并（公式）底稿 - 副本.xlsm')
+    # merge_expense.set_parameter(month='4月', file_path=r'../datas/费用合并底稿/202004',
+    #                         dst_file=r'../datas/费用合并底稿/202004费用合并（公式）底稿(副本).xlsm')
+    merge_expense.set_parameter(month='5月', file_path=r'../datas/费用合并底稿/202005',
+                            dst_file=r'../datas/费用合并底稿/202005费用合并（公式）底稿 - 副本.xlsm')
 
     merge_expense.run()
     # merge_expense.check()
