@@ -28,6 +28,7 @@ from cycler import cycler# 用于定制线条颜色
 
 logger = log.Log(__name__, log_path=os.getcwd()).getlog()
 
+pd.set_option('display.max_columns', 20)
 
 class Candle(object):
     """
@@ -37,12 +38,17 @@ class Candle(object):
     def __init__(self, name, code, start):
         self.__code = code
         self.__name = name
-        self.df = ts.get_k_data(code, start=start)
+        self.df = ts.get_hist_data(code, start=start)
         # df = ts.get_k_data('603976')
 
-        self.df.index = pd.to_datetime(self.df.date)
+        # 转换为日期格式
+        # self.df.index = pd.to_datetime(self.df.date)
+        # self.df['date'] = pd.to_datetime(self.df['date'])
+        # self.df.set_index(['date'], inplace=True)
 
         self.df.sort_index(inplace=True)
+
+        print(self.df.tail())
 
     def get_attr(self):
         return (self.__code, self.__name)
@@ -139,7 +145,7 @@ class Candle(object):
     def CDLCLOSINGMARUBOZU(self, open, high, low, close):
         """
         12，CDLCLOSINGMARUBOZU  （Closing Marubozu 收盘光头光脚）
-        简介：一日K线模式，以阳线为例，最低价低于开盘价，收盘价等于最高价，预示着趋势持续。
+        简介：一日K线模式，以阳线为例，最低价等于开盘价，收盘价等于最高价，预示着趋势持续。
         例子：integer = CDLCLOSINGMARUBOZU(open, high, low, close)
         """
         return talib.CDLCLOSINGMARUBOZU(open, high, low, close)
@@ -475,7 +481,7 @@ class Candle(object):
     def CDLSPINNINGTOP(self, open, high, low, close):
         """
         52，CDLSPINNINGTOP  （Spinning Top 纺锤）
-        简介：一日K线，实体小。
+        简介：一日K线，实体小, 代表市场缺乏进一步上升和下跌的力量, 处于一种均衡状态, 带有巨大成交量的纺锤线意义更加重要
         例子：integer = CDLSPINNINGTOP(open, high, low, close)
         """
         return talib.CDLSPINNINGTOP(open, high, low, close)
@@ -555,6 +561,7 @@ class Candle(object):
     def plot(self):
         # 导入数据
         symbol = '603976'
+        df = ts.get_k_data(symbol, start='2020-01-12')
         df = ts.get_k_data(symbol, start='2020-01-12')
 
         # print(df.head())
@@ -718,8 +725,12 @@ if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
     # candle = Candle('正川股份', '603976', start='2020-05-15')
     # candle = Candle('中兴通讯', '000063', start='2020-05-15')
-    # candle = Candle('供销大集', '000564', start='2020-05-15')
-    candle = Candle('轴研科技', '002046', start='2020-05-15')
+    candle = Candle('供销大集', '000564', start='2020-05-15')
+    # candle = Candle('轴研科技', '002046', start='2020-05-15')
+    # candle = Candle('安记食品', '603696', start='2020-05-15')
+    # candle = Candle('东华软件', '002065', start='2020-05-15')
+    # candle = Candle('小商品城', '600415', start='2020-05-15')
+
     # print(candle.get_attr())
     candle.get_mode()
     # candle.plot()
