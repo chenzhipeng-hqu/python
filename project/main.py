@@ -513,7 +513,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
     def database_match_finish_singel(self):
         self.thread_database_match.quit()
         self.database_fetch_pushButton.setEnabled(True)
-        self.statusBar_singel('提取完成。')
+        # self.statusBar_singel('提取完成。')
         QMessageBox.about(self, "提示", "提取完成")
 
     def merge_expense_finish_singel(self):

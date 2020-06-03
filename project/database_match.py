@@ -4,11 +4,18 @@
 # @Author  : 陈志鹏
 # @File    : financial_tools.py
 
+import os
+import sys
+
+work_path = os.path.join(os.path.dirname(sys.argv[0]), "../")
+sys.path.append(os.path.abspath(work_path))
+os.chdir(work_path)
+
+import time
 from project.fetch import *
 
 # if hasattr(sys, 'frozen'):
 #     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
-
 
 nowTime = lambda:int(round(time.time()*1000))
 
@@ -74,6 +81,9 @@ class DatabaseMatch(QObject):
 
     def apply_id_ops(self, data):
         temp = self.src_FB03_df[self.src_FB03_df['apply_id'] == data['apply_id']]
+
+        self.data_cnt = self.data_cnt + 1
+        self.statusBar_singel.emit('正在提取 申请人 %d...\r\n' % (self.data_cnt))
         if temp.empty:
             ret = '#N/A'
         else:
@@ -98,6 +108,8 @@ class DatabaseMatch(QObject):
 
     def run(self):
         self.statusBar_singel.emit('正在提取...\r\n')
+        self.data_cnt = 0
+        starttime = nowTime()
         src_file = r'./datas/数据库底稿-SAP/FAGLL03.xlsx'
         # src_file = r'./datas/original_data/调整内部订单号.xls'
         src_index_file = r'./datas/数据库底稿-SAP/索引.xlsx'
@@ -111,8 +123,12 @@ class DatabaseMatch(QObject):
         # print(src_index_df.head())
         # print(src_data_df.head())
 
-        self.src_FB03_df['apply_id'] = self.src_FB03_df['公司代码'] + self.src_FB03_df['凭证编号']
-
+        # self.src_FB03_df['apply_id'] = self.src_FB03_df['公司代码'] + self.src_FB03_df['凭证编号']
+        self.src_FB03_df['apply_id'] = (self.src_FB03_df['公司代码'].map(str) + self.src_FB03_df['凭证编号'].map(str)).map(int)
+        # print('self.src_FB03_df:')
+        # print(self.src_FB03_df['公司代码'].head())
+        # print(self.src_FB03_df['凭证编号'].head())
+        # print(self.src_FB03_df['apply_id'].head())
         dst_df = pd.DataFrame(columns=['会计年度', '期间', '凭证日期', '凭证编号', '科目编号', '科目名称', '借方本币', '摘要', '部门', '部门名称', '申请人',
                                        '员工姓名', '项目编号', '项目名称', '账套'])
         # dst_df = pd.read_excel(dst_file)
@@ -125,25 +141,37 @@ class DatabaseMatch(QObject):
         dst_df['部门'] = src_data_df['成本中心']
         dst_df['项目编号'] = src_data_df['订单']
 
+        self.statusBar_singel.emit('正在提取 科目名称 ...\r\n')
         dst_df['科目名称'] = src_data_df.apply(self.subject_num_ops, axis=1)
+        self.statusBar_singel.emit('正在提取 摘要 ...\r\n')
         dst_df['摘要'] = src_data_df.apply(self.abstract_ops, axis=1)
+        self.statusBar_singel.emit('正在提取 部门名称 ...\r\n')
         dst_df['部门名称'] = src_data_df.apply(self.department_name_ops, axis=1)
+        self.statusBar_singel.emit('正在提取 项目名称 ...\r\n')
         dst_df['项目名称'] = src_data_df.apply(self.project_num_ops, axis=1)
+        self.statusBar_singel.emit('正在提取 账套 ...\r\n')
         dst_df['账套'] = src_data_df.apply(self.company_ops, axis=1)
 
-        src_data_df['apply_id'] = src_data_df['公司代码'] + src_data_df['凭证编号']
+        self.statusBar_singel.emit('正在提取 公司代码+凭证编号 ...\r\n')
+        # src_data_df['apply_id'] = src_data_df['公司代码'] + src_data_df['凭证编号']
+        src_data_df['apply_id'] = (src_data_df['公司代码'].map(str) + src_data_df['凭证编号'].map(str)).map(int)
+        # print('src_data_df:')
+        # print(src_data_df['公司代码'].head())
+        # print(src_data_df['凭证编号'].head())
+        # print(src_data_df['apply_id'].head())
         dst_df['申请人'] = src_data_df.apply(self.apply_id_ops, axis=1)
         # src_data_df['申请人'] = dst_df['申请人']
+        self.statusBar_singel.emit('正在提取 员工姓名...\r\n')
         dst_df['员工姓名'] = dst_df.apply(self.staff_ops, axis=1)
 
         # dst_df[['科目名称', '摘要', '部门名称', '项目名称', '账套']] = src_data_df.apply(self.src_data_ops, axis=1, result_type='expand')
 
+        self.statusBar_singel.emit('正在合成文件...\r\n')
         dst_df.to_excel(dst_file, index=False, engine='openpyxl')
-        self.statusBar_singel.emit('完成.\r\n')
+        self.statusBar_singel.emit('完成, %dms\r\n' % (nowTime()-starttime))
+        print('finish', nowTime()-starttime, 'ms')
         self.finish_singel.emit()
 
 if __name__ == '__main__':
-    starttime = nowTime()
     database_match = DatabaseMatch()
     database_match.run()
-    print('finish', nowTime()-starttime, 'ms')
