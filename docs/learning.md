@@ -10,3 +10,8 @@
 
 # 学习过程
 ## 数据库
+1. install
+```
+https://www.cnblogs.com/Zlcode/p/11475298.html
+```
+
