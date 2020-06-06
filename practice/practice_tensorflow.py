@@ -47,19 +47,19 @@ def test1():
     sess.run(init)
 
     # 拟合平面
-    for step in xrange(0, 201):
+    for step in range(0, 201):
         sess.run(train)
         if step % 20 == 0:
-            print
-            step, sess.run(W), sess.run(b)
+            print(step, sess.run(W), sess.run(b))
 
     # 得到最佳拟合结果 W: [[0.100  0.200]], b: [0.300]
+    sess.close()
 
 
 def test2():
     # 进入一个交互式 TensorFlow 会话.
     import tensorflow as tf
-    sess = tf.InteractiveSession()
+    sess = tf.compat.v1.InteractiveSession()
 
     x = tf.Variable([1.0, 2.0])
     a = tf.constant([3.0, 3.0])
@@ -68,11 +68,10 @@ def test2():
     x.initializer.run()
 
     # 增加一个减法 sub op, 从 'x' 减去 'a'. 运行减法 op, 输出结果
-    sub = tf.sub(x, a)
-    print
-    sub.eval()
+    sub = tf.subtract(x, a)
+    print(sub.eval())
     # ==> [-2. -1.]
 
 if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
-    test2()
+    test1()
