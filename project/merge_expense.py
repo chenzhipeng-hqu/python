@@ -101,8 +101,10 @@ class MergeExpense(QObject):
     def hyperlink_for_sheets(self):
         wsheet = self.writer.book['目录']
         for i, sheet in enumerate(self.writer.sheets.keys()):
-            link = r'{}#{}{}{}!E1'.format(os.path.basename(self.dst_file), "'", sheet, "'")
-            wsheet.cell(row=i+3, column=2, value=sheet).hyperlink = link
+            # link = r'{}#{}{}{}!E1'.format(os.path.basename(self.dst_file), "'", sheet, "'")
+            # wsheet.cell(row=i+3, column=2, value=sheet).hyperlink = link
+            link = '=HYPERLINK("#{}{}{}!E1","{}")'.format("'", sheet, "'", sheet)
+            wsheet.cell(row=i+3, column=2, value=link)
 
     def find_company_in_filename(self, src_file):
         for company in self.company_table:
