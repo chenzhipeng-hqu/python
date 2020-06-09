@@ -19,6 +19,7 @@ os.chdir(work_path)
 # from ReadCode import ReadCode
 import tushare as ts
 import pandas as pd
+import sqlite3
 
 from project import log
 
@@ -175,10 +176,86 @@ def test5():
 
     everdate('2020-03-01', '2020-06-03')
 
+def test6():
+    conn = sqlite3.connect('kingname.db')
+    try:
+        with conn:
+            conn.execute('''
+            CREATE TABLE user (
+            name TEXT,
+            age INTEGER,
+            address TEXT,
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT);
+            ''')
+    except Exception as err:
+        print(err)
+
+    sql = 'insert into user (id, name, age, address) values(?, ?, ?, ?)'
+    datas = [
+        (1, 'kingname', 20, '浙江省杭州市'),
+        (2, '产品经理', 18, '上海市'),
+        (3, '胖头猪', 8, '吃屁岛')
+    ]
+    with conn:
+        conn.executemany(sql, datas)
+
+    with conn:
+        datas = conn.execute("select * from user where name = 'kingname'")
+        for data in datas:
+            print(data)
+
+import tushare as ts
+
+def test7():
+    conn = sqlite3.connect('stocks.db')
+    # cursor = conn.cursor()
+    try:
+        with conn:
+            conn.execute('''
+            create table allstock (
+                code varchar(32),
+                name varchar(32),
+                industry varchar(32),
+                area varchar(32))
+            ''')
+    except Exception as err:
+        print(err)
+
+    # 通过tushare库获取所有的A股列表
+    stock_info = ts.get_stock_basics()
+
+    codes = stock_info.index
+    names = stock_info.name
+    industrys = stock_info.industry
+    areas = stock_info.area
+
+    #通过for循环遍历所有股票，然后拆分获取到需要的列，将数据写入到数据库中
+    a=0
+    for i in range(0, len(stock_info)):
+        sql = 'insert into allstock (code,name,industry,area) values (?, ?, ?, ?)'
+        datas = [
+            (codes[i],
+             names[i],
+             industrys[i],
+             areas[i])
+        ]
+        conn.executemany(sql, datas)
+        sql = 'insert into allstock (code,name,industry,area) values (%s,%s,%s,%s)' % (codes[i], names[i], industrys[i], areas[i])
+        # cursor.execute(sql)
+        a += 1
+    #统计所有A股数量
+    print('共获取到%d支股票' % a)
+
+    conn.close()
+    # cursor.close()
+
+
 if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
     # test1()
     # test2()
     # test3()
     # test4()
-    test5()
+    # test5()
+    # test6()
+    test7()
