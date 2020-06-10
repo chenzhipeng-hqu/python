@@ -721,6 +721,28 @@ class Candle(object):
             if data.empty == False:
                 logger.info('%s: {%s}' % (func[0].__doc__, data))
 
+    def find_CDLENGULFING_code(self):
+        stock_info = ts.get_stock_basics()
+        codes = sorted(stock_info.index, reverse=True)
+        start = '2020-06-08'
+        # codes = ['000793']
+        find_codes = []
+        for code in codes:
+            # logger.info(code)
+            # 利用tushare包获取单只股票的阶段性行情
+            df = ts.get_hist_data(code, start=start)
+            try:
+                df.sort_index(inplace=True)
+                # print(df.head())
+                integer = self.CDLENGULFING(df.open, df.high, df.low, df.close)
+                data = integer[integer != 0]
+                data = data[data.index > start]
+                if data.empty == False:
+                    logger.info('[%s] %s: {%s}' % (code, self.CDLENGULFING.__doc__, data))
+                    find_codes.append(code)
+            except Exception as err:
+                logger.info(err)
+        logger.info(find_codes)
 
 if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
@@ -731,9 +753,11 @@ if __name__ == '__main__':
     # candle = Candle('安记食品', '603696', start='2020-05-15')
     # candle = Candle('东华软件', '002065', start='2020-05-15')
     # candle = Candle('小商品城', '600415', start='2020-05-15')
-    candle = Candle('奥普光电', '002338', start='2020-05-15')
+    # candle = Candle('奥普光电', '002338', start='2020-05-15')
+    candle = Candle('华闻集团', '000793', start='2020-05-15')
 
     # print(candle.get_attr())
-    candle.get_mode(start='2020-06-01')
+    # candle.get_mode(start='2020-06-09')
     # candle.plot()
+    candle.find_CDLENGULFING_code()
 
