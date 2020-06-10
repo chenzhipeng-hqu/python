@@ -17,6 +17,7 @@ sys.path.append(os.path.abspath(work_path))
 os.chdir(work_path)
 
 import time
+import datetime
 import sqlite3
 import tushare as ts
 from project import log
@@ -43,6 +44,8 @@ class DataBase(object):
             # self.__creat_table_stocks(start='2020-06-01', end='2020-06-04')
             self.__creat_table_stocks(start=start, end='2020-06-04')
 
+        logger.info('max_date: %s' % self.fetch_max_date('000001'))
+
     def __del__ (self):
         self.conn.commit()
         self.cursor.close()
@@ -55,19 +58,19 @@ class DataBase(object):
         '''
         try:
             self.conn.execute('''
-            create table allstock (
+            create table allstocks (
                 code varchar(32) NOT NULL UNIQUE,
                 name varchar(32) ,
                 industry varchar(32) ,
                 area varchar(32))
             ''')
             # cursor = self.conn.cursor()
-            # cursor.execute('alter table allstock add unique (date)')
+            # cursor.execute('alter table allstocks add unique (date)')
         except Exception as err:
             logger.warning(err)
         stock_info = ts.get_stock_basics()
         stock_info.sort_index(inplace=True)
-        stock_info.to_sql('allstock', self.conn, if_exists='replace', chunksize=10000)
+        stock_info.to_sql('allstocks', self.conn, if_exists='replace', chunksize=10000)
 
         # 统计所有A股数量
         logger.info('共获取到%d支股票' % (len(stock_info)))
@@ -75,14 +78,14 @@ class DataBase(object):
     def __creat_table_allstocks2(self):
         try:
             self.conn.execute('''
-            create table allstock (
+            create table allstocks (
                 code varchar(32) NOT NULL UNIQUE,
                 name varchar(32) ,
                 industry varchar(32) ,
                 area varchar(32))
             ''')
             # cursor = self.conn.cursor()
-            # cursor.execute('alter table allstock add unique (date)')
+            # cursor.execute('alter table allstocks add unique (date)')
         except Exception as err:
             logger.warning(err)
 
@@ -96,10 +99,10 @@ class DataBase(object):
 
         # 通过for循环遍历所有股票，然后拆分获取到需要的列，将数据写入到数据库中
         datas = [(codes[i], names[i], industrys[i], areas[i]) for i in range(0, len(stock_info))]
-        sql = 'insert or ignore into allstock (code,name,industry,area) values (?, ?, ?, ?)'
+        sql = 'insert or ignore into allstocks (code,name,industry,area) values (?, ?, ?, ?)'
         self.conn.executemany(sql, datas)
 
-        # stock_info.to_sql('allstock', self.conn, if_exists='replace')
+        # stock_info.to_sql('allstocks', self.conn, if_exists='replace')
 
         # 统计所有A股数量
         logger.info('共获取到%d支股票' % (len(stock_info)))
@@ -128,22 +131,25 @@ class DataBase(object):
 
         cur.close()
 
-    def __strptime(self, data):
-        times = time.strptime(data, '%Y-%m-%d')
-        time_new = time.strftime('%Y%m%d', times)
-        return time_new
+    def __time2format(self, data, i_fmt, o_fmt):
+        times = time.strptime(data, i_fmt)
+        return time.strftime(o_fmt, times)
+
+    def __date2time(self, data):
+        return self.__time2format(data, '%Y-%m-%d', '%Y%m%d')
 
     def __creat_table_stocks(self, start, end=time.strftime('%Y-%m-%d')):
         # 获取所有有股票
         stock_info = ts.get_stock_basics()
-        codes = sorted(stock_info.index)[:5]
+        codes = sorted(stock_info.index)[:24]
         for code in codes:
             df = ts.get_hist_data(code, start=start, end=end)
-            df.sort_index(inplace=True)
-            df.index = df.index.map(self.__strptime)
-            df = df[['open', 'close', 'high', 'low', 'volume', 'p_change']]
 
             try:
+                df.sort_index(inplace=True)
+                df.index = df.index.map(self.__date2time)
+                df = df[['open', 'close', 'high', 'low', 'volume', 'p_change']]
+
                 # self.conn.execute('create table stock_' + code
                 #      + ' (date varchar(32),'
                 #        'open varchar(32),'
@@ -162,7 +168,7 @@ class DataBase(object):
                 #        'unique(date))')
                 # self.conn.commit()
 
-                self.cursor.execute(
+                self.conn.execute(
                     'create table if not exists stock_' + code + ' (date varchar(32),open varchar(32),close varchar(32),high varchar(32),low varchar(32),volume varchar(32),p_change varchar(32),unique(date))')
 
                 # 利用tushare包获取单只股票的阶段性行情
@@ -188,46 +194,153 @@ class DataBase(object):
     def __add_data_to_stocks(self, start=time.strftime('%Y-%m-%d'), end=time.strftime('%Y-%m-%d')):
         # 获取所有有股票
         stock_info = ts.get_stock_basics()
-        codes = sorted(stock_info.index)[:5]
+        # 每次将 000001 放在最后更新, update中判断000001是否最新数据
+        codes = sorted(sorted(stock_info.index)[:24], reverse=True)
+        # codes = sorted(stock_info.index)
         for code in codes:
+            cursor = self.conn.execute(
+                'create table if not exists stock_' + code + ' (date varchar(32),open varchar(32),close varchar(32),high varchar(32),low varchar(32),volume varchar(32),p_change varchar(32),unique(date))')
+            # logger.info(len(list(cursor)))
+            # logger.info(code)
+
+            # 利用tushare包获取单只股票的阶段性行情
             df = ts.get_hist_data(code, start=start, end=end)
-            df.sort_index(inplace=True)
-            df = df[['open', 'close', 'high', 'low', 'volume', 'p_change']]
 
             try:
-                # 利用tushare包获取单只股票的阶段性行情
+                df.sort_index(inplace=True)
+                df = df[['open', 'close', 'high', 'low', 'volume', 'p_change']]
                 # 这里使用try，except的目的是为了防止一些停牌的股票，获取数据为空，插入数据库的时候失败而报错
                 # 再使用for循环遍历单只股票每一天的行情
-                for i in range(0, len(df)):
-                    # 获取股票日期，并转格式（这里为什么要转格式，是因为之前我2018-03-15这样的格式写入数据库的时候，通过通配符%之后他居然给我把-符号当做减号给算出来了查看数据库日期就是2000百思不得其解想了很久最后决定转换格式）
-                    times = time.strptime(df.index[i], '%Y-%m-%d')
-                    time_new = time.strftime('%Y%m%d', times)
-                    # 插入每一天的行情
-                    self.cursor.execute('insert or ignore into stock_' + code + ' (date,open,close,high,low,volume,p_change) values (%s,%s,%s,%s,%s,%s,%s)' %
-                                   (time_new, df.open[i], df.close[i], df.high[i], df.low[i], df.volume[i],
-                                   df.p_change[i]))
+                # for i in range(0, len(df)):
+                #     # 获取股票日期，并转格式（这里为什么要转格式，是因为之前我2018-03-15这样的格式写入数据库的时候，通过通配符%之后他居然给我把-符号当做减号给算出来了查看数据库日期就是2000百思不得其解想了很久最后决定转换格式）
+                #     time_new = self.__date2time(df.index[i])
+                #     # logger.debug(time_new)
+                #     # 插入每一天的行情
+                #     sql = r'insert or ignore into stock_' + code + ' (date,open,close,high,low,volume,p_change) values (%s,%s,%s,%s,%s,%s,%s)' %\
+                #                    (time_new, df.open[i], df.close[i], df.high[i], df.low[i], df.volume[i],
+                #                    df.p_change[i])
+                #     self.conn.execute(sql)
+                #     # logger.info(sql)
 
-                logger.info('stock_%s的表格添加完成' % (code))
+                # 通过for循环遍历所有股票，然后拆分获取到需要的列，将数据写入到数据库中
+                datas = [(self.__date2time(df.index[i]), \
+                          df.open[i], df.close[i], df.high[i], df.low[i], \
+                          df.volume[i], df.p_change[i]) for i in range(0, len(df))]
+                # sql = 'insert or ignore into allstocks (code,name,industry,area) values (?, ?, ?, ?)'
+                sql = r'insert or ignore into stock_' + code + ' (date,open,close,high,low,volume,p_change) values (?,?,?,?,?,?,?)'
+                self.conn.executemany(sql, datas)
+
+                logger.info('stock_%s 表格添加完成' % (code))
             except Exception as err:
                 logger.warning(err)
-                logger.info('%s这股票目前停牌' % code)
+                logger.info('%s这股票目前无数据' % code)
         logger.info('%d张表格数据插入完成' % len(codes))
 
-    def fetch_data(self, start, end):
-        cursor.execute('select * from stock_' + value_code[i][0] + ' where date=%s or date =%s order by date desc' % (
-        today, str_yestoday))  # 当天
+    def get_all_stocks(self):
+        cur = self.conn.cursor()
+        sql = 'select * from allstocks'
+        cur.execute(sql)  # 返回受影响的行数
+        all_data = cur.fetchall()  # 所有数据
+        # print(len(all_data))
+        # print(all_data)
+        return all_data
+
+    def fetch_data(self, code, start, end=None):
+        '''
+        https://cloud.tencent.com/developer/article/1532914
+        '''
+        # self.cursor.execute('select * from stock_' + code + ' order by date desc limit 1')  # 当天
+        self.cursor.execute('select * from stock_' + code + ' where date>=%s and date<=%s' % (start, end))
+        value = self.cursor.fetchall()
+        logger.debug(value)
+        return value
+
+    def fetch_min_date(self, code):
+        self.cursor.execute('select min(date) from stock_' + code) # 返回 date 列的最大值
+        value = self.cursor.fetchone()
+        # print(value)
+        return value
+
+    def fetch_max_date(self, code):
+        self.cursor.execute('select max(date) from stock_' + code) # 返回 date 列的最大值
         # cursor.execute('select * from stock_'+ value_code[i][0]+ ' where date=%s or date =%s'%('20180315','20180314'))
-        value = cursor.fetchall()
+        value = self.cursor.fetchone()
+        # print(value)
+        return value
+
+    def fetch_history_data(self, start):
+        '''
+        第一条数据比 start 更大 则更新数据
+        '''
+        start_day = self.__time2format(start, '%Y-%m-%d', '%Y%m%d')
+        first_day = self.fetch_min_date('000001')[0]
+
+        if start_day < first_day:
+            logger.info('code:000001, start_day:%s, db_first_day:%s' % (start_day, first_day))
+            start = self.__time2format(start_day, '%Y%m%d', '%Y-%m-%d')
+            first = self.__time2format(first_day, '%Y%m%d', '%Y-%m-%d')
+            self.__add_data_to_stocks(start, first)
+
+    def fetch_len_allstocks(self):
+        # 先计算一个数据库表中的行数
+        self.cursor.execute('select count(*) from allstocks;')
+        # cursor.execute('select * from stock_'+ value_code[i][0]+ ' where date=%s or date =%s'%('20180315','20180314'))
+        value = self.cursor.fetchone()[0]
+        # print(value)
+        return value
+
+    def update_allstocks(self):
+        '''
+        每次启动的时候检查一次是否更新, 以股票数量为主
+        :return:
+        '''
+        len = self.fetch_len_allstocks()
+        # 获取所有有股票
+        stock_info = ts.get_stock_basics()
+        logger.debug(stock_info.shape[0])
+        if len < stock_info.shape[0]:
+            self.__creat_table_allstocks()
+
+    def update_stock_code(self):
+        '''
+        每次启动的时候检查一次是否更新, 以000001为准
+        :return:
+        '''
+        last_day = self.fetch_max_date('000001')[0]
+        today = datetime.datetime.now()
+
+        now = time.strftime('%H:%M:%S')
+        if now < '15:06:06':
+            logger.info('没到下午3点')
+            today = today + datetime.timedelta(days=-1)
+
+        today = today.strftime('%Y%m%d')
+
+        if today != last_day:
+            start = self.__time2format(last_day, '%Y%m%d', '%Y-%m-%d')
+            today = time.strftime('%Y-%m-%d')
+            logger.info('code:000001, db_last_day:%s, today:%s' % (last_day, today))
+            self.__add_data_to_stocks(start, today)
+            # self.__add_data_to_stocks('2020-06-01')
 
     def update(self):
-
-        self.__add_data_to_stocks('2020-06-03')
+        '''
+        每次启动的时候检查一次是否更新, 以000001为准
+        :return:
+        '''
+        self.update_allstocks()
+        self.update_stock_code()
 
 
 if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
-    db = DataBase(start='2020-06-01', database='./datas/stocks.db')
+    db = DataBase(start='2020-06-03', database='./datas/stocks.db')
+    db.fetch_history_data('2020-06-01')
     db.update()
+    # value = db.fetch_data('000001', '20200603', '20200605')
 
-    db.export2excel('allstock')
+    db.export2excel('allstocks')
     db.export2excel('stock_000001')
+
+    # for stock in db.get_all_stocks():
+    #     print(stock[0])
