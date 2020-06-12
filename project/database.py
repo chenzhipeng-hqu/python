@@ -60,7 +60,7 @@ class DataBase(object):
         '''
         try:
             self.conn.execute('''
-            create table allstocks (
+            create table if not exists allstocks (
                 code varchar(32) NOT NULL UNIQUE,
                 name varchar(32) ,
                 industry varchar(32) ,
@@ -80,7 +80,7 @@ class DataBase(object):
     def __creat_table_allstocks2(self):
         try:
             self.conn.execute('''
-            create table allstocks (
+            create table if not exists allstocks (
                 code varchar(32) NOT NULL UNIQUE,
                 name varchar(32) ,
                 industry varchar(32) ,
@@ -295,6 +295,17 @@ class DataBase(object):
         # print(value)
         return value
 
+    def get_company(self, code):
+        # self.cursor.execute('select count(*) from allstocks;')
+        # self.cursor.execute('select * from allstocks where code=' + code)
+        # value = self.cursor.fetchall()
+        self.cursor.execute('select * from allstocks')
+        for value in self.cursor.fetchall():
+            if value[0] == code:
+                break
+        print(value)
+        return value[1]
+
     def update_allstocks(self):
         '''
         每次启动的时候检查一次是否更新, 以股票数量为主
@@ -356,8 +367,9 @@ class DataBase(object):
         #连接数据库
         cursor = self.conn.cursor()
         #查找allstock表获取所有股票代码
-        cursor.execute('select code from allstocks')
+        cursor.execute('select code,name from allstocks')
         value_code = cursor.fetchall()
+        # print(value_code)
         a = 0
         count = []
         #遍历所有股票
@@ -384,7 +396,7 @@ class DataBase(object):
                 p_change2 = float(value[1][6])
 
                 #加入这两天的数据满足昨天下跌超过2%，而且今天的开盘价低于昨天的收盘价，且今天的收盘价高于昨天的收盘价，就满足阳包阴的条件
-                if opens2<close1 and close2>opens1 and p_change2<-2 and p_change1>9.8:
+                if opens2 < close1 and close2 > opens1 and p_change2 < -2.5 and p_change1 > 9.8:
                     # logger.info('%s票%s的开盘价是%s'%(value_code[i][0],today,opens1))
                     # logger.info('%s票%s的收盘价是%s'%(value_code[i][0],today,close1))
                     # logger.info('%s票%s的涨幅是%s'%(value_code[i][0],today,p_change1))
@@ -393,13 +405,18 @@ class DataBase(object):
                     # logger.info('%s票%s的涨幅是%s'%(value_code[i][0],str_yestoday,p_change2))
                     logger.info('%s: %s' % (value_code[i][0], value[0]))
                     logger.info('%s: %s' % ('      ', value[1]))
-                    # logger.info('%s' % (value[1]))
+                    # logger.info('%s' % (value_code[i][1]))
                     #将满足条件的股票代码放进列表中，统计当天满足条件的股票
-                    count.append(value_code[i][0])
+                    # count.append(value_code[i][0])
+                    find = '%s:%s' % (value_code[i][1], value_code[i][0])
+                    count.append(find)
                     a += 1
             except:
                 #之前有次sql语句出错了，order by后面没加date，每次寻找都是0支，找了半个多小时才找出来是sql语句的问题
                 logger.debug('%s停牌无数据,或者请查看sql语句是否正确' % value_code[i][0])#一般不用管，除非执行好多天的数据都为0时那可能输sql语句有问题了
+
+        with open('./datas/report/%s.txt' % (today), 'w') as fp:
+            fp.write('总共找到%d支满足条件的股票:%s' % (a, count))
 
         logger.info('总共找到%d支满足条件的股票:%s' % (a, count))
         return count, a
@@ -416,4 +433,5 @@ if __name__ == '__main__':
 
     # for stock in db.get_all_stocks():
     #     print(stock[0])
-    # db.valid_stock('2020-06-10')
+    db.valid_stock('2020-06-12')
+    # db.get_company('000001')
