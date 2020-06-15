@@ -353,17 +353,22 @@ class DataBase(object):
         从数据库获取股票数据，统计想要查找日期的满足阳包阴并且当天涨停的股票
         '''
         # 先将字符串格式的时间转换为时间格式才能计算昨天的日期
-        now = datetime.date(*map(int,dates.split('-')))
+        now = datetime.date(*map(int, dates.split('-')))
         oneday = datetime.timedelta(days=1)
         yestody = str(now - oneday)
         #将昨天日期转换为规定的字符串格式
-        times = time.strptime(yestody,'%Y-%m-%d')
-        str_yestoday = time.strftime('%Y%m%d',times)
-        logger.info('执行的时间前一天是%s'%str_yestoday)
+        times = time.strptime(yestody, '%Y-%m-%d')
+        weekday = time.strftime("%w", times)
+        if weekday is '0':  #如果昨天是周日, 则调整上一个交易日到周五
+            yestody = str(now - oneday - oneday - oneday)
+            #将昨天日期转换为规定的字符串格式
+            times = time.strptime(yestody, '%Y-%m-%d')
+        str_yestoday = time.strftime('%Y%m%d', times)
+        logger.info('执行的时间前一天是%s' % str_yestoday)
         #将想要查找的日期转换为规定的字符串格式
-        str_today = time.strptime(dates,'%Y-%m-%d')
-        today = time.strftime('%Y%m%d',str_today)
-        logger.info('执行的时间是%s'%today)
+        str_today = time.strptime(dates, '%Y-%m-%d')
+        today = time.strftime('%Y%m%d', str_today)
+        logger.info('执行的时间是%s' % today)
         #连接数据库
         cursor = self.conn.cursor()
         #查找allstock表获取所有股票代码
@@ -377,7 +382,8 @@ class DataBase(object):
             # if re.match('000',value_code[i][0]) or re.match('002',value_code[i][0]):
             #查询所有匹配到的股票，将今天与昨天的数据对比
             try:
-                sql = 'select * from stock_'+ value_code[i][0]+ ' where date=%s or date =%s order by date desc' % (today, str_yestoday)
+                sql = 'select * from stock_' + value_code[i][0] \
+                      + ' where date=%s or date=%s order by date desc limit 2' % (today, str_yestoday)
                 # logger.info(sql)
                 cursor.execute(sql)  #当天
                 #cursor.execute('select * from stock_'+ value_code[i][0]+ ' where date=%s or date =%s'%('20180315','20180314'))
@@ -429,9 +435,10 @@ if __name__ == '__main__':
     # value = db.fetch_data('000001', '20200603', '20200605')
 
     # db.export2excel('allstocks')
-    db.export2excel('stock_000001')
+    # db.export2excel('stock_000001')
 
     # for stock in db.get_all_stocks():
     #     print(stock[0])
-    db.valid_stock('2020-06-12')
+    db.valid_stock('2020-06-15')
     # db.get_company('000001')
+    # db.get_last_trade_day()
