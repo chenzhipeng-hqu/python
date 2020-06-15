@@ -721,10 +721,10 @@ class Candle(object):
             if data.empty == False:
                 logger.info('%s: {%s}' % (func[0].__doc__, data))
 
-    def find_CDLENGULFING_code(self):
+    def find_CDLENGULFING_code(self, start):
         stock_info = ts.get_stock_basics()
         codes = sorted(stock_info.index, reverse=True)
-        start = '2020-06-08'
+        # start = '2020-06-08'
         # codes = ['000793']
         find_codes = []
         for code in codes:
@@ -754,10 +754,11 @@ if __name__ == '__main__':
     # candle = Candle('东华软件', '002065', start='2020-05-15')
     # candle = Candle('小商品城', '600415', start='2020-05-15')
     # candle = Candle('奥普光电', '002338', start='2020-05-15')
-    candle = Candle('华闻集团', '000793', start='2020-05-15')
+    # candle = Candle('华闻集团', '000793', start='2020-05-15')
+    candle = Candle('姚记科技', '002605', start='2020-05-15')
 
     # print(candle.get_attr())
-    # candle.get_mode(start='2020-06-09')
+    # candle.get_mode(start='2020-06-08')
     # candle.plot()
-    candle.find_CDLENGULFING_code()
+    candle.find_CDLENGULFING_code('2020-06-10')
 
