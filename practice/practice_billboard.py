@@ -164,15 +164,16 @@ def billboard2(date):
 
     # data = ts.cap_tops()
     # print(data)
-    #
-    # data = ts.broker_tops()
-    # print(data)
+
+    data = ts.broker_tops()
+    print(data)
+    data.to_excel('../datas/billboard.xls', index=False)
 
     # data = ts.inst_tops()
     # print(data)
 
-    data = ts.inst_detail()
-    print(data)
+    # data = ts.inst_detail()
+    # print(data)
 
 if __name__ == '__main__':
     # billboard()
