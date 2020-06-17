@@ -137,6 +137,7 @@ class WorkerOtherPayables(QObject):
         # 查看软件是否打开
         position = self.wait_pic('datas/picture/GeneroDeskTop.png')
         # 2. 双击用户（624, 350）
+        pyautogui.press('SHIFT')
         pyautogui.moveTo(position[0], position[1])
         pyautogui.doubleClick()
         # 3. 输入账号（540, 512）
@@ -159,7 +160,7 @@ class WorkerOtherPayables(QObject):
     def select_center(self, center):
         # 查看软件是否打开
         #self.wait_pic('datas/picture/select_center.png', tip=False)
-        time.sleep(1)
+        time.sleep(2)
         # print(center)
         # # 1. 选择账套(营运中心) 点击查询放大镜(1218, 558)
         # pyautogui.click(1218, 558, duration=1)
@@ -236,8 +237,11 @@ class WorkerOtherPayables(QObject):
 
     def filter_subject(self, subject):  # 4. 筛选条件(期间(年、月、年、月)， 科目, 点击确定筛选
         # 9. 点击科目(30, 240)
-        pyautogui.moveTo(30, 240)
+        position = self.wait_pic('datas/picture/Subject.png')
+        pyautogui.moveTo(position[0], position[1])
         pyautogui.click(duration=0.5)
+        # pyautogui.moveTo(30, 240)
+        # pyautogui.click(duration=0.5)
         # 10. 输入科目编号（1221*，2241*）
         pyautogui.write(subject)
         print(subject)
@@ -278,7 +282,9 @@ class WorkerOtherPayables(QObject):
 
         # 4. 新建营运中心文件夹
         path = os.path.join(self.save_path, 'download')
-        pyautogui.write(path)
+        pyperclip.copy(str(path))
+        pyautogui.hotkey('ctrl', 'v')
+        # pyautogui.write(path)
         time.sleep(0.5)
         if not os.path.exists(path):
             os.makedirs(path)
@@ -304,15 +310,18 @@ class WorkerOtherPayables(QObject):
 
     def click_query(self):
         # 3. 点击查询按钮 (408, 63)
-        pyautogui.moveTo(408, 63)
-        pyautogui.click(duration=1)
+        position = self.wait_pic('datas/picture/Query.png')
+        pyautogui.moveTo(position[0], position[1])
+        pyautogui.click(duration=0.5)
+        # pyautogui.moveTo(408, 63)
+        # pyautogui.click(duration=1)
 
     def reback_center(self): # 1. 回到选择账套(营运中心)界面
         # 1. 关闭查询页面 (1580, 8)
         pyautogui.moveTo(1580, 8)
         pyautogui.click(duration=1)
         # 2. 点击更改营运中心 (970, 143)
-        pyautogui.moveTo(970, 143)
+        pyautogui.moveTo(820, 143)
         pyautogui.click(duration=1)
 
         # # 5. 点击查询放大镜 (1112, 640)
