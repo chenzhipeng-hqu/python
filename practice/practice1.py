@@ -368,8 +368,19 @@ def test4():
     integer = ta.CDL3INSIDE(df.open, df.high, df.low, df.close)
     print(integer[integer > 0])
 
+def test5():
+    data = ts.new_stocks()
+    print(data)
+    data.to_excel('../datas/new_stocks.xls', index=False)
+
+def test6():
+    data = ts.get_notices('000001')
+    print(data)
+    # data.to_excel('../datas/notices.xls', index=False)
 
 if __name__ == '__main__':
     logger.info('\r\n welcom to use candle predict')
     # test3()
-    test4()
+    # test4()
+    # test5()
+    test6()
