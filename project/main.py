@@ -28,6 +28,7 @@ from project.merge_expense import *
 from project.custom_control import *
 from project.merge import *
 from project.fetch import *
+from project.sheet_hyperlink import *
 
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
@@ -49,6 +50,7 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.other_fetch_init()
         self.database_match_init()
         self.merge_expense_init()
+        self.hyperlink_init()
 
     def initUI(self):
         self.setupUi(self)
@@ -116,6 +118,10 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.fetch_file_pushButton.clicked.connect(self.other_fetch_file_dialog)
         self.blance_subject_lineEdit.editingFinished.connect(self.fetch_subject_editingFinished)
         self.blance_month_lineEdit.editingFinished.connect(self.fetch_month_editingFinished)
+
+        # hyper link
+        self.hyperlink_pushButton.clicked.connect(self.hyperlink)
+        self.hyperlink_file_pushButton.clicked.connect(self.hyperlink_file_dialog)
 
         # test
         # self.pushButton.clicked.connect(self.test)
@@ -209,6 +215,11 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
             month = self.conf.get('expense', 'expense_month')
             self.merge_expense_month_lineEdit.setText(month)
 
+        # hpyer link
+        if self.conf.has_option('hyperlink', 'hyperlink_file'):
+            file = self.conf.get('hyperlink', 'hyperlink_file')
+            self.hyperlink_file_pushButton.setText(file)
+
     def payables_init(self):
         self.thread_other_payables = QThread()
         self.worker_other_payables = WorkerOtherPayables()
@@ -245,6 +256,15 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
         self.worker_merge_expense.finish_singel.connect(self.merge_expense_finish_singel)
         self.worker_merge_expense.moveToThread(self.thread_merge_expense)
         self.thread_merge_expense.started.connect(self.worker_merge_expense.run)
+
+    def hyperlink_init(self):
+        self.thread_hyperlink = QThread()
+        self.worker_hyperlink = SheetHyperLink()
+        # self.worker_inter_orders.message_singel.connect(self.message_singel)
+        self.worker_hyperlink.statusBar_singel.connect(self.statusBar_singel)
+        self.worker_hyperlink.finish_singel.connect(self.hyperlink_finish_singel)
+        self.worker_hyperlink.moveToThread(self.thread_hyperlink)
+        self.thread_hyperlink.started.connect(self.worker_hyperlink.run)
 
     def other_merge(self):
         # self.thread_other_merge = QThread()
@@ -330,6 +350,12 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
                                                  job=job,
                                                  subjects=subjects,
                                                  save_path=save_path)
+
+    def hyperlink(self):
+        self.hyperlink_pushButton.setEnabled(False)
+        self.statusBar_singel('正在生成目录...')
+        self.worker_hyperlink.set_parameter(dst_file=self.hyperlink_file_pushButton.text())
+        self.thread_hyperlink.start()
 
     def download_payables(self):
         self.download_payables_pushButton.setEnabled(False)
@@ -444,6 +470,16 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
             self.blance_month_lineEdit.text().strip())
         self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
 
+    def hyperlink_file_dialog(self):
+        fname, ftype = QFileDialog.getOpenFileName(
+            self, '选择文件', self.hyperlink_file_pushButton.text(), 'All Files (*)')
+        print(fname)
+        if os.path.isfile(fname):
+            self.hyperlink_file_pushButton.setText(fname)
+            self.statusBar_singel(fname)
+            self.conf.set('hyperlink', 'hyperlink_file', fname)
+            self.conf.write(codecs.open(self.conf_path, 'w', 'utf-8-sig'))
+
     def login_payables(self):
         self.set_parameter_payables()
         self.worker_other_payables.login()
@@ -519,6 +555,12 @@ class UIMainWindow(Ui_MainWindow, QMainWindow):
     def merge_expense_finish_singel(self):
         self.thread_merge_expense.quit()
         self.merge_expense_pushButton.setEnabled(True)
+        self.statusBar_singel('完成。')
+        QMessageBox.about(self, "提示", "完成")
+
+    def hyperlink_finish_singel(self):
+        self.thread_hyperlink.quit()
+        self.hyperlink_pushButton.setEnabled(True)
         self.statusBar_singel('完成。')
         QMessageBox.about(self, "提示", "完成")
 

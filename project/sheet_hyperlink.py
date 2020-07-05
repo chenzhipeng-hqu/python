@@ -54,7 +54,7 @@ class SheetHyperLink(QObject):
             wsheet = self.writer.book['目录']
             print('exist')
         else:
-            wsheet = self.writer.book.create_sheet("目录")
+            wsheet = self.writer.book.create_sheet("目录", 0)
             print('not exist')
 
         for i, sheet in enumerate(self.writer.sheets.keys()):
@@ -65,12 +65,14 @@ class SheetHyperLink(QObject):
         self.open_dst_file()
         self.hyperlink_for_sheets()
         self.save_dst_file()
+        self.statusBar_singel.emit('完成.\r\n')
+        self.finish_singel.emit()
 
 
 if __name__ == '__main__':
     starttime = nowTime()
     sheet_hyperlink = SheetHyperLink()
-    sheet_hyperlink.set_parameter(dst_file=r'../datas/202004安徽天孚报表-费用.xlsx')
+    sheet_hyperlink.set_parameter(dst_file=r'../datas/abd.xlsx')
 
     sheet_hyperlink.run()
     # merge_expense.check()

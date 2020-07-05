@@ -48,6 +48,7 @@ class MergeExpense(QObject):
             ['有机硅', '有机硅', self.handle_general, None, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
             ['香港', '香港', self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
             ['九江天祺', '天祺', self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
+            ['九江矿业', '九江矿业', self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
             ['九江天赐', '九江', self.handle_G_JJTC, self.handle_YZ_JJTC, self.handle_X_JJTC, self.handle_X_JJTC, self.handle_general, self.handle_YZ_JJTC],
             ['池州天赐', '池州天赐', self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
             ['江西创新', '创新中心', self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general, self.handle_general],
