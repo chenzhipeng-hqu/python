@@ -7,6 +7,7 @@
 import os
 import sys
 import time
+import datetime
 import logging
 
 class Log(object):
@@ -29,12 +30,15 @@ class Log(object):
         #     file_dir = os.path.join(os.getcwd(), "log")
         # else:
 
-        file_dir = os.path.join(log_path, "log")
-        if not os.path.exists(file_dir):
-            os.mkdir(file_dir)
+        self.file_dir = os.path.join(log_path, "log")
+        if not os.path.exists(self.file_dir):
+            os.mkdir(self.file_dir)
+        else:
+            # 清理log文件夹, 防止log过多
+            self.clean()
             # print(file_dir)
         # self.log_path = file_dir
-        self.log_name = file_dir + "/" + log_cate + "." + self.log_time + '.log'
+        self.log_name = self.file_dir + "/" + log_cate + "." + self.log_time + '.log'
         # print(self.log_name)
 
         # fh = logging.FileHandler(self.log_name, 'a')  # 追加模式  这个是python2的
@@ -71,6 +75,25 @@ class Log(object):
         self.logger.warning("test")
         self.logger.info("test")
         self.logger.debug("test")
+
+    def clean(self):
+        # print('delete log dir')
+        dirToBeEmptied = self.file_dir  # 需要清空的文件夹
+        ds = list(os.walk(dirToBeEmptied))  # 获得所有文件夹的信息列表
+        delta = datetime.timedelta(days=10)  # 设定10天前的文件为过期
+        now = datetime.datetime.now()  # 获取当前时间
+
+        for d in ds:  # 遍历该列表
+            # print(d)
+            os.chdir(d[0])  # 进入本级路径，防止找不到文件而报错
+            if d[2] != []:  # 如果该路径下有文件
+                # print(d[2])
+                for x in d[2]:  # 遍历这些文件
+                    ctime = datetime.datetime.fromtimestamp(os.path.getctime(x))  # 获取文件创建时间
+                    # print(x)
+                    # print(ctime, now, delta)
+                    if ctime < (now - delta):  # 若创建于delta天前
+                        os.remove(x)  # 则删掉
 
 
 if __name__ == '__main__':
