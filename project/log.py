@@ -35,7 +35,8 @@ class Log(object):
             os.mkdir(self.file_dir)
         else:
             # 清理log文件夹, 防止log过多
-            self.clean()
+            # self.clean()
+            pass
             # print(file_dir)
         # self.log_path = file_dir
         self.log_name = self.file_dir + "/" + log_cate + "." + self.log_time + '.log'
@@ -85,6 +86,7 @@ class Log(object):
 
         for d in ds:  # 遍历该列表
             # print(d)
+            # TODO: don't call os.chdir()
             os.chdir(d[0])  # 进入本级路径，防止找不到文件而报错
             if d[2] != []:  # 如果该路径下有文件
                 # print(d[2])
