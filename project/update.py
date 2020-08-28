@@ -26,7 +26,7 @@ import configparser
 from PyQt5.QtCore import (pyqtSignal, QTimer, QThread, QTime, QRect)
 
 
-nowTime = lambda:int(round(time.time()*1000))
+nowTime = lambda: int(round(time.time()*1000))
 
 class Update(QThread):
 
@@ -132,7 +132,7 @@ class Update(QThread):
                 temp_file = 'files/version.txt'
                 version_path = self.conf.get('remote_path', "file_"+os.path.splitext(os.path.basename(temp_file))[0])
                 version_file = os.path.join(version_path, 'version.txt')
-                getattr(self.obj,'get')('version_r.txt', version_file)
+                getattr(self.obj, 'get')('version_r.txt', version_file)
 
                 f_remote = open('version_r.txt', 'r')
                 r_line = f_remote.readline()

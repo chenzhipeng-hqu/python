@@ -37,7 +37,7 @@ class SecureShell(object):
             logger.info("连接已建立")
             return 0
         except Exception as e:
-            logger.warn("未能连接到主机")
+            logger.warn("未能连接到主机,{%s}" % (e))
             return 1
 
     def cmd(self, cmd):

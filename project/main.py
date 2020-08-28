@@ -19,7 +19,9 @@ os.chdir(work_path)
 # https://blog.csdn.net/zwyact/article/details/99778898  
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
-	
+
+import codecs
+
 from project import log
 from project import ssh
 from project import update
@@ -64,6 +66,16 @@ class UI_MainWindow(ui.Ui_MainWindow, QMainWindow):
 
         self.initUI()
 
+        # 加载现有配置文件
+        self.conf = configparser.ConfigParser()
+        self.conf_file = "files/configure.ini"
+        # self.conf.read("../configure/configure.ini", encoding="utf-8-sig")
+        self.conf.read(self.conf_file, encoding="utf-8-sig")
+
+        if self.conf.has_option('user', "ip"):
+            ip = self.conf.get('user', "ip")
+            self.ip_lineEdit.setText(ip)
+
         self.last_open_path = '../'
 
         self.AudoDownload = False
@@ -96,6 +108,9 @@ class UI_MainWindow(ui.Ui_MainWindow, QMainWindow):
         self.Send_LineEdit.editingFinished.connect(self.Send_LineEdit_Finished)
         # self.Send_LineEdit.setEnabled(True)
 
+        self.ip_lineEdit.editingFinished.connect(
+            self.ip_editingFinished)
+
         self.select_file.clicked.connect(self.OpenFileDialog)
         self.select_file.setEnabled(False)
 
@@ -107,13 +122,18 @@ class UI_MainWindow(ui.Ui_MainWindow, QMainWindow):
 
         pass
 
+    def ip_editingFinished(self):
+        self.conf.set('user', 'ip', self.ip_lineEdit.text())
+        self.conf.write(codecs.open(self.conf_file, 'w', 'utf-8-sig'))
+
+
     def send_file(self):
         # self.interface.ip_addr = self.ip_lineEdit.text().strip()
         # logger.info(self.ip_lineEdit.text())
         self.interface.send_flag = 1
 
     def OpenFileDialog(self):
-        fname,ftype=QFileDialog.getOpenFileName(self,'打开文件',self.last_open_path)
+        fname,ftype=QFileDialog.getOpenFileName(self, '打开文件', self.last_open_path)
         # if fname[0]:
         if os.path.isfile(fname):
             self.last_open_path = os.path.dirname(fname)
