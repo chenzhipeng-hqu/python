@@ -35,8 +35,9 @@ class Log(object):
             os.mkdir(self.file_dir)
         else:
             # 清理log文件夹, 防止log过多
-            self.clean()
+            # self.clean()
             # print(file_dir)
+            pass
         # self.log_path = file_dir
         self.log_name = self.file_dir + "/" + log_cate + "." + self.log_time + '.log'
         # print(self.log_name)
@@ -47,7 +48,7 @@ class Log(object):
 
         # 再创建一个handler，用于输出到控制台
         ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
+        ch.setLevel(logging.DEBUG)
 
         # 定义handler的输出格式
         formatter = logging.Formatter(
