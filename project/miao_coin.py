@@ -31,11 +31,11 @@ def go(x, y):
         os.system('adb shell input tap {} {}'.format(x, y))  # 触摸店铺按钮
         print('---开始任务---')
         time.sleep(4)
-        print('---等待18秒---')
-        for j in range(18):
+        print('---等待15秒---')
+        for j in range(12):
             os.system('adb shell input tap {} {}'.format(1, 1))  # 模拟滑动界面
             time.sleep(1)
-            print('j ', end='')
+            print(j, end=' ')
         print('\r\n---领取完成---')
         time.sleep(1)
         os.system('adb shell input keyevent KEYCODE_BACK')
@@ -49,7 +49,7 @@ def go_2():
     if os.path.exists('123.txt'):
         c = open('123.txt', encoding='UTF-8')
         a = c.read()
-        e = re.findall('<node index="1" text="去搜索"(.*?)/>', a)  # 找到所有去浏览坐标
+        e = re.findall('<node index="1" text="去浏览"(.*?)/>', a)  # 找到所有去浏览坐标
         for i in e:
             g = re.search('\[(.*?)\]', i).group()
             print(g)
@@ -57,12 +57,13 @@ def go_2():
         print('---------------------------')
     else:
         try:
-            os.system('adb shell uiautomator dump /sdcard/ui.xml')
+            os.system('adb shell uiautomator dump /data/local/tmp/uidump.xml')
             time.sleep(2)
-            os.system('adb shell uiautomator dump /sdcard/ui.xml')
+            os.system('adb shell uiautomator dump /data/local/tmp/uidump.xml')
             time.sleep(1)
-            os.system('adb pull /sdcard/ui.xml 123.txt')
+            os.system('adb pull /data/local/tmp/uidump.xml 123.txt')
             size = get_FileSize('123.txt')
+            print(size)
             if size >= 0.02:  # 第一次获取ui会出现文件非淘宝xml
                 go_2()
             else:
@@ -85,12 +86,15 @@ def get_FileSize(filePath):
 if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
 
+    if os.path.exists('123.txt'):
+        os.remove('123.txt')
+
     print('正在获取页面布局')
     print('----------------')
     go_2()
     print('author：刘秉哲')
-    while 1:
-        task = int(input('请输入任务个数：'))
-        x = int(input('请输入任务X坐标：'))
-        y = int(input('请输入任务y坐标：'))
-        go(x + 20, y + 20)
+    # while 1:
+    task = int(input('请输入任务个数：'))
+    x = int(input('请输入任务X坐标：'))
+    y = int(input('请输入任务y坐标：'))
+    go(x + 20, y + 20)

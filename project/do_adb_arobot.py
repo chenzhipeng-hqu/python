@@ -385,7 +385,7 @@ def adbshellcommand(cmd):
         return None
     req_msg = 'shell:%s' % cmd
     if DEBUG:
-        logger.debug( '%s' % req_msg)
+        logger.debug('%s' % req_msg)
     s.sendall(('%04x' % len(req_msg)).encode())
     s.sendall(req_msg.encode())
     if readAdbResponse(s):

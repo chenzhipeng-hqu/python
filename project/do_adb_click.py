@@ -45,19 +45,38 @@ class Element(object):
         """
         获取当前Activity控件树
         """
-        temp = os.popen("adb shell uiautomator dump /data/local/tmp/uidump.xml")
-        # logger.debug(temp.read())
-        time.sleep(0.1)
-        os.popen("adb pull /data/local/tmp/uidump.xml " + self.tempFile)
-        time.sleep(2)
+        try:
+            temp = os.popen("adb shell uiautomator dump /data/local/tmp/uidump.xml")
+            # logger.debug(temp.read())
+            time.sleep(2)
+            # temp = os.popen("adb shell uiautomator dump /data/local/tmp/uidump.xml")
+            # logger.debug(temp.read())
+            # time.sleep(1)
+            os.popen("adb pull /data/local/tmp/uidump.xml " + self.tempFile)
+            time.sleep(2)
+            size = os.path.getsize(os.path.join(self.tempFile, "uidump.xml"))
+            logger.debug(size)
+            if size >= 2000:  # 第一次获取ui会出现文件非淘宝xml
+                pass
+            else:
+                logger.warning('xml文件错误正在重新下载，请勿翻动手机界面')
+                os.remove(os.path.join(self.tempFile, "uidump.xml"))
+                self.__uidump()
+        except:
+            logger.error('错误！正在回调函数')
+            if os.path.exists(os.path.join(self.tempFile, "uidump.xml")):
+                os.remove(os.path.join(self.tempFile, "uidump.xml"))
+            self.__uidump()
 
     def __element(self, attrib, name):
         """
         同属性单个元素，返回单个坐标元组
         """
         self.__uidump()
-        tree = ET.ElementTree(file=os.path.join(self.tempFile, "uidump.xml"))
+        tree = ET.ElementTree(element='node', file=os.path.join(self.tempFile, "uidump.xml"))
+        # tree.fromstring(os.path.join(self.tempFile, "uidump.xml"))
         treeIter = tree.iter(tag="node")
+        # logger.debug(len(treeIter))
 
         for elem in treeIter:
             if elem.attrib[attrib] == name:
