@@ -30,10 +30,10 @@ logger = log.Log(__name__, log_path=os.getcwd()).getlog()
 def get_taobao_miao_coin():
     for i in range(500):
         evevt = Event()
-        x = 500 + random.randint(0, 100)
-        y = 1100 + random.randint(0, 100)
+        x = 500 + random.randint(0, 200)
+        y = 1100 + random.randint(0, 300)
         evevt.touch(x, y)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
 if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
@@ -51,11 +51,11 @@ if __name__ == '__main__':
     # adbshellcommand(cmd)
 
     # 东东农场
-    jingdong_farmer = JDFarmer('6c2a9126')
-    jingdong_farmer.run2()
+    # jingdong_farmer = JDFarmer('6c2a9126')
+    # jingdong_farmer.run2()
 
     # 2020双十一淘宝点击喵币
-    # get_taobao_miao_coin()
+    get_taobao_miao_coin()
 
     # send_touch_event('tap', 432, 1217)
     # send_touch_event('swipe', 432, 1217, 432+100, 1217)

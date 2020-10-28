@@ -31,13 +31,15 @@ def go(x, y):
         os.system('adb shell input tap {} {}'.format(x, y))  # 触摸店铺按钮
         print('---开始任务---')
         time.sleep(4)
-        os.system('adb shell input tap {} {}'.format(1, 1))  # 模拟滑动界面
-        print('---等待20秒---')
-        time.sleep(20)
-        print('---领取完成---')
+        print('---等待18秒---')
+        for j in range(18):
+            os.system('adb shell input tap {} {}'.format(1, 1))  # 模拟滑动界面
+            time.sleep(1)
+            print('j ', end='')
+        print('\r\n---领取完成---')
         time.sleep(1)
-        os.system('adb shell input keyevent 4')
-        time.sleep(4)
+        os.system('adb shell input keyevent KEYCODE_BACK')
+        time.sleep(2)
         # os.system('adb shell input tap 518 2202')
         print('第{}任务领取完成'.format(i + 1))
         print('______________________')
@@ -47,7 +49,7 @@ def go_2():
     if os.path.exists('123.txt'):
         c = open('123.txt', encoding='UTF-8')
         a = c.read()
-        e = re.findall('<node index="1" text="去浏览"(.*?)/>', a)  # 找到所有去浏览坐标
+        e = re.findall('<node index="1" text="去搜索"(.*?)/>', a)  # 找到所有去浏览坐标
         for i in e:
             g = re.search('\[(.*?)\]', i).group()
             print(g)
@@ -61,15 +63,8 @@ def go_2():
             time.sleep(1)
             os.system('adb pull /sdcard/ui.xml 123.txt')
             size = get_FileSize('123.txt')
-            if size >= 0.03:  # 第一次获取ui会出现文件非淘宝xml
-                c = open('123.txt', encoding='UTF-8')
-                a = c.read()
-                e = re.findall('<node index="1" text="去浏览"(.*?)/>', a)  # 找到所有去浏览坐标
-                for i in e:
-                    g = re.search('\[(.*?)\]', i).group()
-                    print(g)
-                print('以下是按照当前淘宝所有排序的“去浏览”按钮,请根据排序填入要刷取的任务')
-
+            if size >= 0.02:  # 第一次获取ui会出现文件非淘宝xml
+                go_2()
             else:
                 print('xml文件错误正在重新下载，请勿翻动手机界面')
                 os.remove('123.txt')
