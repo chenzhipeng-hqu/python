@@ -48,9 +48,7 @@ if __name__ == '__main__':
 
     # 淘宝农场
     taobao_farmer = TBFarmer('6c2a9126')
-    # taobao_farmer.baba_farmer_sunny()
-    # taobao_farmer.baba_farmer_tree()
-    taobao_farmer.miao_coin_contiune_click()
+    taobao_farmer.run()
 
     # send_touch_event('tap', 432, 1217)
     # send_touch_event('swipe', 432, 1217, 432+100, 1217)

@@ -60,15 +60,16 @@ class TBFarmer(object):
         # time.sleep(4)
         #
         # # 点击集肥料
-        # adbshellcommand('input tap %d %d' % (980, 1700))
-        # time.sleep(3)
+        adbshellcommand('input tap %d %d' % (980, 1700))
+        time.sleep(3)
 
-        # 点击去领取
+        # 点击去领取 7/12/20/22点
         e = self.element.findElementByName(u"去领取")
         logger.debug('[%d, %d]' % (e[0], e[1]))
         adbshellcommand('input tap %d %d' % (e[0], e[1]))
-        time.sleep(17)
-        adbshellcommand('input keyevent KEYCODE_BACK')
+
+
+        # adbshellcommand('input keyevent KEYCODE_BACK')
 
     def miao_coin_contiune_click(self):
         """
@@ -82,6 +83,10 @@ class TBFarmer(object):
             adbshellcommand('input tap %d %d' % (x, y))
             time.sleep(0.3)
 
+    def run(self):
+        # self.baba_farmer_sunny()
+        # self.baba_farmer_tree()
+        # self.miao_coin_contiune_click()
 
 if __name__ == '__main__':
     logger.info('\r\n ---------------- welcom to use -----------------')
